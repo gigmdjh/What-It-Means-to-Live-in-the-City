@@ -906,6 +906,7 @@ function stateSummary(local){
   lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]}(${k}) ${eff(k)} (판정 +${bonus(eff(k))})`).join(", "));
   lines.push(`[장비] ${equipText()}`);
   lines.push(`[가족] ${familyText()}`);
+  if(S.flowNote) lines.push(`[직전에 흘려보낸 시간] ${S.flowNote}`);
   if(S.tags.length) lines.push(`[기록 태그] ${S.tags.join(", ")}`);
   const ltm = S.ltm.slice(local ? -2 : -6);
   if(ltm.length) lines.push("[장기 기억]\n" + ltm.map(m => "- " + m).join("\n"));
@@ -1134,6 +1135,7 @@ function applyDays(n){
 }
 
 function applyNarr(n, forcedDays, shownDays){
+  S.flowNote = "";
   for(const k of GAUGE_KEYS) S[k] = clamp(S[k] + n[k], 0, 100);
   for(const k of STAT_KEYS) S[k] = Math.max(0, S[k] + n[k]);
   S.ahn = Math.max(0, S.ahn + n.ahn);
@@ -1303,16 +1305,21 @@ function appendEntry(e, live){
     row.append(b1, b2); node.appendChild(row);
     if(live && !S.archived) setTimeout(endLife, 60);
   }
-  if(node){ box.appendChild(node); box.scrollTop = box.scrollHeight; if(live) node.scrollIntoView({block:"end", behavior: reduceMotion ? "auto" : "smooth"}); }
+  if(node){
+    box.appendChild(node);
+    if(live){ while(box.children.length > 300) box.firstElementChild.remove(); box.scrollTop = box.scrollHeight; }
+  }
 }
 
 function lastNarr(){ for(let i = S.log.length - 1; i >= 0; i--) if(S.log[i].t === "narr") return S.log[i]; return null; }
-function renderLog(){ $("#log").replaceChildren(); for(const e of S.log) appendEntry(e, false); }
+function renderLog(){ const box = $("#log"); box.replaceChildren(); for(const e of S.log) appendEntry(e, false); box.scrollTop = box.scrollHeight; }
 
+let lastSpriteKey = "";
 function renderStatus(){
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
-  drawSprite($("#sSprite")); drawSprite($("#hSprite"));
+  const spriteKey = [S.name, S.look, S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
+  if(spriteKey !== lastSpriteKey){ drawSprite($("#sSprite")); drawSprite($("#hSprite")); lastSpriteKey = spriteKey; }
   const eqBox = $("#sEquip"); eqBox.replaceChildren();
   for(const slot of Object.keys(SLOT_KO)){
     const it = S.equip[slot] && itemById(S.equip[slot]);
@@ -1369,6 +1376,16 @@ function renderStatus(){
   document.querySelectorAll("#log .opt").forEach(b => b.disabled = lock);
 }
 
+function renderLite(){
+  $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
+  $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()} · ${S.location || ""}`;
+  $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
+  for(const k of GAUGE_KEYS){
+    document.querySelectorAll(".g-" + k + " .fill").forEach(f => { f.style.width = S[k] + "%"; });
+    const t = document.querySelector("#sGauges .g-" + k + " .g-top span:last-child"); if(t) t.textContent = `${S[k]} / 100`;
+    const h = document.querySelector("#hGauges .g-" + k + " .g-top span:last-child"); if(h) h.textContent = String(S[k]);
+  }
+}
 let engineNote = "";
 function setEngineNote(t){ engineNote = t; renderEngineChip(); }
 function renderEngineChip(){
@@ -1686,6 +1703,7 @@ function oneDay(){
       else { S[k] = clamp(S[k] + v, 0, 100); deltas.push({k:GAUGE_KO[k], v}); }
     }
     log({t:"small", text:`${calendarText()} · ${ev.text}`, deltas});
+    flow.dirty = true;
     flow.smalls.push(ev.text); if(flow.smalls.length > 12) flow.smalls.shift();
   }
 }
@@ -1704,26 +1722,36 @@ function checkBig(){
 function startFlow(){
   if(busy || S.dead || flow.on) return;
   resolvePendingChild();
-  Object.assign(flow, {on:true, startDays:S.days, smalls:[], ahn:0});
+  Object.assign(flow, {on:true, startDays:S.days, smalls:[], ahn:0, ticks:0, dirty:false});
   updateFlowUI();
   flow.timer = setTimeout(flowTick, 250);
 }
 function flowTick(){
   if(!flow.on) return;
   let big = null;
+  const ym = ageY() * 12 + monthOf(S.days);
   for(let i = 0; i < FLOW_DAYS[flow.speed] && !big; i++){ oneDay(); big = checkBig(); }
-  renderStatus();
+  if(ageY() * 12 + monthOf(S.days) !== ym || flow.dirty){ renderStatus(); flow.dirty = false; } else renderLite();
   if(S.dead){ flow.on = false; updateFlowUI(); save(); return; }
   if(big){ stopFlow(big); return; }
-  save();
+  if(++flow.ticks % 8 === 0) save();
   flow.timer = setTimeout(flowTick, 700);
 }
 async function stopFlow(big){
   if(!flow.on) return;
   flow.on = false; clearTimeout(flow.timer); updateFlowUI();
   const elapsed = S.days - flow.startDays;
-  if(elapsed <= 0 && !big) return;
-  await flowNarrate(elapsed, big || null);
+  renderStatus();
+  if(big){ await flowNarrate(elapsed, big); return; }
+  /* 직접 멈출 때는 AI를 부르지 않고 바로 멈춘다. 흐른 시간은 다음 행동 때 AI에게 전한다 */
+  if(elapsed > 0){
+    const sm = flow.smalls.slice(-4);
+    S.flowNote = `${dayLabel(elapsed)} 동안 시간을 흘려보냈다. 그동안 작은 일들: ${sm.length ? sm.join(" / ") : "없음"}. 소지금 변화 ${fmt(flow.ahn)}안.`;
+    const deltas = [{k:"경과", v:elapsed, days:true}];
+    if(flow.ahn) deltas.push({k:"안", v:flow.ahn});
+    log({t:"narr", text:`⏸ 시간을 멈췄다. 지금은 ${calendarText()}, ${S.location || regionText()}.`, deltas, options: ruleOptions()});
+  }
+  save();
 }
 function updateFlowUI(){
   const b = $("#btnFlow");
