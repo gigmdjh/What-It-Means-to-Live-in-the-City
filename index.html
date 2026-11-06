@@ -560,7 +560,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js"></script>
+<script src="parts.js?v=4"></script>
 <script>
 "use strict";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
@@ -1703,11 +1703,13 @@ async function loadParts(){
   const P = window.SPRITE_PARTS; if(!P) return;
   const jobs = [];
   for(const [k, b] of Object.entries(P.bodies)) jobs.push(Promise.all([loadPartImage(b.img), loadPartImage(b.reg)]).then(([img, reg]) => { PART.bodies[k] = Object.assign({}, b, {px:img, rg:reg}); }));
-  for(const kind of ["hair", "eyes"]) for(const [g, list] of Object.entries(P[kind])){
+  for(const kind of ["hair", "eyes"]) for(const [g, list0] of Object.entries(P[kind] || {})){
+    /* 예전 형식(나이 구분 없음)이 캐시에 남아 있어도 깨지지 않게 */
+    const list = list0.map(it => Array.isArray(it) ? it : [it, it, it]);
     PART[kind][g] = list.map(st => st.map(() => null));
     list.forEach((stages, i) => stages.forEach((p, s) => jobs.push(loadPartImage(p.img).then(img => { PART[kind][g][i][s] = Object.assign({}, p, {px:img}); }))));
   }
-  await Promise.all(jobs);
+  try{ await Promise.all(jobs); }catch(e){ console.warn("캐릭터 부품을 불러오지 못했습니다", e); }
   PART.ready = true;
   lastSpriteKey = "";
   try{ if(S && !$("#game").hidden) renderStatus(); }catch(e){}
@@ -1832,6 +1834,23 @@ function drawSprite(cv, opt){
   /* 머리카락: 단계별로 미리 맞춘 크기를 그대로, 앞머리 끝을 눈썹 바로 위에 */
   if(!(tr.style === "bald" || baby) && !tr.hood){
     let hairC = hexRGB(tr.hair); if(y0 >= 60) hairC = [207, 207, 214];
+    /* 먼저 정수리부터 눈썹 위까지 머리 영역 전체를 머리색으로 덮어 맨살이 보이지 않게 */
+    const capBottom = eb[1] - 1;
+    const base = hairC.map(v => v * 0.82), baseD = hairC.map(v => v * 0.62);
+    for(let y = 0; y < capBottom; y++) for(let x = 0; x < B.w; x++){
+      const i = (y * B.w + x) * 4; if(!sd[i + 3]) continue;
+      if(Math.round(rg[i] / 20) !== 2 || rg[i + 1] > 128) continue;
+      const edge = regAt(x - 1, y) !== 2 || regAt(x + 1, y) !== 2 || regAt(x, y - 1) !== 2;
+      const c = (edge || y > capBottom - 2) ? baseD : base;
+      put(x + ox, y + oy, c[0], c[1], c[2]);
+    }
+    /* 관자놀이: 눈 높이까지 얼굴 바깥 두 칸도 머리색 */
+    for(let y = capBottom; y < eb[3]; y++){
+      let l = -1, r2 = -1;
+      for(let x = 0; x < B.w; x++){ const i = (y * B.w + x) * 4; if(sd[i + 3] && Math.round(rg[i] / 20) === 2 && rg[i + 1] <= 128){ if(l < 0) l = x; r2 = x; } }
+      if(l < 0 || r2 - l < 10) continue;
+      for(const x of [l, l + 1, r2 - 1, r2]) if(x < eb[0] - 1 || x > eb[2] + 1) put(x + ox, y + oy, baseD[0], baseD[1], baseD[2]);
+    }
     const [hg, hi] = pickHair(g, tr.style, hseed);
     const Hh = ((PART.hair[hg] || [])[hi] || [])[stage];
     if(Hh && Hh.px){
