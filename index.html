@@ -334,6 +334,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);max-width:min(92vw,420px);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:.85rem;z-index:50;transition:opacity .5s}
 .toast.out{opacity:0}
 .login-btns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.ugauge{display:inline-block;vertical-align:middle;width:46px;height:6px;margin-left:8px;border-radius:3px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.ugauge i{display:block;height:100%;background:var(--accent)}
+.ugauge.low i{background:#c0504d}
+.ugauge-row{display:flex;align-items:center;gap:8px;margin-top:3px}
+.ugauge-row .ugauge{margin-left:0;width:90px}
 </style>
 </head>
 <body>
@@ -382,6 +387,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <button class="btn primary" type="submit" id="btnBorn">태어나기</button>
     <p class="note" id="reliveNote" hidden></p>
     <p class="note" id="createNote"></p>
+    <div class="ugauge-row note" id="menuEngine" hidden></div>
     <div class="polli-cta" id="polliCta" hidden>
       <button class="btn" type="button" id="btnPolliMenu">Pollinations로 로그인</button>
       <span class="note">무료 계정의 사용량으로 AI를 씁니다. 폰에서 모델을 내려받지 않아 가볍고 빠릅니다.</span>
@@ -604,10 +610,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0145"></script>
+<script src="parts.js?v=20261107-0155"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0145";
+const BUILD = "20261107-0155";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -861,7 +867,7 @@ const store = {
 /* ───────── 외부 API 사용량: 회사가 응답 머리말로 알려 주는 남은 양 + 이 기기에서 센 오늘 사용량 ───────── */
 const API_PROVS = ["anthropic", "openai", "gemini", "pollinations"];
 let USAGE = store.get("dosi_usage") || {};
-function usageToday(){ const d = new Date().toISOString().slice(0, 10); if(USAGE.date !== d){ USAGE = {date:d, rl:USAGE.rl || {}, credit:USAGE.credit || null}; } return USAGE; }
+function usageToday(){ const d = new Date().toISOString().slice(0, 10); if(USAGE.date !== d){ USAGE = {date:d, rl:USAGE.rl || {}, credit:USAGE.credit || null, polli:USAGE.polli || null, polliFull:USAGE.polliFull || 0}; } return USAGE; }
 function recordUsage(prov, headers, tokIn, tokOut){
   const u = usageToday();
   const c = u[prov] || (u[prov] = {req:0, tin:0, tout:0});
@@ -892,6 +898,54 @@ async function checkCredit(){
     store.set("dosi_usage", u); renderEngineChip(); renderUsage();
   }catch(e){}
 }
+/* Pollinations: 남은 pollen 조회(경로가 문서마다 달라 두 곳을 차례로 시도). 처음 본 값(또는 승인 예산)을 가득 찬 기준으로 삼는다 */
+let lastPolliCheck = 0, polliBalPath = null;
+async function checkPolliBalance(force){
+  const key = polliKey(); if(!key) return;
+  if(!force && Date.now() - lastPolliCheck < 45000) return; lastPolliCheck = Date.now();
+  const paths = polliBalPath ? [polliBalPath] : ["https://gen.pollinations.ai/account/balance", "https://enter.pollinations.ai/api/account/balance"];
+  for(const url of paths){
+    try{
+      const r = await fetch(url, {headers:{"Authorization":"Bearer " + key}});
+      if(!r.ok) continue;
+      const j = await r.json();
+      const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
+      let bal = num(j.balance) ?? num(j.pollen) ?? num(j.total) ?? num(j.remaining);
+      if(bal == null){ const parts = ["tierBalance", "packBalance", "cryptoBalance"].map(k => num(j[k])).filter(v => v != null); if(parts.length) bal = parts.reduce((a, b) => a + b, 0); }
+      if(bal == null && j.data) bal = num(j.data.balance);
+      if(bal == null) continue;
+      polliBalPath = url;
+      const u = usageToday(), st = store.get("dosi_polli") || {};
+      const budget = Number(st.budget) || 10;
+      /* 로그인 직후의 잔액을 기준으로, 그 뒤 줄어든 만큼을 이 키(예산)로 쓴 양으로 본다 */
+      if(st.start == null){ st.start = bal; store.set("dosi_polli", st); }
+      const spent = Math.max(0, st.start - bal);
+      const full = Math.max(0.01, Math.min(st.start, budget));
+      u.polli = {bal, left:Math.max(0, Math.min(bal, full - spent)), at:Date.now()}; u.polliFull = full;
+      store.set("dosi_usage", u); renderEngineChip(); renderUsage();
+      return;
+    }catch(e){}
+  }
+}
+/* 게이지: 남은 비율(0~1)과 글. 회사가 알려 주는 값이 있을 때만 */
+function usageGauge(prov){
+  const u = usageToday(), rl = (u.rl || {})[prov];
+  if(prov === "pollinations" && u.polli && u.polliFull){
+    const left = u.polli.left != null ? u.polli.left : u.polli.bal;
+    return {frac:Math.max(0, Math.min(1, left / u.polliFull)), text:`남은 pollen ${Number(left).toFixed(2)} / ${Number(u.polliFull).toFixed(2)}`};
+  }
+  if(prov === "openai" && u.credit && u.credit.remaining != null && u.credit.limit)
+    return {frac:u.credit.remaining / u.credit.limit, text:`남은 크레딧 $${Number(u.credit.remaining).toFixed(2)} / $${Number(u.credit.limit).toFixed(2)}`};
+  if(rl && rl.remReq && rl.limReq) return {frac:Number(rl.remReq) / Number(rl.limReq), text:`남은 요청 ${rl.remReq} / ${rl.limReq}` + (rl.reset ? ` (다시 채워짐: ${rl.reset})` : "")};
+  if(rl && rl.remTok && rl.limTok) return {frac:Number(rl.remTok) / Number(rl.limTok), text:`남은 토큰 ${Number(rl.remTok).toLocaleString("ko-KR")} / ${Number(rl.limTok).toLocaleString("ko-KR")}`};
+  return null;
+}
+function gaugeEl(g){
+  const w = el("span", "ugauge"); w.title = g.text; w.setAttribute("aria-label", g.text);
+  const f = el("i"); f.style.width = Math.round(Math.max(0, Math.min(1, g.frac)) * 100) + "%";
+  if(g.frac < 0.2) w.classList.add("low");
+  w.appendChild(f); return w;
+}
 function usageShort(prov){
   if(!API_PROVS.includes(prov)) return "";
   const u = usageToday(), rl = (u.rl || {})[prov];
@@ -905,17 +959,18 @@ function renderUsage(){
   const u = usageToday(), rows = [];
   for(const p of API_PROVS){
     const c = u[p], rl = (u.rl || {})[p];
-    if(!c && !rl) continue;
+    if(!c && !rl && !(p === "pollinations" && u.polli)) continue;
     let t = `${PROV_KO[p]}: 오늘 ${c ? c.req : 0}회 요청`;
     if(c && (c.tin || c.tout)) t += `, 토큰 ${(c.tin + c.tout).toLocaleString("ko-KR")}개(보냄 ${c.tin.toLocaleString("ko-KR")} · 받음 ${c.tout.toLocaleString("ko-KR")})`;
     if(rl && rl.remReq) t += ` · 남은 요청 ${rl.remReq}${rl.limReq ? "/" + rl.limReq : ""}`;
     if(rl && rl.remTok) t += ` · 남은 토큰 ${Number(rl.remTok).toLocaleString("ko-KR")}${rl.limTok ? "/" + Number(rl.limTok).toLocaleString("ko-KR") : ""}`;
     if(rl && rl.reset) t += ` (다시 채워짐: ${rl.reset})`;
     if(p === "openai" && u.credit){ const cr = u.credit; t += ` · 남은 크레딧 ${cr.remaining == null ? "제한 없음" : "$" + Number(cr.remaining).toFixed(2)}${cr.usage != null ? `, 지금까지 쓴 돈 $${Number(cr.usage).toFixed(2)}` : ""}`; }
-    rows.push(t);
+    const g = usageGauge(p);
+    rows.push(g ? [t, g] : [t]);
   }
   box.hidden = !rows.length;
-  box.replaceChildren(el("b", null, "API 사용량"), ...rows.map(r => el("div", null, r)),
+  box.replaceChildren(el("b", null, "API 사용량"), ...rows.map(([t, g]) => { const d = el("div", null, t); if(g){ const gw = el("div", "ugauge-row"); gw.append(gaugeEl(g), el("span", null, g.text)); d.appendChild(gw); } return d; }),
     el("div", "note", "남은 양은 회사가 알려 줄 때만 보입니다(Gemini는 알려 주지 않아 이 기기에서 센 횟수만). 요금·잔액은 각 회사 사이트에서 정확히 확인하세요."));
 }
 function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
@@ -1150,7 +1205,7 @@ async function polliFinishLogin(){
   const qs = new URLSearchParams(location.search), hash = new URLSearchParams(location.hash.slice(1));
   const clean = () => history.replaceState(null, "", location.pathname);
   /* 예전 방식(조각에 키가 바로 옴)도 받는다 */
-  if(hash.get("api_key")){ store.set("dosi_polli", {key:hash.get("api_key"), exp:Date.now() + 30 * 864e5}); clean(); return "ok"; }
+  if(hash.get("api_key")){ store.set("dosi_polli", {key:hash.get("api_key"), exp:Date.now() + 30 * 864e5, budget:10}); { const u = usageToday(); u.polliFull = 0; u.polli = null; store.set("dosi_usage", u); } clean(); return "ok"; }
   if(qs.get("error") || hash.get("error")){ clean(); return "denied"; }
   const code = qs.get("code"); if(!code) return null;
   let saved = null; try{ saved = JSON.parse(sessionStorage.getItem("dosi_polli_pkce") || "null"); }catch(e){}
@@ -1163,7 +1218,7 @@ async function polliFinishLogin(){
     if(!r.ok) return "fail";
     const j = await r.json();
     if(!j.access_token) return "fail";
-    store.set("dosi_polli", {key:j.access_token, exp:Date.now() + (Number(j.expires_in) || 7 * 86400) * 1000});
+    store.set("dosi_polli", {key:j.access_token, exp:Date.now() + (Number(j.expires_in) || 7 * 86400) * 1000, budget:10}); { const u = usageToday(); u.polliFull = 0; u.polli = null; store.set("dosi_usage", u); }
     try{ sessionStorage.removeItem("dosi_polli_pkce"); }catch(e){}
     if(CFG.provider === "rules" || CFG.provider === "webllm"){ CFG.provider = "auto"; saveCfg(); }
     return "ok";
@@ -1190,7 +1245,7 @@ async function callPolli(sys, user, maxTok){
   let last = "";
   for(const body of tries){
     const r = await fetch(POLLI_CHAT, {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer " + key}, body:JSON.stringify(body)});
-    if(r.ok){ const j = await r.json(); recordUsage("pollinations", r.headers, j.usage && j.usage.prompt_tokens, j.usage && j.usage.completion_tokens); return j.choices?.[0]?.message?.content || ""; }
+    if(r.ok){ const j = await r.json(); recordUsage("pollinations", r.headers, j.usage && j.usage.prompt_tokens, j.usage && j.usage.completion_tokens); checkPolliBalance(); return j.choices?.[0]?.message?.content || ""; }
     last = r.status + ": " + (await r.text()).slice(0, 200);
     if(r.status === 401 || r.status === 402 || r.status === 403){
       /* 키가 끊겼거나 예산이 다 됨 → 로그아웃하고 다음 엔진으로 */
@@ -1952,9 +2007,13 @@ function setEngineNote(t){ engineNote = t; renderEngineChip(); }
 function renderEngineChip(){
   const c = $("#engineChip"); c.replaceChildren("AI ");
   c.appendChild(el("b", null, engineNote || PROV_KO[currentProv] || currentProv));
-  const us = engineNote ? "" : usageShort(currentProv);
-  if(us) c.appendChild(el("span", "chip-usage", " · " + us));
-  const h = document.getElementById("hEngine"); if(h) h.textContent = "AI " + (engineNote || PROV_KO[currentProv] || currentProv) + (us ? " · " + us : "");
+  const g = engineNote ? null : usageGauge(currentProv);
+  if(g){ c.appendChild(gaugeEl(g)); c.title = g.text; } else c.removeAttribute("title");
+  const h = document.getElementById("hEngine");
+  if(h){ h.replaceChildren("AI " + (engineNote || PROV_KO[currentProv] || currentProv)); if(g) h.appendChild(gaugeEl(g)); }
+  /* 첫 화면에도(폰에선 위쪽 표시가 숨겨지므로) 남은 양 게이지 */
+  const m = document.getElementById("menuEngine");
+  if(m){ m.hidden = !g; if(g) m.replaceChildren(el("span", null, PROV_KO[currentProv] || currentProv), gaugeEl(g), el("span", null, g.text)); }
 }
 
 function thinking(text){
@@ -3527,7 +3586,7 @@ function maybeShowLogin(){
   if(polliKey() || hasKey() || CFG.provider === "rules" || closed) return;
   try{ $("#loginDlg").showModal(); }catch(e){}
 }
-$("#btnSettings").addEventListener("click", () => { fillSettings(); renderUsage(); checkCredit(); $("#settings").showModal(); });
+$("#btnSettings").addEventListener("click", () => { fillSettings(); renderUsage(); checkCredit(); checkPolliBalance(true); $("#settings").showModal(); });
 $("#settings").addEventListener("close", async () => { readSettings(); currentProv = await pickProvider(); renderEngineChip(); });
 
 $("#btnLoadWebllm").addEventListener("click", async () => {
@@ -3595,6 +3654,7 @@ checkUpdate();
   if(pl === "ok") setTimeout(() => alertNote("Pollinations에 로그인했습니다. 이제 폰 부담 없이 AI로 진행합니다."), 50);
   else if(pl === "fail") setTimeout(() => alertNote("Pollinations 로그인을 마치지 못했습니다. 설정에서 다시 시도해 주세요."), 50);
   if(pl !== "ok") setTimeout(maybeShowLogin, 300);
+  setTimeout(() => checkPolliBalance(true), 800);
   showMenu();
   currentProv = await pickProvider(); renderEngineChip();
   const note = $("#createNote");
