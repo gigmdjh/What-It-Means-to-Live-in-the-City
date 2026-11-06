@@ -329,6 +329,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .thinking .live{flex-basis:100%;white-space:pre-wrap;margin-top:6px;font:400 .95rem/1.75 var(--f-body);color:var(--fg);opacity:.85}
 .chip-usage{font-weight:400;color:var(--muted)}
 .usage{display:grid;gap:4px;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:.8rem;line-height:1.5}
+.polli-cta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px}
+.polli-cta .note{flex:1 1 200px;min-width:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);max-width:min(92vw,420px);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:.85rem;z-index:50;transition:opacity .5s}
+.toast.out{opacity:0}
 </style>
 </head>
 <body>
@@ -377,6 +381,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <button class="btn primary" type="submit" id="btnBorn">태어나기</button>
     <p class="note" id="reliveNote" hidden></p>
     <p class="note" id="createNote"></p>
+    <div class="polli-cta" id="polliCta" hidden>
+      <button class="btn" type="button" id="btnPolliMenu">Pollinations로 로그인</button>
+      <span class="note">무료 계정의 사용량으로 AI를 씁니다. 폰에서 모델을 내려받지 않아 가볍고 빠릅니다.</span>
+    </div>
   </form>
   <div class="cont card" id="menuContinue" hidden>
     <canvas class="sprite sm" id="contSprite" width="60" height="92" aria-hidden="true"></canvas>
@@ -508,7 +516,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <h2>AI 엔진 설정</h2>
     <label class="field"><span>사용할 엔진</span>
       <select id="optProvider">
-        <option value="auto">자동 (API 키 → 내 기기 AI → 규칙 순)</option>
+        <option value="auto">자동 (내 API 키 → Pollinations → 내 기기 AI → 규칙 순)</option>
+        <option value="pollinations">Pollinations (무료 계정으로 로그인, 폰 부담 없음)</option>
         <option value="webllm">내 기기: 로컬 모델 (WebLLM, 무료)</option>
         <option value="chrome">내 기기: 크롬 내장 AI (무료)</option>
         <option value="anthropic">내 API 키: Anthropic Claude</option>
@@ -555,6 +564,14 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <label class="field"><span>모델 이름</span><input type="text" id="optOaModel" placeholder="해당 서비스의 모델 이름"></label>
     </section>
 
+    <section data-prov="pollinations">
+      <h3>Pollinations</h3>
+      <p class="note">자기 Pollinations 계정의 무료 사용량(pollen)으로 플레이합니다. 이 게임 운영자에게 비용이 가지 않고, 폰에서 모델을 돌리지 않습니다. 로그인하면 정한 예산과 기간 안에서만 쓰이고, Pollinations 사이트에서 언제든 끊을 수 있습니다. 가입 전 Pollinations의 이용 조건(나이 등)을 확인하세요.</p>
+      <div class="row"><button class="btn primary" type="button" id="btnPolliLogin">Pollinations로 로그인</button><button class="btn" type="button" id="btnPolliLogout">로그아웃</button></div>
+      <div class="prog" id="polliState"></div>
+      <label class="field"><span>모델 이름</span><input type="text" id="optPolliModel" placeholder="openai/gpt-5.4-nano"></label>
+    </section>
+
     <section data-prov="gemini">
       <h3>Google Gemini</h3>
       <label class="field"><span>API 키</span><input type="password" id="optGmKey" autocomplete="off"></label>
@@ -573,10 +590,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0110"></script>
+<script src="parts.js?v=20261107-0125"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0110";
+const BUILD = "20261107-0125";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -771,7 +788,7 @@ const GAUGE_KEYS = ["hp","sp","en","rep"];
 const GAUGE_KO = {hp:"체력",sp:"정신력",en:"기력",rep:"평판"};
 const KO2STAT = {"힘":"str","방어력":"def","방어":"def","속도":"spd","지력":"int","지능":"int"};
 const DISTRICT_NOTE = {8:"홍원 바이오(옛 H사)",9:"음악의 거리",10:"도박",12:"Lobotomy",13:"MDM",14:"Nagel und Hammer",19:"살피뼈 농산",20:"TimeTrack",21:"습지",23:"WARP · 맛의 거리",25:"혹한"};
-const PROV_KO = {auto:"자동",anthropic:"Claude",openai:"OpenAI 호환",gemini:"Gemini",chrome:"크롬 내장 AI",webllm:"로컬 모델",rules:"규칙 기반"};
+const PROV_KO = {pollinations:"Pollinations",auto:"자동",anthropic:"Claude",openai:"OpenAI 호환",gemini:"Gemini",chrome:"크롬 내장 AI",webllm:"로컬 모델",rules:"규칙 기반"};
 
 /* 시드 난수: 같은 시드면 출생·가족·주사위·사건 흐름이 같다 (AI 문장은 매번 다름) */
 function rand01(){
@@ -828,7 +845,7 @@ const store = {
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
 /* ───────── 외부 API 사용량: 회사가 응답 머리말로 알려 주는 남은 양 + 이 기기에서 센 오늘 사용량 ───────── */
-const API_PROVS = ["anthropic", "openai", "gemini"];
+const API_PROVS = ["anthropic", "openai", "gemini", "pollinations"];
 let USAGE = store.get("dosi_usage") || {};
 function usageToday(){ const d = new Date().toISOString().slice(0, 10); if(USAGE.date !== d){ USAGE = {date:d, rl:USAGE.rl || {}, credit:USAGE.credit || null}; } return USAGE; }
 function recordUsage(prov, headers, tokIn, tokOut){
@@ -895,6 +912,7 @@ const CFG_DEFAULT = {
   anthropic:{key:"", model:"claude-haiku-5-5"},
   openai:{base:"https://api.openai.com/v1", key:"", model:""},
   gemini:{key:"", model:""},
+  polli:{model:"openai/gpt-5.4-nano", appKey:""},
   webllm:{model:"", autoload:false, working:""}
 };
 function loadCfg(){
@@ -1032,7 +1050,7 @@ function aiOn(){ return (!!currentProv && currentProv !== "rules") || hasKey() |
 function deviceAIPlanned(){
   /* 메모리 2GB 이하 폰은 자동으로는 기기 AI를 켜지 않는다(직접 고르면 시도) */
   const tiny = isMobile && (navigator.deviceMemory || 4) <= 2;
-  return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey() && !tiny));
+  return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey() && !polliKey() && !tiny));
 }
 function withTimeout(promise, ms, msg){
   return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
@@ -1040,10 +1058,12 @@ function withTimeout(promise, ms, msg){
 async function pickProvider(){
   const p = CFG.provider;
   if(p === "webllm") return webllmEngine ? "webllm" : "rules";
+  if(p === "pollinations") return polliKey() ? "pollinations" : (webllmEngine ? "webllm" : "rules");
   if(p !== "auto") return p;
   if(CFG.anthropic.key && CFG.anthropic.model) return "anthropic";
   if(CFG.openai.key && CFG.openai.model) return "openai";
   if(CFG.gemini.key && CFG.gemini.model) return "gemini";
+  if(polliKey()) return "pollinations";
   if(webllmEngine) return "webllm";
   return "rules";
 }
@@ -1080,6 +1100,85 @@ async function callOpenAI(sys, user, maxTok){
   throw new Error("OpenAI 호환 API 오류 " + last);
 }
 
+/* ───────── Pollinations: 플레이어가 자기 계정으로 승인(BYOP, PKCE) → 받은 키로 호출 ───────── */
+const POLLI_AUTH = "https://enter.pollinations.ai/authorize", POLLI_TOKEN = "https://enter.pollinations.ai/api/oauth/token";
+const POLLI_CHAT = "https://gen.pollinations.ai/v1/chat/completions";
+/* 앱 키(pk_)는 공개용이라 코드에 넣어도 된다. 비어 있으면 Pollinations가 사이트 주소로 앱을 표시한다 */
+const POLLI_APP_KEY = "";
+function polliKey(){
+  const k = store.get("dosi_polli");
+  if(!k || !k.key) return "";
+  if(k.exp && Date.now() > k.exp){ store.del("dosi_polli"); return ""; }
+  return k.key;
+}
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function polliRedirect(){ return location.origin + location.pathname; }
+async function polliLogin(){
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  const state = b64url(crypto.getRandomValues(new Uint8Array(12)));
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  try{ sessionStorage.setItem("dosi_polli_pkce", JSON.stringify({verifier, state})); }catch(e){}
+  try{ save(); }catch(e){}
+  const q = new URLSearchParams({response_type:"code", redirect_uri:polliRedirect(), scope:"usage", state,
+    code_challenge:challenge, code_challenge_method:"S256", models:"text", budget:"10", expiry:"30"});
+  const app = POLLI_APP_KEY || CFG.polli.appKey; if(app) q.set("client_id", app);
+  location.href = POLLI_AUTH + "?" + q.toString();
+}
+async function polliFinishLogin(){
+  const qs = new URLSearchParams(location.search), hash = new URLSearchParams(location.hash.slice(1));
+  const clean = () => history.replaceState(null, "", location.pathname);
+  /* 예전 방식(조각에 키가 바로 옴)도 받는다 */
+  if(hash.get("api_key")){ store.set("dosi_polli", {key:hash.get("api_key"), exp:Date.now() + 30 * 864e5}); clean(); return "ok"; }
+  if(qs.get("error") || hash.get("error")){ clean(); return "denied"; }
+  const code = qs.get("code"); if(!code) return null;
+  let saved = null; try{ saved = JSON.parse(sessionStorage.getItem("dosi_polli_pkce") || "null"); }catch(e){}
+  clean();
+  if(!saved || saved.state !== qs.get("state")) return "fail";
+  try{
+    const body = new URLSearchParams({grant_type:"authorization_code", code, redirect_uri:polliRedirect(), code_verifier:saved.verifier});
+    const app = POLLI_APP_KEY || CFG.polli.appKey; if(app) body.set("client_id", app);
+    const r = await fetch(POLLI_TOKEN, {method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body});
+    if(!r.ok) return "fail";
+    const j = await r.json();
+    if(!j.access_token) return "fail";
+    store.set("dosi_polli", {key:j.access_token, exp:Date.now() + (Number(j.expires_in) || 7 * 86400) * 1000});
+    try{ sessionStorage.removeItem("dosi_polli_pkce"); }catch(e){}
+    if(CFG.provider === "rules" || CFG.provider === "webllm"){ CFG.provider = "auto"; saveCfg(); }
+    return "ok";
+  }catch(e){ return "fail"; }
+}
+function alertNote(t){
+  const d = el("div", "toast", t); document.body.appendChild(d);
+  setTimeout(() => d.classList.add("out"), 3800); setTimeout(() => d.remove(), 4400);
+}
+function renderPolliCta(){
+  const b = document.getElementById("polliCta"); if(!b) return;
+  b.hidden = !!polliKey() || hasKey() || CFG.provider === "rules";
+}
+function polliLogout(){ store.del("dosi_polli"); renderPolliState(); pickProvider().then(p => { currentProv = p; renderEngineChip(); }); }
+function renderPolliState(){
+  const box = document.getElementById("polliState"); if(!box) return;
+  const k = store.get("dosi_polli");
+  box.textContent = polliKey() ? `로그인됨 · ${new Date(k.exp).toLocaleDateString("ko-KR")}까지` : "로그인하지 않음";
+}
+async function callPolli(sys, user, maxTok){
+  const key = polliKey(); if(!key) throw new Error("Pollinations에 로그인하세요.");
+  const messages = [{role:"system", content:sys}, {role:"user", content:user}];
+  const tries = [{model:CFG.polli.model, messages, max_tokens:maxTok, response_format:{type:"json_object"}}, {model:CFG.polli.model, messages, max_tokens:maxTok}];
+  let last = "";
+  for(const body of tries){
+    const r = await fetch(POLLI_CHAT, {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer " + key}, body:JSON.stringify(body)});
+    if(r.ok){ const j = await r.json(); recordUsage("pollinations", r.headers, j.usage && j.usage.prompt_tokens, j.usage && j.usage.completion_tokens); return j.choices?.[0]?.message?.content || ""; }
+    last = r.status + ": " + (await r.text()).slice(0, 200);
+    if(r.status === 401 || r.status === 402 || r.status === 403){
+      /* 키가 끊겼거나 예산이 다 됨 → 로그아웃하고 다음 엔진으로 */
+      store.del("dosi_polli"); currentProv = await pickProvider(); renderEngineChip();
+      throw new Error(r.status === 402 ? "Pollinations 예산(pollen)을 다 썼습니다. 설정에서 다시 로그인하면 예산을 정할 수 있습니다." : "Pollinations 로그인이 끝났습니다. 설정에서 다시 로그인하세요.");
+    }
+    if(r.status !== 400 && r.status !== 422) break;
+  }
+  throw new Error("Pollinations 오류 " + last);
+}
 async function callGemini(sys, user, maxTok){
   const c = CFG.gemini;
   if(!c.key || !c.model) throw new Error("설정에서 Gemini API 키와 모델 이름을 입력하세요.");
@@ -1252,12 +1351,13 @@ async function runAI(build, maxTok, schema, quiet, onText){
   PROMPT_TIGHT = 0;
   /* API일 때만: 한국어 서술은 토큰을 많이 먹어 잘리기 쉬우니 넉넉하게, 실패하면 한 번 더 요청.
      기기 AI·크롬 내장 AI는 느리니 이 과정을 건너뛴다(고쳐 읽기만 한다) */
-  const api = p === "anthropic" || p === "openai" || p === "gemini";
+  const api = p === "anthropic" || p === "openai" || p === "gemini" || p === "pollinations";
   const tok = api ? Math.round(maxTok * 1.8) : maxTok;
   const call = async u => {
     if(p === "anthropic") return callAnthropic(sys, u, tok);
     if(p === "openai") return callOpenAI(sys, u, tok);
     if(p === "gemini") return callGemini(sys, u, tok);
+    if(p === "pollinations") return callPolli(sys, u, tok);
     if(p === "chrome") return callChrome(sys, u, tok, schema);
     if(p === "webllm"){
       const room = Math.max(250, webllmCtx - est(sys + u) - 60);
@@ -3375,11 +3475,13 @@ function fillSettings(){
   $("#optAnKey").value = CFG.anthropic.key; $("#optAnModel").value = CFG.anthropic.model;
   $("#optOaBase").value = CFG.openai.base; $("#optOaKey").value = CFG.openai.key; $("#optOaModel").value = CFG.openai.model;
   $("#optGmKey").value = CFG.gemini.key; $("#optGmModel").value = CFG.gemini.model;
+  $("#optPolliModel").value = CFG.polli.model; renderPolliState();
   $("#optRemember").checked = CFG.remember;
   showProvSections();
 }
 function readSettings(){
   CFG.provider = $("#optProvider").value;
+  CFG.polli.model = $("#optPolliModel").value.trim() || CFG_DEFAULT.polli.model;
   CFG.webllm.model = $("#optWebllmModel").value;
   CFG.anthropic.key = $("#optAnKey").value.trim(); CFG.anthropic.model = $("#optAnModel").value.trim();
   CFG.openai.base = $("#optOaBase").value.trim() || "https://api.openai.com/v1"; CFG.openai.key = $("#optOaKey").value.trim(); CFG.openai.model = $("#optOaModel").value.trim();
@@ -3392,6 +3494,9 @@ function showProvSections(){
   document.querySelectorAll("#setForm section[data-prov]").forEach(s => s.hidden = !(p === "auto" || s.dataset.prov === p));
 }
 $("#optProvider").addEventListener("change", showProvSections);
+$("#btnPolliLogin").addEventListener("click", () => { readSettings(); saveCfg(); polliLogin(); });
+$("#btnPolliLogout").addEventListener("click", polliLogout);
+$("#btnPolliMenu").addEventListener("click", polliLogin);
 $("#btnSettings").addEventListener("click", () => { fillSettings(); renderUsage(); checkCredit(); $("#settings").showModal(); });
 $("#settings").addEventListener("close", async () => { readSettings(); currentProv = await pickProvider(); renderEngineChip(); });
 
@@ -3456,12 +3561,16 @@ loadParts();
 checkUpdate();
 (async function boot(){
   $("#buildTag").textContent = "버전 " + BUILD;
+  const pl = await polliFinishLogin();
+  if(pl === "ok") setTimeout(() => alertNote("Pollinations에 로그인했습니다. 이제 폰 부담 없이 AI로 진행합니다."), 50);
+  else if(pl === "fail") setTimeout(() => alertNote("Pollinations 로그인을 마치지 못했습니다. 설정에서 다시 시도해 주세요."), 50);
   showMenu();
   currentProv = await pickProvider(); renderEngineChip();
   const note = $("#createNote");
   if(deviceAIPlanned() && currentProv === "rules") note.textContent = "태어나는 순간 기기 AI(폰은 약 1GB, 처음 한 번만)를 내려받아 무료로 진행합니다.";
   else if(currentProv === "rules" && !hasKey()) note.textContent = "이 브라우저는 기기 AI(WebGPU)를 지원하지 않아 규칙으로만 진행됩니다.";
   else note.textContent = `AI 엔진: ${PROV_KO[currentProv]}`;
+  renderPolliCta();
 })();
 </script>
 </body>
