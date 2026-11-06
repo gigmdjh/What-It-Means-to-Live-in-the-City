@@ -565,10 +565,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2310"></script>
+<script src="parts.js?v=20261106-2325"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2310";
+const BUILD = "20261106-2325";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1837,24 +1837,18 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     const wl = Math.min(L(eyeT), earMinL) - 1, wr = Math.max(R(eyeT), earMaxR) + 1;
     const edgeAt = y => {
       const k = (y - y0b) / Math.max(1, bEnd - y0b);
-      const fl = s === "long" ? (k < 0.7 ? k * 2.2 : 1.54 - (k - 0.7) * 3) : (k < 0.6 ? k * 1.5 : 0.9 - (k - 0.6) * 4);
+      const fl = s === "long" ? (k < 0.3 ? 0 : 1) : 0;
       const wv = plan.wavy ? Math.sin(y * 0.55 + v) * 1.2 : 0;
       return [Math.round(wl - fl + wv), Math.round(wr + fl + wv)];
     };
-    const [xl0, xr0] = edgeAt(Math.round((y0b + bEnd) / 2));
-    const nB = Math.max(4, Math.round((xr0 - xl0 + 1) / 6)), bw = (xr0 - xl0 + 1) / nB;
-    const ends = []; for(let c = 0; c < nB; c++) ends.push(bEnd - [0, 2, 1, 2, 0, 1][(c + v) % 6] + (c === 0 || c === nB - 1 ? -1 : 0));
+    /* 한 덩어리: 끝은 가운데가 조금 더 내려온 부드러운 곡선 */
     for(let y = y0b; y <= bEnd; y++){
-      const [xl, xr] = edgeAt(y);
+      const [xl, xr] = edgeAt(y), mid = (xl + xr) / 2, hw = Math.max(1, (xr - xl) / 2);
       for(let x = xl; x <= xr; x++){
-        const c = Math.max(0, Math.min(nB - 1, Math.floor((x - xl) / Math.max(1, (xr - xl + 1) / nB))));
-        const ca = xl + c * (xr - xl + 1) / nB, cb = xl + (c + 1) * (xr - xl + 1) / nB - 1;
-        /* 다발 끝은 가운데가 조금 더 내려온 둥근 모양 */
-        const edgeDist = Math.min(x - ca, cb - x);
-        const yEnd = ends[c] - (edgeDist < 0.5 ? 1 : 0);
-        if(y > yEnd) continue;
+        const u = (x - mid) / hw;
+        if(y > bEnd - Math.round(u * u * 2.4)) continue;
         if(x < 0 || x >= W || y < 0 || y >= H) continue;
-        back[y * W + x] = 2; bid[y * W + x] = 70 + c;
+        back[y * W + x] = 2; bid[y * W + x] = 70;
       }
     }
   }
@@ -1998,11 +1992,11 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   }
   return {back, front, fid, bid, ears};
 }
-function paintHair(D, layer, hairC, tie, behindOnly, ids){
+function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
   const W = SPRITE_W, H = SPRITE_H;
   const base = hairC, light = hairC.map(c => c + (255 - c) * 0.12), shadow = hairC.map(c => c * 0.7), deep = hairC.map(c => c * 0.52);
   const hi = hairC.map(c => c + (255 - c) * 0.45), strand = hairC.map(c => c * 0.55), line = hairC.map(c => c * 0.24);
-  const has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && layer[y * W + x] > 0;
+  const has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && (layer[y * W + x] > 0 || (merge && merge[y * W + x] > 0));
   const idAt = (x, y) => ids && x >= 0 && y >= 0 && x < W && y < H ? ids[y * W + x] : 0;
   /* 다발마다 범위를 구해 다발 안에서 명암을 준다 */
   const box = {};
@@ -2034,6 +2028,12 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids){
     else if(id >= 10 && box[id]){
       const b = box[id], rx = (x - b.x0) / Math.max(1, b.x1 - b.x0), ry = (y - b.y0) / Math.max(1, b.y1 - b.y0);
       if(id >= 20 && id < 30) c = rx > 0.86 ? shadow : rx < 0.2 ? light : base; /* 정수리 덩어리는 부드럽게 */
+      else if(id === 70){
+        /* 뒷머리: 위는 밝고 아래로 갈수록, 오른쪽(빛 반대편)으로 갈수록 서서히 어두워진다 */
+        const k = 1.0 - ry * 0.32 - Math.max(0, rx - 0.55) * 0.3 + Math.max(0, 0.3 - rx) * 0.2;
+        c = base.map(v => v * k);
+      }
+      else if(merge && id >= 40 && id < 50) c = rx < 0.3 ? light : base;   /* 뒷머리와 이어지는 옆머리: 끝을 어둡게 끊지 않는다 */
       else c = ry > 0.82 ? deep : rx < 0.3 ? light : rx > 0.7 ? shadow : base;
     }else c = v === 2 ? shadow : base;
     D[j] = Math.min(255, c[0]); D[j + 1] = Math.min(255, c[1]); D[j + 2] = Math.min(255, c[2]); D[j + 3] = 255;
@@ -2200,7 +2200,7 @@ function drawSprite(cv, opt){
   }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
   if(hairLayers){
-    paintHair(D, hairLayers.back, hairC.map(c => c * 0.86), TIE, true, hairLayers.bid); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid); }
+    paintHair(D, hairLayers.back, hairC, TIE, true, hairLayers.bid); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid, ["long", "bob", "curly"].includes(tr.style) ? hairLayers.back : null); }
   ctx.putImageData(img, 0, 0);
   /* 소품: 픽셀 단위 사각형으로만 그린다 */
   const ex0 = eb[0] + ox, ey0 = eb[1] + oy, ex1 = eb[2] + ox, ey1 = eb[3] + oy, emx = Math.round((ex0 + ex1) / 2);
