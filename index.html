@@ -565,10 +565,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2400"></script>
+<script src="parts.js?v=20261106-2415"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2400";
+const BUILD = "20261106-2415";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1887,13 +1887,19 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     else if(plan.fringe === "swept") depth = Math.round((1 - u) * 4);
     else if(plan.fringe === "none") depth = -2;
     else depth = [2, 1, 2, 0, 1, 2, 1][(c + v) % 7];
-    /* 다발 하나 = 끝이 뾰족한 V. 가운데가 가장 길고 양옆으로 짧아진다 */
+    /* 다발 하나 = 끝이 뾰족한 V. 다발 경계는 정수리 쪽에서 모였다가 아래로 부채꼴로 퍼진다 */
     const hw = Math.max(1, (b - a) / 2);
-    for(let x = a; x <= b; x++){
-      const q = Math.abs(x - mid) / hw;
-      const pointy = plan.fringe === "straight" ? 0 : Math.round(q * q * 3);
-      const bottom = eyeT - 2 + Math.min(depth, 2) - pointy; /* 앞머리 끝은 눈매에 살짝 닿는 정도까지만 */
-      for(let y = bangTop; y <= bottom; y++) set(front, x, y, 1);
+    for(let y = bangTop; y <= eyeT + 1; y++){
+      const t = (y - bangTop) / Math.max(1, eyeT - bangTop), sc = 0.72 + 0.28 * t;
+      const ya = c === 0 ? Math.min(a, L(y) - 1) : Math.round(cx + (a - cx) * sc);
+      const yb = c === nClump - 1 ? Math.max(b, R(y) + 1) : Math.round(cx + (b + 1 - cx) * sc) - 1;
+      const ym = (Math.round(cx + (a - cx) * sc) + Math.round(cx + (b + 1 - cx) * sc) - 1) / 2;
+      for(let x = ya; x <= yb; x++){
+        const q = Math.min(1.2, Math.abs(x - ym) / hw);
+        const pointy = plan.fringe === "straight" ? 0 : Math.round(q * q * 3);
+        const bottom = eyeT - 2 + Math.min(depth, 2) - pointy; /* 앞머리 끝은 눈매에 살짝 닿는 정도까지만 */
+        if(y <= bottom) set(front, x, y, 1);
+      }
     }
   }
   curId = 1;
@@ -1935,7 +1941,10 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
           outer = y >= e0 ? earOut + (side < 0 ? -flare + tipIn : flare - tipIn) : (side < 0 ? fL(yy) - 1 : fR(yy) + 1);
           w = Math.max(1, Math.abs(inner - outer) + 1);
         }
-        const x0 = outer - side * cl.off;
+        let x0 = outer - side * cl.off;
+        /* 다발 끝 세 줄은 양쪽에서 안으로 모아 뾰족한 끝 → 덩어리로 보이게 */
+        const dEnd = cl.end - y;
+        if(dEnd < 3 && w > 2){ const m = Math.round((3 - dEnd) / 3 * (w - 1) / 2); x0 -= side * m; w = Math.max(1, w - 2 * m); }
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
       }
     }
@@ -1993,7 +2002,7 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
   const W = SPRITE_W, H = SPRITE_H;
   const base = hairC, light = hairC.map(c => c + (255 - c) * 0.12), shadow = hairC.map(c => c * 0.7), deep = hairC.map(c => c * 0.52);
   const hi = hairC.map(c => c + (255 - c) * 0.45), strand = hairC.map(c => c * 0.55), line = hairC.map(c => c * 0.24);
-  const has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && (layer[y * W + x] > 0 || (merge && merge[y * W + x] > 0));
+  const has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && layer[y * W + x] > 0;   /* 옆머리도 뒷머리 위에서 테두리를 가진 덩어리로 */
   const idAt = (x, y) => ids && x >= 0 && y >= 0 && x < W && y < H ? ids[y * W + x] : 0;
   /* 다발마다 범위를 구해 다발 안에서 명암을 준다 */
   const box = {};
@@ -2026,23 +2035,14 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
       const o = idAt(x + dx, y + dy); if(o < 10 || o === id || o < id) continue;
       const a = grp(id), b2 = grp(o);
       if((a === "bang" && b2 === "crown") || (a === "crown" && b2 === "bang")) continue; /* 정수리↔앞머리는 이어지게 */
-      /* 앞머리 다발 사이 결은 아래쪽 절반에만 → 위는 정수리와 한 덩어리로 이어진다 */
-      if(a === "bang" && b2 === "bang" && box[id] && (y - box[id].y0) / Math.max(1, box[id].y1 - box[id].y0) < 0.45) continue;
       seam = true;
     }
+    /* 명암 없이 한 색 + 하이라이트만. 다발 경계와 바깥은 선 */
     let c;
     if(v === 5) c = tie;
     else if(edge || seam) c = line;
     else if(v === 3) c = hi;
-    else if(v === 4) c = strand;
-    else if(id >= 10 && box[id]){
-      const b = box[id], rx = (x - b.x0) / Math.max(1, b.x1 - b.x0), ry = (y - b.y0) / Math.max(1, b.y1 - b.y0);
-      if(id >= 20 && id < 30) c = rx > 0.86 ? shadow : rx < 0.2 ? light : base; /* 정수리 덩어리는 부드럽게 */
-      else if(id === 70 && gb) c = grad(x, y);   /* 뒷머리: 아래로, 빛 반대편(오른쪽)으로 서서히 어두워진다 */
-      else if(gb && id >= 40 && id < 50) c = grad(x, y);   /* 뒷머리와 이어지는 옆머리는 뒷머리와 같은 그라데이션 */
-      else if(id >= 10 && id < 20) c = rx > 0.75 && ry > 0.45 ? shadow : base;   /* 앞머리: 끝을 진하게 띠처럼 칠하지 않는다 */
-      else c = ry > 0.82 ? deep : rx < 0.3 ? light : rx > 0.7 ? shadow : base;
-    }else c = v === 2 ? shadow : base;
+    else c = base;
     D[j] = Math.min(255, c[0]); D[j + 1] = Math.min(255, c[1]); D[j + 2] = Math.min(255, c[2]); D[j + 3] = 255;
   }
 }
