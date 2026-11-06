@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2555"></script>
+<script src="parts.js?v=20261106-2610"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2555";
+const BUILD = "20261106-2610";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -589,14 +589,14 @@ const LORE_SHORT = `[세계관: 프로젝트 문의 '도시'] 머리·눈·발�
 
 const JUDGE_RULES = `
 너는 이 세계관의 텍스트 RPG 판정관이다.
-플레이어 입력을 개별 행동으로 나누고(최대 3개), 각 행동에 가장 관련 있는 능력치 하나와 난이도(dc)를 정한다.
-구역은 날개 이름(L사 구역 등)으로 부른다. [장비]와 의체를 고려해 난이도를 정하라(무기가 있으면 싸움이 쉬워진다).
-능력치: str=힘, def=방어력(버티기·견디기·막기), spd=속도(달리기·회피·손재주), int=지력(관찰·지식·말솜씨·설득·속임수).
-판정은 d20 + floor(능력치/2) 가 dc 이상이면 성공.
-dc 기준: 5 매우 쉬움, 10 쉬움, 13 보통, 16 어려움, 20 매우 어려움, 25 극히 어려움, 30 이상 사실상 불가능.
-캐릭터의 나이, 상태, 장소, 상대를 반영하라. 예: 0세 아기가 일어서 걷기는 dc 30, 우는 것은 trivial.
+플레이어 입력을 개별 행동으로 나누고(최대 3개), 각 행동마다 가장 관련 있는 능력치 하나와 난이도를 말로 정한다.
+구역은 날개 이름(L사 구역 등)으로 부른다.
+능력치(stat): 힘(때리기·들기·부수기), 방어력(버티기·견디기·막기), 속도(달리기·회피·손재주), 지력(관찰·지식·말솜씨·설득·속임수).
+난이도(difficulty)는 다음 중 하나: 사소함, 매우 쉬움, 쉬움, 보통, 어려움, 매우 어려움, 극히 어려움, 불가능.
+캐릭터의 나이·능력치·장비·의체·부상·상태·장소·상대를 종합해서 고른다. 예: 0세 아기가 일어서 걷기는 불가능, 우는 것은 사소함. 무기가 있으면 싸움은 한 단계 쉬워진다.
+주사위와 능력치 보정은 게임이 계산한다. 숫자는 쓰지 마라.
 실패할 여지가 없는 사소한 행동(둘러보기, 쉬기, 먹기 등)은 trivial: true.
-반드시 JSON만 출력: {"actions":[{"text":"행동 요약(짧게)","stat":"str","dc":13,"why":"난이도 이유 한 줄","trivial":false}]}`;
+반드시 JSON만 출력: {"actions":[{"text":"행동 요약(짧게)","stat":"속도","difficulty":"보통","why":"난이도 이유 한 줄","trivial":false}]}`;
 
 const NARR_RULES = `
 너는 이 세계관의 텍스트 RPG 서술자다.
@@ -609,20 +609,24 @@ const NARR_RULES = `
 - [장비]의 무기·방어구·의체를 장면에 반영하라.
 - shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 돌발 상황(심부름, 장인의 손짓, 피신 등)으로 공방 안에 들어오게 된 경우도 true. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
-- 숫자는 변화량(증감)만 적는다: hp(체력), sp(정신력), en(기력), rep(평판)은 0~100 게이지에서의 증감. ahn은 소지금 증감(안). str, def, spd, int는 능력치 증감으로 대부분 0, 의미 있는 훈련·경험이면 +1, 큰 부상이면 -1. days는 행동에 걸린 경과 일수(정수, 몇 시간이면 0).
-- 값 판단 기준: 평범한 행동은 en -2~-8. 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 실패한 행동으로 이득을 주지 마라. 평판은 남들이 보거나 소문이 날 때만 움직인다. 아기·어린이는 스스로 돈을 벌기 어렵다.
+- 변화는 숫자가 아니라 말로 적는다(정확한 수치는 게임이 정한다. 숫자를 쓰지 마라):
+  hp(체력), sp(정신력), en(기력), rep(평판): "없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복" 중 하나.
+  ahn(돈): "없음", "조금 씀", "씀", "많이 씀", "아주 많이 씀", "조금 벎", "벎", "많이 벎", "아주 많이 벎" 중 하나.
+  str, def, spd, int(능력치): "없음", "오름", "내림" 중 하나. 대부분 "없음". 의미 있는 훈련·경험이면 "오름", 큰 부상이면 "내림".
+  days(걸린 시간): "없음"(몇 시간 이내), "하루", "며칠", "일주일", "몇 주", "한 달", "몇 달", "일 년" 중 하나.
+- 판단 기준: 평범한 행동은 en "약간 감소". 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 실패한 행동으로 이득을 주지 마라. 평판은 남들이 보거나 소문이 날 때만 움직인다. 아기·어린이는 스스로 돈을 벌기 어렵다.
 - location은 장면이 끝난 현재 장소(짧게).
 - tag_add: 새로 생긴 중요한 사실을 "분류:내용" 태그로(예: "부상:왼팔 골절", "빚:쥐 패거리에 30만안", "소속:하나 협회 9급", "인연:옆집 할머니"). 여러 개면 쉼표로 구분, 없으면 "".
 - tag_remove: 더 이상 사실이 아닌 기존 태그(나은 부상, 갚은 빚 등)를 그대로 적는다. 없으면 "".
 - 가족은 [가족] 목록을 따르고 멋대로 바꾸지 마라. 이야기 속에서 결혼하면 spouse에 "이름/성별", 플레이어의 아이가 태어나면 child_born을 true, 가족이 죽으면 family_dead에 그 이름. 해당 없으면 ""와 false.
-반드시 JSON만 출력: {"narration":"서술","hp":0,"sp":0,"en":0,"rep":0,"ahn":0,"str":0,"def":0,"spd":0,"int":0,"days":0,"location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
+반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
 
 const SUM_RULES = `
 너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 이야기를 이어 갈 때 필요한 사실 위주로 한국어 2~3문장으로 요약하라(사람 이름, 관계, 사건, 약속, 빚, 부상, 장소). 꾸밈말 없이.
 반드시 JSON만 출력: {"summary":"요약"}`;
 
-const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["str","def","spd","int"]},dc:{type:"integer"},why:{type:"string"},trivial:{type:"boolean"}},required:["text","stat","dc","why","trivial"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"integer"},sp:{type:"integer"},en:{type:"integer"},rep:{type:"integer"},ahn:{type:"integer"},str:{type:"integer"},def:{type:"integer"},spd:{type:"integer"},int:{type:"integer"},days:{type:"integer"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"}},required:["text","stat","difficulty","why","trivial"]}}},required:["actions"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
 
 /* 계절 · 달력 */
@@ -706,6 +710,35 @@ function rndVis(n){ const a = new Uint32Array(1); crypto.getRandomValues(a); ret
 const SEED_WORDS = ["안개","녹슨","검은","잿빛","새벽","골목","날개","둥지","청소부","손가락","공방","등불","비","겨울","유리","철","종이","달"];
 function randomSeed(){ return SEED_WORDS[rndVis(SEED_WORDS.length)] + "-" + (1000 + rndVis(9000)); }
 const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+/* AI가 말로 준 변화("약간 감소", "많이 벎", "며칠")를 게임이 숫자로 바꾼다. 숫자를 주면 그대로 쓴다 */
+function wordLevel(v){
+  const t = String(v == null ? "" : v).replace(/\s+/g, " ").trim();
+  if(!t || /^(없음|없다|변화 ?없음|그대로|0|-|none)$/i.test(t)) return 0;
+  const neg = /(감소|줄|깎|잃|하락|씀|썼|쓴|지출|내림|떨어|손해|나빠|악화|빼앗|-)/.test(t);
+  const pos = /(증가|회복|오름|올|늘|벎|벌|얻|상승|좋아|나아|\+)/.test(t);
+  if(!neg && !pos) return 0;
+  const mag = /(아주|매우|막대|엄청)/.test(t) ? 4 : /(크게|많이|대폭|심하)/.test(t) ? 3 : /(약간|조금|살짝|소폭|약하)/.test(t) ? 1 : 2;
+  return neg ? -mag : mag;
+}
+const WORD_SCALE = {gauge:[0, 4, 10, 20, 30], rep:[0, 2, 5, 10, 15], ahn:[0, 20000, 200000, 2000000, 20000000]};
+function wordAmount(v, kind){
+  if(typeof v === "number" || /^[+-]?\d+$/.test(String(v || "").trim())) return Number(v);
+  const lv = wordLevel(v), sc = WORD_SCALE[kind];
+  return Math.sign(lv) * sc[Math.min(4, Math.abs(lv))];
+}
+function wordDays(v){
+  if(typeof v === "number" || /^\d+$/.test(String(v || "").trim())) return Number(v);
+  const t = String(v || "");
+  if(/일 ?년|한 해|1년/.test(t)) return 365;
+  if(/몇 ?달|수개월|석 달|두 달/.test(t)) return 90;
+  if(/한 ?달|1달|한달/.test(t)) return 30;
+  if(/몇 ?주|수주|두 ?주/.test(t)) return 14;
+  if(/일주일|한 ?주/.test(t)) return 7;
+  if(/며칠|사흘|이틀|수일/.test(t)) return 3;
+  if(/하루|1일|밤새/.test(t)) return 1;
+  return 0;
+}
+const DIFF_DC = {"사소함":0, "매우 쉬움":5, "쉬움":10, "보통":13, "어려움":16, "매우 어려움":20, "극히 어려움":25, "불가능":30};
 function num(v, lo, hi){ v = Number(v); if(!isFinite(v)) return 0; return clamp(Math.round(v), lo, hi); }
 const fmt = n => Number(n).toLocaleString("ko-KR");
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1026,8 +1059,11 @@ function stateSummary(local){
 function normalizeActions(j){
   if(!j || !Array.isArray(j.actions)) return null;
   const out = j.actions.slice(0, 3).map(a => {
-    const stat = STAT_KEYS.includes(a.stat) ? a.stat : (KO2STAT[a.stat] || "int");
-    const dc = num(a.dc, 0, 40);
+    const stat = STAT_KEYS.includes(a.stat) ? a.stat : (KO2STAT[String(a.stat || "").trim()] || "int");
+    const dw = String(a.difficulty || "").trim();
+    const dc = a.dc != null && isFinite(Number(a.dc)) ? num(a.dc, 0, 40)
+      : DIFF_DC[dw] != null ? DIFF_DC[dw]
+      : /불가/.test(dw) ? 30 : /극히/.test(dw) ? 25 : /매우 어|아주 어/.test(dw) ? 20 : /어려/.test(dw) ? 16 : /매우 쉬|아주 쉬/.test(dw) ? 5 : /쉬/.test(dw) ? 10 : /사소/.test(dw) ? 0 : 13;
     return {text: String(a.text || "행동").slice(0, 80), stat, dc, why: String(a.why || "").slice(0, 140), trivial: !!a.trivial || dc <= 0};
   });
   return out.length ? out : null;
@@ -1071,10 +1107,10 @@ function rollCheck(a){
 function normalizeNarr(j, statCap){
   if(!j || typeof j.narration !== "string" || !j.narration.trim()) return null;
   const n = blankNarr(j.narration.trim().slice(0, 4000));
-  for(const k of GAUGE_KEYS) n[k] = num(j[k], -60, 60);
-  for(const k of STAT_KEYS) n[k] = num(j[k], -statCap, statCap);
-  n.ahn = num(j.ahn, -1e10, 1e10);
-  n.days = num(j.days, 0, 3650);
+  for(const k of GAUGE_KEYS) n[k] = num(wordAmount(j[k], k === "rep" ? "rep" : "gauge"), -60, 60);
+  for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")), -statCap, statCap);
+  n.ahn = num(wordAmount(j.ahn, "ahn"), -1e10, 1e10);
+  n.days = num(wordDays(j.days), 0, 3650);
   n.location = String(j.location || "").slice(0, 40);
   n.tag_add = String(j.tag_add || "").slice(0, 300);
   n.tag_remove = String(j.tag_remove || "").slice(0, 300);
@@ -1616,7 +1652,7 @@ async function birth(){
   let n = null;
   try{
     n = normalizeNarr(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + NARR_RULES,
-      user: stateSummary(local) + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [가족]의 부모를 그대로 등장시키고 가정 형편을 정해 tag_add에 '형편:…' 태그로 적어라. spouse, family_dead는 \"\", child_born은 false. 숫자 변화는 모두 0, days는 0."}), 1100, NARR_SCHEMA), 0);
+      user: stateSummary(local) + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [가족]의 부모를 그대로 등장시키고 가정 형편을 정해 tag_add에 '형편:…' 태그로 적어라. spouse, family_dead는 \"\", child_born은 false. 변화는 모두 \"없음\", days도 \"없음\"."}), 1100, NARR_SCHEMA), 0);
   }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message + (aiOn() ? "" : " 규칙 기반으로 진행합니다.")}); }
   done();
   applyNarr(n || ruleBirth(), 0);
@@ -2525,7 +2561,7 @@ async function flowNarrate(elapsed, big){
   try{
     const smalls = flow.smalls.length ? flow.smalls.join(" / ") : "특별한 일 없음";
     n = normalizeNarr(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + NARR_RULES,
-      user: stateSummary(local) + `\n\n[흘려보낸 시간] 방금 ${dayLabel(elapsed)}이 흘렀다(나이·계절·수치·돈은 이미 반영됨, 이 기간 소지금 변화 ${fmt(flow.ahn)}안). 그동안의 작은 일들: ${smalls}. 이 기간을 한두 문장으로 짧게 돌아본 뒤 지금 이 순간의 장면으로 이어라. days는 0, 숫자 변화는 지금 장면에서 새로 생긴 것만.` + hint}), 1100, NARR_SCHEMA), 2);
+      user: stateSummary(local) + `\n\n[흘려보낸 시간] 방금 ${dayLabel(elapsed)}이 흘렀다(나이·계절·수치·돈은 이미 반영됨, 이 기간 소지금 변화 ${fmt(flow.ahn)}안). 그동안의 작은 일들: ${smalls}. 이 기간을 한두 문장으로 짧게 돌아본 뒤 지금 이 순간의 장면으로 이어라. days는 "없음", 변화는 지금 장면에서 새로 생긴 것만.` + hint}), 1100, NARR_SCHEMA), 2);
   }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
   done();
   if(big && big.kind === "child") log({t:"child", id:S.pendingChild});
