@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2525"></script>
+<script src="parts.js?v=20261106-2530"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2525";
+const BUILD = "20261106-2530";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1870,9 +1870,26 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
       const dark = d[i + 3] && lumOf(d[i], d[i + 1], d[i + 2]) < 80;
       if(run && dark){ runLen++; runEnd = X; } else run = false;
     }
-    if(runLen > 2 && y >= e0) best = side < 0 ? Math.max(best, runEnd) : (best < 0 ? runEnd : Math.min(best, runEnd));
+    /* 짧은 머리: 귀 아랫선은 earFix로 살색 처리하고 머리카락은 넓히지 않는다(넓히면 가로 줄처럼 튀어나온다).
+       긴 머리: 귀를 통째로 덮으니 아랫선까지 덮는다 */
+    if(runLen > 2 && y >= e0 && plan.style !== "short" && plan.style !== "spiky") best = side < 0 ? Math.max(best, runEnd) : (best < 0 ? runEnd : Math.min(best, runEnd));
     return best;
   };
+  /* 귀 아랫선이 얼굴 안쪽까지 길게 그어진 부분: 얼굴선(2칸) 안쪽은 살색으로 지운다 → 볼 윤곽이 깔끔하게 */
+  const earFix = [];
+  for(let y = e0 - 1; y <= e1 + 2; y++){
+    const by = y - oy; if(by < 0 || by >= B.h) continue;
+    for(const side of [-1, 1]){
+      const base0 = side < 0 ? L(y) : R(y);
+      const xs = [];
+      for(let k = 0; k <= 8; k++){
+        const X = base0 - side * k, bx = X - ox; if(bx < 0 || bx >= B.w) break;
+        const i = (by * B.w + bx) * 4, d = B.px.d;
+        if(d[i + 3] && lumOf(d[i], d[i + 1], d[i + 2]) < 80) xs.push(X); else break;
+      }
+      if(xs.length > 3){ const face = side < 0 ? fL(y) : fR(y); for(const X of xs) if(side < 0 ? X > face + 1 : X < face - 1) earFix.push([X, y, side]); }
+    }
+  }
   const s = plan.style, v = plan.v;
   /* 길이(아래 끝) */
   const neckY = chin + 1;
@@ -1958,7 +1975,10 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     const burnEnd = Math.min(sideEnd, Math.max(e1, eyeB) + ((s === "short" || s === "spiky") ? 2 : 4));
     const clumps = [{off:0, w:2, start:eyeT - 4, end:burnEnd, id:side < 0 ? 40 : 42}, {off:2, w:2, start:eyeB, end:Math.max(eyeB + 1, burnEnd - 2 - (v % 2)), id:side < 0 ? 41 : 43}];
     for(const cl of clumps){
+      /* 짧은 머리의 안쪽 작은 다발은 한두 줄짜리 가로 선처럼 보여 빼 둔다 */
+      if(cl.off !== 0 && (s === "short" || s === "spiky")) continue;
       curId = cl.id;
+      let lastX0 = null;
       for(let y = cl.start; y <= cl.end; y++){
         const k = (y - cl.start) / Math.max(1, cl.end - cl.start);
         const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
@@ -1992,8 +2012,12 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
           w = Math.max(1, Math.abs(inner - outer) + 1);
         }
         /* 모양은 그대로 두고 옆머리 전체를 얼굴 쪽으로 옮긴다 (짧은 머리 2칸, 긴 머리 1칸) */
-        const inward = shortHair ? 2 : 1;
+        /* 위치만 얼굴 쪽으로: 귀 높이는 짧은 머리 2칸·긴 머리 1칸, 귀 아래는 1칸(얼굴 윤곽선 위에 딱 겹쳐 볼 선이 깨지지 않게) */
+        const inward = cl.off !== 0 ? 0 : (y <= e1 ? (shortHair ? 2 : 1) : 1);
         let x0 = outer - side * cl.off - side * inward;
+        /* 귀 아래로 내려가며 바깥으로 튀지 않게: 윗줄 위치에서 그대로 내려온다(턱선이 안으로 들어오면 그쪽에 맞춤) */
+        if(lastX0 !== null && y > e1) x0 = side < 0 ? Math.max(x0, lastX0) : Math.min(x0, lastX0);
+        lastX0 = x0;
         /* 다발 끝 세 줄은 양쪽에서 안으로 모아 뾰족한 끝 → 덩어리로 보이게 */
         const dEnd = cl.end - y;
         if(dEnd < 3 && w > 2){ const m = Math.round((3 - dEnd) / 3 * (w - 1) / 2); x0 -= side * m; w = Math.max(1, w - 2 * m); }
@@ -2048,7 +2072,7 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     set(front, x, yy, 3);
     if(u < -0.3 && front[(yy + 1) * W + x] === 1) set(front, x, yy + 1, 3);   /* 왼쪽은 두 줄로 두껍게 */
   }
-  return {back, front, fid, bid, ears};
+  return {back, front, fid, bid, ears, earFix};
 }
 function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
   const W = SPRITE_W, H = SPRITE_H;
@@ -2213,6 +2237,15 @@ function drawSprite(cv, opt){
     const keepIris = new Set(best);
     const rows = new Map();
     for(const k1 of best){ const x = k1 % 1000, y = Math.floor(k1 / 1000); const r0 = rows.get(y) || [99, -1]; rows.set(y, [Math.min(r0[0], x), Math.max(r0[1], x)]); }
+    /* 속눈썹도 가장 큰 덩어리(8방향 연결)만 남긴다 → 눈꼬리 옆에 따로 떠 있는 짧은 선 제거 */
+    const lashSet = new Set([...cls.values()].filter(v => v.k === "lash").map(v => key(v.xx, v.yy)));
+    let lashBest = []; const lseen = new Set();
+    for(const k0 of lashSet){ if(lseen.has(k0)) continue; const comp = [], st = [k0]; lseen.add(k0);
+      while(st.length){ const k1 = st.pop(); comp.push(k1); const x = k1 % 1000, y = Math.floor(k1 / 1000);
+        for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){ const k2 = key(x + dx, y + dy); if(lashSet.has(k2) && !lseen.has(k2)){ lseen.add(k2); st.push(k2); } } }
+      if(comp.length > lashBest.length) lashBest = comp; }
+    const keepLash = new Set(lashBest);
+    for(const v of cls.values()) if(v.k === "lash" && !keepLash.has(key(v.xx, v.yy)) && !closed) v.k = "skip";
     /* 3) 눈동자 밖 조각은 피부로, 나머지(눈썹·속눈썹·피부)는 그대로 */
     for(const v of cls.values()){
       if(v.k === "skip") continue;
@@ -2259,6 +2292,10 @@ function drawSprite(cv, opt){
   }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
   if(hairLayers){
+    for(const [X, Y, sd] of hairLayers.earFix || []){
+      const to = (Y * W + X) * 4, sk = skinDefault ? skinB : skinT;
+      if(D[to + 3]){ D[to] = sk[0]; D[to + 1] = sk[1]; D[to + 2] = sk[2]; }
+    }
     paintHair(D, hairLayers.back, hairC, TIE, true, hairLayers.bid); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid, ["long", "bob", "curly"].includes(tr.style) ? hairLayers.back : null); }
   ctx.putImageData(img, 0, 0);
   /* 소품: 픽셀 단위 사각형으로만 그린다 */
