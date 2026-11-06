@@ -565,10 +565,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2235"></script>
+<script src="parts.js?v=20261106-2250"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2235";
+const BUILD = "20261106-2250";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2068,52 +2068,88 @@ function drawSprite(cv, opt){
   const put = (X, Y, r, gg, b) => { if(X < 0 || Y < 0 || X >= W || Y >= H) return; const j = (Y * W + X) * 4; D[j] = r; D[j + 1] = gg; D[j + 2] = b; D[j + 3] = 255; };
   /* 눈 */
   const eb = B.eye;
-  const E = ((PART.eyes[g] || [])[pickEyes(S && S.look, hseed >>> 2)] || [])[stage];
+  const eyeK = pickEyes(S && S.look, hseed >>> 2);
+  const E = ((PART.eyes[g] || [])[eyeK] || [])[stage];
   if(E && E.px && !tr.sunglasses){
     /* 왼쪽 눈 하나만 읽어 좌우로 뒤집어 그린다 → 두 눈이 완전히 대칭 */
-    const pe = E.eye, cxE = (pe[0] + pe[2]) / 2;
+    const pe = E.eye, cxE = (pe[0] + pe[2]) / 2, P = pe[0] + pe[2], half = Math.floor(cxE);
     const x0 = Math.round(ox + (eb[0] + eb[2]) / 2 - cxE), y0e = Math.round(oy + (eb[1] + eb[3]) / 2 - (pe[1] + pe[3]) / 2) + 1;
-    const eyeA = hexRGB(tr.eye), eyeB2 = hexRGB(tr.eye2 || tr.eye);
+    const eyeA = hexRGB(tr.eye), eyeB2 = hexRGB(tr.eye2 || tr.eye), eyeR = eq.eye ? [69, 224, 207] : eyeB2;
     const lashC = tr.lash ? hexRGB(tr.lash).map(c => c * 0.5) : null;
     const hairBrow = hexRGB(tr.hair).map(c => c * 0.62);
     const skinNow = skinDefault ? skinB : skinT;
-    const pinkish = (r, gg, b) => r - gg > 28 && r > 150;
-    let lx0 = 999, lyB = -1;
-    const plot = (xx, yy, r, gg, b) => {
-      for(const [X, right] of [[x0 + xx, false], [x0 + Math.round(pe[0] + pe[2] - xx), true]]){
-        const Y = y0e + yy, j = (Y * W + X) * 4;
-        if(X < 0 || Y < 0 || X >= W || Y >= H || !D[j + 3]) continue;
-        let c = [r, gg, b];
-        if(right && c.tag === undefined && r === -1){ continue; }
-        put(X, Y, Math.min(255, c[0]), Math.min(255, c[1]), Math.min(255, c[2]));
-      }
-    };
-    for(let yy = 0; yy < E.h; yy++) for(let xx = 0; xx <= Math.floor(cxE); xx++){
+    const closed = eyeK === 5;
+    const put2 = (X, Y, c) => { if(X < 0 || Y < 0 || X >= W || Y >= H || !D[(Y * W + X) * 4 + 3]) return; put(X, Y, Math.min(255, c[0]), Math.min(255, c[1]), Math.min(255, c[2])); };
+    /* 왼쪽 칸 좌표(xx,yy)를 두 눈에 찍는다. cR이 있으면 오른쪽 눈은 그 색 */
+    const plot = (xx, yy, c, cR) => { put2(x0 + xx, y0e + yy, c); put2(x0 + P - xx, y0e + yy, cR || c); };
+    /* 1) 시트 픽셀 분류 */
+    const cls = new Map(), key = (x, y) => y * 1000 + x;
+    for(let yy = 0; yy < E.h; yy++) for(let xx = 0; xx <= half; xx++){
       const i = (yy * E.w + xx) * 4; if(!E.px.d[i + 3]) continue;
-      let r = E.px.d[i], gg = E.px.d[i + 1], b = E.px.d[i + 2];
+      const r = E.px.d[i], gg = E.px.d[i + 1], b = E.px.d[i + 2];
       const L = lumOf(r, gg, b), sat = Math.max(r, gg, b) - Math.min(r, gg, b);
-      if(yy < pe[1] - 1){ [r, gg, b] = hairBrow; plot(xx, yy, r, gg, b); continue; }  /* 눈썹 */
-      if(pinkish(r, gg, b) && yy >= pe[3] - 1) continue;                                /* 눈 밑 분홍 점은 지우고 애굣살로 다시 */
-      if(L <= 30){ if(lashC) [r, gg, b] = lashC; }                                       /* 속눈썹: 따로 지정한 색만 */
-      else if(L > 200 && sat < 40){ /* 하이라이트 */ }
-      else if(L < 150 && sat < 70){
-        if(xx < lx0) lx0 = xx; if(yy > lyB) lyB = yy;
-        const kk = Math.min(1.3, (L + 25) / 105);
-        /* 오른쪽(뒤집힌) 눈은 오드아이·의안 색이라 따로 칠한다 */
-        const cL = eyeA, cR = eq.eye ? [69, 224, 207] : eyeB2;
-        const j1 = [cL[0] * kk, cL[1] * kk, cL[2] * kk], j2 = [cR[0] * kk, cR[1] * kk, cR[2] * kk];
-        const XL = x0 + xx, XR = x0 + Math.round(pe[0] + pe[2] - xx), Y = y0e + yy;
-        if(D[(Y * W + XL) * 4 + 3]) put(XL, Y, Math.min(255, j1[0]), Math.min(255, j1[1]), Math.min(255, j1[2]));
-        if(D[(Y * W + XR) * 4 + 3]) put(XR, Y, Math.min(255, j2[0]), Math.min(255, j2[1]), Math.min(255, j2[2]));
-        continue;
+      let k;
+      if(yy < pe[1] - 1) k = "brow";
+      else if(r - gg > 28 && r > 150) k = "skip";            /* 시트의 분홍 점은 지우고 애굣살로 대신 */
+      else if(L <= 30) k = "lash";
+      else if(L > 200 && sat < 40) k = closed ? "skip" : "hi";
+      else if(L < 150 && sat < 70) k = closed ? "skip" : "iris";
+      else k = "skin";
+      cls.set(key(xx, yy), {xx, yy, k, c:[r, gg, b]});
+    }
+    /* 2) 눈동자: 가장 큰 덩어리만 남기고 줄마다 빈틈을 메워 깔끔한 모양으로 */
+    const irisSet = new Set([...cls.values()].filter(v => v.k === "iris" || v.k === "hi").map(v => key(v.xx, v.yy)));
+    let best = [];
+    const seen = new Set();
+    for(const k0 of irisSet){ if(seen.has(k0)) continue; const comp = [], st = [k0]; seen.add(k0);
+      while(st.length){ const k1 = st.pop(); comp.push(k1); const x = k1 % 1000, y = Math.floor(k1 / 1000);
+        for(const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const k2 = key(x + dx, y + dy); if(irisSet.has(k2) && !seen.has(k2)){ seen.add(k2); st.push(k2); } } }
+      if(comp.length > best.length) best = comp; }
+    const keepIris = new Set(best);
+    const rows = new Map();
+    for(const k1 of best){ const x = k1 % 1000, y = Math.floor(k1 / 1000); const r0 = rows.get(y) || [99, -1]; rows.set(y, [Math.min(r0[0], x), Math.max(r0[1], x)]); }
+    /* 3) 눈동자 밖 조각은 피부로, 나머지(눈썹·속눈썹·피부)는 그대로 */
+    for(const v of cls.values()){
+      if(v.k === "skip") continue;
+      if((v.k === "iris" || v.k === "hi") && keepIris.has(key(v.xx, v.yy))) continue;
+      let c = v.c;
+      if(v.k === "brow") c = hairBrow;
+      else if(v.k === "lash"){ if(lashC) c = lashC; }
+      else if(v.k === "iris" || v.k === "hi") continue;          /* 떨어져 나간 조각은 지운다(피부 그대로) */
+      else if(!skinDefault) c = [c[0] * skinT[0] / skinB[0], c[1] * skinT[1] / skinB[1], c[2] * skinT[2] / skinB[2]];
+      plot(v.xx, v.yy, c);
+    }
+    let lx0 = 999, lyB = -1;
+    if(rows.size){
+      const ys = [...rows.keys()].sort((p1, p2) => p1 - p2), top = ys[0], bot = ys[ys.length - 1], span = Math.max(1, bot - top);
+      /* 첫 줄(속눈썹 그늘) 아래는 아래쪽 몸통 폭에 맞춰 옆으로 삐져나온 칸을 잘라 둥근 모양으로 */
+      const lower = ys.filter(y => y >= top + span / 2);
+      if(lower.length && ys.length >= 3){
+        const med = arr => arr.sort((p1, p2) => p1 - p2)[arr.length >> 1];
+        const bL = med(lower.map(y => rows.get(y)[0])), bR = med(lower.map(y => rows.get(y)[1]));
+        for(const y of ys) if(y > top){ const [a1, a2] = rows.get(y); rows.set(y, [Math.max(a1, bL - 1), Math.min(a2, bR + 1)]); }
       }
-      else if(L >= 150 && !skinDefault){ r = r * skinT[0] / skinB[0]; gg = gg * skinT[1] / skinB[1]; b = b * skinT[2] / skinB[2]; }
-      plot(xx, yy, r, gg, b);
+      for(const y of ys){ const [a1, a2] = rows.get(y), t = (y - top) / span;
+        const kk = t < 0.34 ? 0.62 : t < 0.67 ? 0.9 : 1.2;
+        const cl = eyeA.map(c => c * kk), cr = eyeR.map(c => c * kk);
+        for(let x = a1; x <= a2; x++) plot(x, y, cl, cr);
+        if(a1 < lx0) lx0 = a1; }
+      lyB = bot;
+      /* 하이라이트: 두 눈 모두 왼쪽 위에 흰 점, 오른쪽 아래에 작은 반사광 → 한 방향 */
+      const [tl1, tl2] = rows.get(top), hiY = top, white = [250, 248, 244];
+      put2(x0 + Math.min(tl1 + 1, tl2), y0e + hiY, white);
+      if(tl2 - tl1 >= 3) put2(x0 + tl1 + 2, y0e + hiY, white);
+      const rTop1 = P - tl2, rTop2 = P - tl1;          /* 오른쪽 눈 첫 줄 범위 */
+      put2(x0 + Math.min(rTop1 + 1, rTop2), y0e + hiY, white);
+      if(rTop2 - rTop1 >= 3) put2(x0 + rTop1 + 2, y0e + hiY, white);
+      if(span >= 2){ const [b1, b2] = rows.get(bot), refl = c => c.map(v => v + (255 - v) * 0.55);
+        if(b2 - b1 >= 1){ put2(x0 + b2 - 1 + (b2 - b1 >= 3 ? 0 : 1), y0e + bot, refl(eyeA.map(c => c * 1.2)));
+          const r1 = P - b2, r2 = P - b1; put2(x0 + r2 - 1 + (r2 - r1 >= 3 ? 0 : 1), y0e + bot, refl(eyeR.map(c => c * 1.2))); } }
     }
     /* 애굣살: 눈 왼쪽 아래를 감싸는 분홍 3칸 (오른쪽 눈은 대칭) */
     if(lyB >= 0){
       const pk = skinNow.map((c, i2) => c + ([229, 122, 136][i2] - c) * 0.5);
-      for(const [dx, dy] of [[-1, 0], [0, 1], [1, 1]]) plot(lx0 + dx, lyB + dy, pk[0], pk[1], pk[2]);
+      for(const [dx, dy] of [[-1, 0], [0, 1], [1, 1]]) plot(lx0 + dx, lyB + dy, pk);
     }
   }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
