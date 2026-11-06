@@ -339,6 +339,13 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .ugauge.low i{background:#c0504d}
 .ugauge-row{display:flex;align-items:center;gap:8px;margin-top:3px}
 .ugauge-row .ugauge{margin-left:0;width:90px}
+.track.mid{position:relative}
+.track.mid::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--muted);opacity:.6}
+.g-sp .fill.neg{background:#b0506a}
+.g-merit .fill{background:#c9a45a}
+.hud-career{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:6px 10px;margin-top:6px}
+.hud-career .g-top,.hud-career .g-top span:last-child{font-size:.66rem}
+.hud-career .track{height:5px;margin-top:2px}
 </style>
 </head>
 <body>
@@ -411,6 +418,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   <div class="hud" id="hud">
     <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><b id="hName"></b><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
     <div class="hud-g" id="hGauges"></div>
+    <div class="hud-career" id="hCareer" hidden></div>
     <div class="hud-bot"><span><b id="hAhn"></b> 안</span><span id="hEngine"></span></div>
   </div>
   <aside class="status" id="statusPanel">
@@ -428,6 +436,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <div class="card">
       <div class="label">상태</div>
       <div class="gauges" id="sGauges"></div>
+    </div>
+    <div class="card" id="sCareerCard" hidden>
+      <div class="label">소속 · 등급 · 실적</div>
+      <div class="gauges" id="sCareer"></div>
     </div>
     <div class="card">
       <div class="label">소지금</div>
@@ -454,7 +466,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <div id="log" aria-live="polite"></div>
     <form class="act" id="actForm">
       <div class="quick">
-        <button class="btn" type="button" id="btnFlow">▶ 흘려보내기</button>
+        <button class="btn" type="button" id="btnFlow">▶ 재생</button>
         <button class="btn speedbtn" type="button" id="btnSpeed" aria-label="배속 바꾸기">1×</button>
         <span class="note" id="flowDate"></span>
       </div>
@@ -610,10 +622,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0200"></script>
+<script src="parts.js?v=20261107-0220"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0200";
+const BUILD = "20261107-0220";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -626,9 +638,13 @@ const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 구역 예: 8구역(거대한 하나의 구조물 안), 9구역('음악의 거리', 피아니스트 사건으로 약 30만 명 사망), 10구역(도박, 소원력 기술을 화폐처럼 씀), 12구역(L사, 중독성 에너지 엔케팔린), 14구역(기억을 정제하는 통조림 공장), 18구역(R사, 다른 날개에 병력을 파는 사병 기업), 20구역(무채색 벽돌 거리, 흑운회·검계 활동), 21구역(탁한 습지, 플라즈마 장벽), 23구역(WARP사, 10초 만에 이동하는 워프 열차 / 뒷골목은 인육을 파는 '맛의 거리'), 25구역(혹한과 빈곤).
 - 의체(신체 개조)와 공방(무기 제작)이 흔하다. 총기는 법으로 엄격히 규제되어 매우 비싸다.
 - 화폐는 '안(眼)'. 이 게임에서 1안은 1원과 같은 가치다. 빵 2,000안, 국밥 9,000안, 뒷골목 단칸방 월세 30만안, 하급 해결사 의뢰 수십만~수백만안 정도.
-- 분위기: 냉혹하고 건조하며 사람 목숨이 싸다. 그래도 사람 사이의 작은 온기는 있다.`;
+- 분위기: 냉혹하고 건조하며 사람 목숨이 싸다. 그래도 사람 사이의 작은 온기는 있다.
+- 혈귀: 사람의 피를 마시며 늙지 않는 괴물. 피가 모자라면 미쳐 가고 시든다. 대부분 물을 두려워한다. 피로 무기·갑옷을 빚는다. 첫째 권속을 정점으로 한 '가문'으로 묶인다(라만차랜드). 혈귀가 산 사람을 물면 그 사람은 권속(새 혈귀)이 되거나, 기억과 자아가 없는 피주머니(하수인)가 된다. 해결사들은 혈귀 토벌을 전문으로 맡기도 한다.
+- 뒤틀림: 감당하지 못한 감정과 욕망에 삼켜진 사람이 괴물 같은 존재로 변하는 현상. 그 사람만 듣는 여자의 목소리가 욕망에 굴복하라고 속삭인다고 한다. 감정을 받아들이고 다스린 사람은 에고(E.G.O)를 발현해 뒤틀림에서 벗어난다.
+- 특색: 하나 협회가 인정한 최정상 해결사에게 붙는 이름(예: 붉은 안개, 검은 침묵, 보라 눈물). 1급 위의 경지.
+- 협회(해결사 단체, 구역마다 지부): 하나(모든 협회를 이끌고 해결사·사무소 등급을 매김), 츠바이(치안·방어, 경찰 같은 역할), 트레스(공방과 무기 심사), 시(암살·은밀 작전), 생크(결투로 분쟁 해결), 리우(다수 상대 전투), 세븐(정보 수집), 데뱌트(배송·운송), 디에치(지식 수집·연구, 자선 협회), 우피(거래·계약). 해결사는 협회 지부나 사무소에 들어가 일할 수 있다.`;
 
-const LORE_SHORT = `[세계관: 프로젝트 문의 '도시'] 머리·눈·발톱이 다스리는 인류 최후의 도시, 26개 구역. 각 구역 중심엔 거대기업 '날개'가 지키는 부유한 '둥지', 바깥엔 가난하고 위험한 '뒷골목'. 매일 새벽 3:13~4:34 '뒷골목의 밤'엔 무슨 짓도 처벌받지 않고 '청소부'가 거리를 쓸어 간다. '해결사'는 하나 협회 자격증(20세 이상, 9급~1급, 그 위는 '색')을 받고 의뢰를 처리한다. 범죄 '조직'과 최강 조직 '다섯 손가락'(엄지·검지·중지·약지·새끼)이 뒷골목을 쥔다. 화폐는 '안', 1안=1원 가치(빵 2,000안, 월세 30만안). 분위기는 냉혹하고 건조하다.`;
+const LORE_SHORT = `[세계관: 프로젝트 문의 '도시'] 혈귀(사람 피를 마시는 불로의 괴물, 물린 사람은 권속(혈귀)이나 피주머니(기억 없는 하수인)가 됨, 해결사가 토벌함)와 뒤틀림(감정에 삼켜진 사람이 괴물로 변하는 현상, 이겨내면 에고(E.G.O)를 발현)이 있다. 머리·눈·발톱이 다스리는 인류 최후의 도시, 26개 구역. 각 구역 중심엔 거대기업 '날개'가 지키는 부유한 '둥지', 바깥엔 가난하고 위험한 '뒷골목'. 매일 새벽 3:13~4:34 '뒷골목의 밤'엔 무슨 짓도 처벌받지 않고 '청소부'가 거리를 쓸어 간다. '해결사'는 하나 협회 자격증(20세 이상, 9급~1급, 그 위는 '색')을 받고 의뢰를 처리한다. 범죄 '조직'과 최강 조직 '다섯 손가락'(엄지·검지·중지·약지·새끼)이 뒷골목을 쥔다. 화폐는 '안', 1안=1원 가치(빵 2,000안, 월세 30만안). 분위기는 냉혹하고 건조하다.`;
 
 const JUDGE_RULES = `
 너는 이 세계관의 텍스트 RPG 판정관이다.
@@ -661,9 +677,18 @@ const NARR_RULES = `
 - 판단 기준: 평범한 행동은 en "약간 감소". 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 실패한 행동으로 이득을 주지 마라. 평판은 남들이 보거나 소문이 날 때만 움직인다. 아기·어린이는 스스로 돈을 벌기 어렵다.
 - location은 장면이 끝난 현재 장소(짧게).
 - tag_add: 새로 생긴 중요한 사실을 "분류:내용" 태그로(예: "부상:왼팔 골절", "빚:쥐 패거리에 30만안", "소속:하나 협회 9급", "인연:옆집 할머니"). 여러 개면 쉼표로 구분, 없으면 "".
+- 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀"처럼 적어라. 권속이 된 사람은 피를 마셔야 하고 물을 두려워한다.
+- merit: 플레이어가 소속([신분·힘]의 해결사·조직·공무원)의 일을 했다면 그 일의 실적 변화("없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복" 중 하나. 회복=올라감). 소속 일이 아니면 "없음".
+- 해결사 자격 시험은 20세 이상만 볼 수 있다. 합격하면 tag_add에 "자격:해결사"라고만 적어라(급수는 게임이 정한다). 20세 미만이면 시험을 볼 수 없다고 그려라.
+- 플레이어가 범죄 조직·패거리에 들어가면 tag_add에 "조직:조직 이름"을 적고, 나오면 tag_remove로 지워라.
+- 플레이어가 공무원(관청·날개 등 공적 기관의 직원)이 되면 tag_add에 "공무원:기관 이름"을 적고, 그만두면 tag_remove로 지워라.
+- 해결사 사무소는 하나 협회 4급 이상 해결사만 차릴 수 있다. 그보다 낮으면 차릴 수 없다고 그려라.
+- 플레이어가 자기 사무소에 사람을 고용하면 tag_add에 "고용:이름/역할"을 적어라(예: "고용:한서진/해결사").
+- 플레이어가 다른 협회(츠바이·시·리우 등) 지부에 들어가면 tag_add에 "협회:협회 이름", 남의 사무소에 들어가면 "소속 사무소:사무소 이름"을 적어라. 나오면 tag_remove로 지워라.
+- 플레이어가 해결사 사무소를 차리는 데 성공하면 tag_add에 "사무소:새로 차림"이라고만 적어라(이름은 플레이어가 짓는다).
 - tag_remove: 더 이상 사실이 아닌 기존 태그(나은 부상, 갚은 빚 등)를 그대로 적는다. 없으면 "".
 - 가족은 [가족] 목록을 따르고 멋대로 바꾸지 마라. 이야기 속에서 결혼하면 spouse에 "이름/성별", 플레이어의 아이가 태어나면 child_born을 true, 가족이 죽으면 family_dead에 그 이름. 해당 없으면 ""와 false.
-반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
+반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false,"merit":"없음"}`;
 
 /* 기기 AI용 짧은 규칙: 폰에서는 프롬프트가 길면 읽는 데만 수십 초가 걸린다 */
 const NARR_RULES_LOCAL = `
@@ -679,7 +704,7 @@ const SUM_RULES = `
 반드시 JSON만 출력: {"summary":"요약"}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"}},required:["text","stat","difficulty","why","trivial"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},merit:{type:"string"}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
 
 /* 계절 · 달력 */
@@ -689,10 +714,16 @@ function seasonOf(days){ const m = Math.min(12, monthOf(days)); return Object.ke
 function calendarText(){ const m = Math.min(12, monthOf(S.days)); return `${seasonOf(S.days)} · ${m}월`; }
 
 /* 돌발 상황: 어릴 땐 드물고, 6세부터 점점 잦아진다 */
+/* 조직(뒷골목 범죄 조직·패거리·손가락)에 몸담고 있으면 돌발 상황이 잦아진다 */
+const ORG_RE = /(조직|패거리|손가락|엄지|검지|중지|약지|새끼|쥐 패거리|파벌|갱|일가|범죄)/;
+const inSyndicate = () => !!(S && S.tags && S.tags.some(t => /^조직:/.test(t) || (/^(소속|직업|일):/.test(t) && ORG_RE.test(t))));
+const ORG_MULT = 1.6;
 function eventChance(y){
-  if(y < 3) return 0.04;
-  if(y < 6) return 0.08;
-  return Math.min(0.5, 0.15 + (y - 6) * 0.025);
+  let c;
+  if(y < 3) c = 0.04;
+  else if(y < 6) c = 0.08;
+  else c = Math.min(0.5, 0.15 + (y - 6) * 0.025);
+  return inSyndicate() ? Math.min(0.75, c * ORG_MULT) : c;
 }
 /* 돌발 상황: "장면|선택지1/선택지2/선택지3". 언제·어디서·무엇을 하다가 무엇을 마주쳤는지 구체적으로 → 다음 행동을 고르기 쉽게.
    AI가 있으면 참고 예시로만 쓰고, AI가 없을 때는 이 장면을 그대로 쓴다 */
@@ -730,6 +761,10 @@ const EVENTS = {
     "가족에게서 다급한 연락이 왔다. 빚쟁이들이 집에 찾아와 물건을 들고 가려 한다고 한다.|당장 집으로 간다/돈을 마련해 본다/해결사에게 의뢰한다",
     "해결사 사무소 직원이 당신을 찾아와 마침 일손이 필요하다며 내일부터 나와 볼 생각이 있냐고 묻는다.|조건을 묻는다/수락한다/거절한다",
     "공방 주인이 포장된 상자 하나를 내밀며 하루만 맡아 달라고 한다. 상자에서 희미하게 금속이 떠는 소리가 난다.|맡는다/안을 확인한다/거절한다",
+    "해 질 녘 골목에서 창백한 얼굴의 사람이 다가와 웃는다. 입가에 마른 피가 묻어 있고, 당신의 목덜미를 빤히 본다.|물을 끼얹는다/뒤돌아 달린다/맞서 싸운다",
+    "해결사 사무소 게시판에 혈귀 토벌 의뢰가 붙었다. 근처 빈 공장에서 사람들이 사라지고 있다고 한다. 보수가 꽤 크다.|의뢰를 맡는다/정보를 더 모은다/지나친다",
+    "말쑥한 차림의 사내가 당신을 불러 세운다. 자기 가문의 권속이 되면 늙지도 굶지도 않게 해 주겠다며 손을 내민다.|거절한다/조건을 묻는다/손을 잡는다",
+    "밤길에 눈이 텅 빈 사람들이 줄지어 걸어간다. 피주머니들이다. 그중 하나가 당신 쪽으로 고개를 돌린다.|숨는다/물가로 달아난다/해결사를 부른다",
     "앞서 걷던 검은 옷의 사람이 쪽지 한 장을 떨어뜨리고 사라졌다. 펼쳐 보니 오늘 날짜와 당신이 아는 가게 이름이 적혀 있다.|쪽지대로 가 본다/쪽지를 버린다/누군가에게 보여 준다"],
   봄:["봄바람을 맞으며 골목을 걷는데, 처음 보는 무리가 빈집에 짐을 옮기고 있다. 그중 하나가 당신을 빤히 쳐다본다.|말을 건다/모른 척 지나간다/멀리서 지켜본다",
     "밤새 내린 봄비에 골목 축대가 무너져 길이 막혔다. 흙더미 아래로 누군가의 손이 보인다.|흙을 파낸다/사람을 부른다/돌아서 간다"],
@@ -745,6 +780,7 @@ const EVENTS = {
 const evText = e => String(e || "").split("|")[0];
 const evOpts = e => { const o = String(e || "").split("|")[1]; return o ? o.split("/") : null; };
 function rollEvent(daysAhead){
+  if(!daysAhead && rand01() < commissionChance()) return COMMISSIONS[rnd(COMMISSIONS.length)];
   const y = Math.floor((S.days + (daysAhead || 0)) / 365);
   let chance = eventChance(y);
   if(daysAhead >= 30) chance = Math.min(0.85, chance * 2.2);
@@ -752,6 +788,21 @@ function rollEvent(daysAhead){
   return pickEvent(y, seasonOf(S.days + (daysAhead || 0)));
 }
 /* 가끔 공방에 들르게 되는 상황 (12세부터). 장면이 공방 안에서 끝나면 서술 AI가 shop:true → 공방 창이 열린다 */
+/* 해결사 의뢰: 평판이 높을수록 자주 들어온다 */
+const COMMISSIONS = [
+  "사무소로 의뢰 전화가 왔다. 뒷골목 상점가 주인이 밤마다 물건을 털어 가는 패거리를 잡아 달라고 한다. 보수는 넉넉하지 않다.|의뢰를 맡는다/조건을 흥정한다/거절한다",
+  "말쑥한 차림의 의뢰인이 찾아왔다. 둥지로 가는 화물의 호위를 맡아 달라고 한다. 경로에 쥐 패거리 구역이 끼어 있다.|맡는다/경로를 바꾸자고 한다/거절한다",
+  "울먹이는 노인이 사라진 손녀를 찾아 달라며 사진 한 장을 내민다. 마지막으로 본 곳은 뒷골목의 밤 직전 시장 뒤편이다.|사진을 받아 든다/더 자세히 묻는다/다른 사무소를 소개한다",
+  "협회 지부에서 연락이 왔다. 근처 빈 건물에 혈귀가 숨어든 것 같으니 토벌에 참여할 해결사를 모은다고 한다.|토벌에 지원한다/보수부터 묻는다/거절한다",
+  "익명의 의뢰가 들어왔다. 어느 조직 간부의 장부를 몰래 빼 와 달라는 일이다. 보수는 크지만 뒷탈이 걱정된다.|맡는다/의뢰인을 알아본다/거절한다",
+  "공방에서 의뢰가 왔다. 도난당한 시제품 무기를 되찾아 오면 보수에 더해 할인도 해 주겠다고 한다.|맡는다/단서를 묻는다/거절한다",
+  "둥지 사람이 사무소를 찾아왔다. 협박 편지를 보내는 자를 찾아 조용히 처리해 달라고 한다.|맡는다/편지를 살펴본다/거절한다"];
+function commissionChance(){
+  /* 행동할 때 의뢰가 끼어들 확률: 해결사(자격 있음)일 때 평판에 비례(평판 100이면 약 30%) */
+  if(!S.license || ageY() < 20) return 0;
+  const staff = (S.staff || []).length;
+  return Math.min(0.45, (0.04 + S.rep / 100 * 0.26) * (1 + staff * 0.1));
+}
 const SHOP_EVENTS = [
   "심부름으로 공방에 맡겨 둔 물건을 찾으러 갔다. 주인은 잠깐 기다리라며 안쪽으로 들어가고, 진열대의 무기들이 눈에 들어온다.|진열대를 둘러본다/주인을 기다린다/물건만 받고 나간다",
   "늘 지나치던 공방 앞, 장인이 문가에서 담배를 피우다 당신을 보고 \"구경이나 하고 가\"라며 손짓한다.|들어가 본다/인사만 하고 지나간다/무엇이 있는지 묻는다",
@@ -770,6 +821,7 @@ function pickEvent(y, season){
 /* 돌발 상황은 AI가 지어낸다. 목록의 문장은 참고 예시일 뿐(AI가 없을 때만 그대로 쓴다) */
 function eventExamples(ev){
   const y = ageY();
+  if(COMMISSIONS.includes(ev)) return [evText(ev)];
   const pool = SHOP_EVENTS.includes(ev) ? SHOP_EVENTS : (y < 3 ? EVENTS.baby : y < 13 ? EVENTS.child : EVENTS.adult).concat(y >= 3 ? (EVENTS[seasonOf(S.days)] || []) : []);
   const ex = [ev];
   for(let i = 0; i < 8 && ex.length < 2; i++){ const c = pool[rndVis(pool.length)]; if(!ex.includes(c)) ex.push(c); }
@@ -782,6 +834,7 @@ function plainEvent(ev){
 function eventLine(ev){
   if(!ev) return "";
   const shop = SHOP_EVENTS.includes(ev);
+  if(COMMISSIONS.includes(ev)) return `\n\n[의뢰] 장면 끝에서 해결사인 플레이어에게 새 의뢰가 들어오게 하라. 누가, 무엇을, 얼마에 맡기려는지 구체적으로(평판 ${S.rep}에 걸맞은 규모로). 참고 예시(그대로 베끼지 말 것): "${evText(ev)}". 맡을지 말지 고르는 순간에서 멈추고, options는 대응으로 써라.`;
   return `\n\n[돌발 상황] 장면 끝에서 갑작스러운 일이 벌어지게 하라. 무슨 일인지는 네가 지금의 나이·장소·계절·태그·가족·최근 일에 맞게 새로 지어내라` +
     (shop ? "(이번엔 공방·무기점·의체 시술소와 엮이는 일)" : "") +
     `. 막연하게("소문이 번진다") 쓰지 말고, 언제·어디서·무엇을 하던 중에 무엇을 보거나 마주쳤는지 구체적인 장면으로 써서 플레이어가 다음 행동을 바로 고를 수 있게 하라. 참고 예시(그대로 베끼지 말 것): ${eventExamples(ev).map(e => `"${e}"`).join(" / ")}. 그 순간에서 멈추고, options는 이 상황에 대한 대응으로 써라.`;
@@ -806,6 +859,19 @@ const STAT_KEYS = ["str","def","spd","int"];
 const STAT_KO = {str:"힘",def:"방어력",spd:"속도",int:"지력"};
 const GAUGE_KEYS = ["hp","sp","en","rep"];
 const GAUGE_KO = {hp:"체력",sp:"정신력",en:"기력",rep:"평판"};
+/* 정신력은 0이 평온, -45~45. 나머지 게이지는 0~100 */
+const GMIN = k => k === "sp" ? -45 : 0, GMAX = k => k === "sp" ? 45 : 100;
+const gclamp = (k, v) => clamp(v, GMIN(k), GMAX(k));
+const gpct = k => k === "sp" ? (S.sp + 45) / 90 * 100 : S[k];
+/* 정신력 막대는 가운데(0)에서 좌우로 */
+function setFill(f, k){
+  if(k !== "sp"){ f.style.width = S[k] + "%"; return; }
+  const p = gpct(k);
+  f.style.position = "absolute"; f.style.top = "0"; f.style.bottom = "0";
+  f.style.left = Math.min(p, 50) + "%"; f.style.width = Math.abs(p - 50) + "%";
+  f.classList.toggle("neg", S.sp < 0);
+}
+const gtext = k => k === "sp" ? (S.sp > 0 ? "+" + S.sp : String(S.sp)) : String(S[k]);
 const KO2STAT = {"힘":"str","방어력":"def","방어":"def","속도":"spd","지력":"int","지능":"int"};
 const DISTRICT_NOTE = {8:"홍원 바이오(옛 H사)",9:"음악의 거리",10:"도박",12:"Lobotomy",13:"MDM",14:"Nagel und Hammer",19:"살피뼈 농산",20:"TimeTrack",21:"습지",23:"WARP · 맛의 거리",25:"혹한"};
 const PROV_KO = {pollinations:"Pollinations",auto:"자동",anthropic:"Claude",openai:"OpenAI 호환",gemini:"Gemini",chrome:"크롬 내장 AI",webllm:"로컬 모델",rules:"규칙 기반"};
@@ -1502,15 +1568,32 @@ function gearLook(){
   return out.join(", ");
 }
 
+const STAT_AVG = 12;
+const statRel = v => v >= 35 ? "특색급" : v >= 26 ? "이름난 해결사급" : v >= 18 ? "단련된 해결사급" : v >= STAT_AVG + 3 ? "평균보다 높음" : v >= STAT_AVG - 2 ? "성인 평균" : v >= 6 ? "평균보다 낮음" : "아이 수준";
+const isKindred = () => !!(S && S.tags && S.tags.some(t => /^혈귀:권속/.test(t)));
+function identityText(){
+  const out = [];
+  if(isKindred()) out.push("혈귀의 권속(늙지 않음, 사람의 피에 굶주림, 물을 두려워함, 피로 무기를 빚을 수 있음)");
+  if(S.ego) out.push(`에고 「${S.ego}」를 발현했다(뒤틀림을 이겨낸 사람)`);
+  syncCareers();
+  for(const t of Object.keys(S.careers)) out.push(`${careerLabel(t)}(실적 ${S.careers[t].merit}/100)`);
+  if(!S.license && ageY() >= 20) out.push("해결사 자격 없음(성인이라 시험은 볼 수 있음)");
+  if(inSyndicate()) out.push("조직에 몸담고 있어 사건이 잦고 적도 많다");
+  if(S.color) out.push(`특색 「${S.color}」로 불린다(하나 협회가 인정한 최고의 해결사)`);
+  if(S.office) out.push(`자기 해결사 사무소 「${S.office}」의 대표` + ((S.staff || []).length ? `, 직원: ${S.staff.map(p => `${p.name}(${p.role}, ${p.grade}급)`).join(", ")}` : ", 직원 없음"));
+  return out.join(" / ");
+}
 function stateSummary(local){
   const lines = [];
   lines.push(`[캐릭터] 이름 ${S.name} / 성별 ${S.gender}`);
   lines.push(`[외모(플레이어가 쓴 글 그대로)] ${S.look || "특별한 설명 없음"}`);
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [계절] ${calendarText()}`);
-  lines.push(`[게이지 0~100] 체력 ${S.hp}, 정신력 ${S.sp}, 기력 ${S.en}, 평판 ${S.rep}`);
+  lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
+  lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
+  const idt = identityText(); if(idt) lines.push(`[신분·힘] ${idt}`);
   lines.push(`[소지금] ${fmt(S.ahn)}안`);
-  lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]}(${k}) ${eff(k)} (판정 +${bonus(eff(k))})`).join(", "));
+  lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}(${statRel(eff(k))})`).join(", "));
   lines.push(`[장비] ${equipText()}`);
   lines.push(`[가족] ${familyText()}`);
   if(S.flowNote) lines.push(`[직전에 흘려보낸 시간] ${S.flowNote}`);
@@ -1562,7 +1645,12 @@ function rollCheck(a){
   const mods = [];
   if(S.en <= 0) mods.push({label:"기력 고갈", v:-5});
   else if(S.en < 20) mods.push({label:"지침", v:-3});
-  if(S.sp < 25) mods.push({label:"정신 불안", v:-2});
+  /* 정신력: +면 마음이 단단해 유리, -면 흔들려 불리 (15마다 1) */
+  const spm = S.sp >= 0 ? Math.floor(S.sp / 15) : -Math.floor(-S.sp / 15);
+  if(spm) mods.push({label:spm > 0 ? "정신 고양" : "정신 불안", v:spm});
+  /* 나이: 몸을 쓰는 일은 60세부터 10년마다 -1, 지력은 영향 없음 */
+  const yy = ageY();
+  if(a.stat !== "int" && yy >= 60 && !isKindred()) mods.push({label:"노쇠", v:-Math.min(3, Math.floor((yy - 50) / 10))});
   if(S.hp < 25) mods.push({label:"부상", v:-2});
   const total = d + b + mods.reduce((s, m) => s + m.v, 0);
   let tier, cls;
@@ -1590,6 +1678,7 @@ function normalizeNarr(j, statCap){
   n.family_dead = String(j.family_dead || "").slice(0, 30);
   n.options = parseOptions(j.options);
   n.shop = j.shop === true || j.shop === "true";
+  n.merit = j.merit == null ? 0 : num(wordAmount(j.merit, "gauge"), -30, 30);
   n.plain = !!j._plain;
   return n;
 }
@@ -1740,17 +1829,17 @@ function applyDays(n){
     for(const k of STAT_KEYS){
       let g = 0;
       if(y <= 20) g = [0,0,1,1][rnd(4)];
-      else if(y >= 60 && (k === "str" || k === "spd") && rnd(10) < 3) g = -1;
+      else if(y >= 60 && (k === "str" || k === "spd") && rnd(10) < 3 && !isKindred()) g = -1;
       if(g){ S[k] = Math.max(0, S[k] + g); grown.push(`${STAT_KO[k]} ${g > 0 ? "+" : ""}${g}`); }
     }
     log({t:"sys", text:`${y}세가 되었다.` + (grown.length ? " 자연 성장: " + grown.join(", ") : "")});
-    if(y === 20) log({t:"sys", text:"이제 하나 협회 해결사 자격 시험을 볼 수 있는 나이다."});
+    if(y === 20) log({t:"sys", text:"성인이 되었다. 이제 하나 협회 해결사 자격 시험을 볼 수 있다(예: \"해결사 자격 시험을 본다\")."});
   }
 }
 
 function applyNarr(n, forcedDays, shownDays){
   S.flowNote = "";
-  for(const k of GAUGE_KEYS) S[k] = clamp(S[k] + n[k], 0, 100);
+  for(const k of GAUGE_KEYS) S[k] = gclamp(k, S[k] + n[k]);
   for(const k of STAT_KEYS) S[k] = Math.max(0, S[k] + n[k]);
   S.ahn = Math.max(0, S.ahn + n.ahn);
   if(n.location) S.location = n.location;
@@ -1807,8 +1896,184 @@ async function memoryTick(){
 function checkDeath(){
   if(S.dead) return;
   if(S.hp <= 0) S.dead = "체력이 다해 숨을 거두었다.";
-  else if(S.sp <= 0) S.dead = "정신이 무너져, 더는 자기 자신으로 남지 못했다.";
-  if(S.dead) log({t:"death", text:S.dead});
+  else if(S.tags.some(t => /^혈귀:피주머니/.test(t))) S.dead = "혈귀에게 물려 피주머니가 되었다. 이름도 기억도 남지 않았다.";
+  if(S.dead){ log({t:"death", text:S.dead}); return; }
+  if(S.sp <= -45) distortionCheck();
+}
+
+/* ───────── 뒤틀림 · 에고 ─────────
+   정신력이 −45에 닿으면 뒤틀림 판정(d20 + 지력 보정, 에고가 있으면 +5, 난이도 16).
+   이겨내면 정신력이 0으로 돌아오고 (처음이면) 에고를 발현해 이름을 짓는다. 지면 뒤틀림이 되어 그 삶이 끝난다. */
+function distortionCheck(){
+  if(S.dead || S.distorting) return;
+  S.distorting = true;
+  if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
+  log({t:"sys", text:"머릿속에서 낯선 여자의 목소리가 속삭인다. 감정이 둑을 넘는다. 뒤틀림이 시작되려 한다."});
+  const d = 1 + rnd(20), b = bonus(eff("int")), mods = [];
+  if(S.ego) mods.push({label:"에고", v:5});
+  const total = d + b + mods.reduce((a, m) => a + m.v, 0), dc = 16;
+  const win = d === 20 || (d !== 1 && total >= dc);
+  log({t:"roll", data:{text:"뒤틀림에 맞선다", stat:"int", dc, d, b, mods, total, tier:win ? (d === 20 ? "대성공" : "성공") : (d === 1 ? "대실패" : "실패"), cls:win ? (d === 20 ? "crit" : "ok") : (d === 1 ? "fumble" : "fail")}});
+  S.distorting = false;
+  if(win){
+    S.sp = 0;
+    if(!S.ego){
+      for(const k of ["str", "def"]) S[k] += 2;
+      log({t:"narr", text:"당신은 그 목소리를 밀어내지 않고, 끝까지 들은 뒤 대답한다. 무너지던 감정이 한 점으로 모여 형태를 갖춘다. 당신의 에고(E.G.O)가 발현했다.", deltas:[{k:"힘", v:2}, {k:"방어력", v:2}], options:[]});
+      requestName("ego");
+    }else log({t:"narr", text:`에고 「${S.ego}」가 다시 당신을 붙잡는다. 이번에도 당신은 당신으로 남았다.`, options:ruleOptions()});
+  }else{
+    S.dead = "끝내 감정에 삼켜져 뒤틀림이 되었다. 사람이었던 무언가가 골목을 떠돈다.";
+    log({t:"death", text:S.dead});
+  }
+  save(); renderStatus();
+}
+
+/* ───────── 직접 짓는 이름: 에고 · 특색 · 사무소 ───────── */
+const NAME_KIND = {
+  ego:{head:"에고(E.G.O)의 이름을 지어 주세요.", label:"에고 이름", ph:["침묵의 종", "붉은 서약", "새벽을 삼킨 자", "잿빛 맹세"], max:16},
+  color:{head:"도시가 당신을 특별한 이름으로 부르기 시작했습니다. 특색의 이름을 지어 주세요.", label:"특색 이름", ph:["푸른 잔향", "검은 물결", "회색 서리", "은빛 장막"], max:12},
+  office:{head:"새 해결사 사무소의 이름을 지어 주세요.", label:"사무소 이름", ph:["새벽 사무소", "골목등 사무소", "녹슨 열쇠 사무소", "청어 사무소"], max:16}
+};
+function requestName(kind){
+  if(!S.pendingNames) S.pendingNames = [];
+  if(!S.pendingNames.includes(kind)) S.pendingNames.push(kind);
+  log({t:"name", kind});
+}
+function giveName(kind, name){
+  const k = NAME_KIND[kind]; if(!k) return;
+  const nm = (name || "").trim().slice(0, k.max) || k.ph[rndVis(k.ph.length)];
+  S[kind] = nm;
+  S.pendingNames = (S.pendingNames || []).filter(x => x !== kind);
+  const tagName = {ego:"에고", color:"특색", office:"사무소"}[kind];
+  S.tags = S.tags.filter(t => !t.startsWith(tagName + ":"));
+  S.tags.push(`${tagName}:${nm}`);
+  if(kind === "color") S.rep = Math.min(100, S.rep + 5);
+  log({t:"sys", text:{ego:`당신의 에고는 「${nm}」이다.`, color:`이제 사람들은 당신을 「${nm}」이라 부른다.`, office:`「${nm}」의 간판이 걸렸다.`}[kind]});
+  save(); renderLog(); renderStatus();
+}
+function resolvePendingNames(){ for(const k of (S.pendingNames || []).slice()) giveName(k, ""); }
+/* 특색·사무소가 생길 때 */
+function checkMilestones(input, results){
+  if(S.dead) return;
+  const y = ageY();
+  /* 사무소: AI가 태그로 알려 주거나(기기 AI는) 행동이 사무소 차리기이고 성공했을 때 */
+  const won = (results || []).some(r => r.cls === "ok" || r.cls === "crit" || r.auto);
+  const tagIdx = S.tags.findIndex(t => /^사무소:새로 ?차림/.test(t));
+  const wantsOffice = input && /사무소/.test(input) && /(차리|차린|열[어었고다]|세우|설립|개업|개소)/.test(input);
+  if(!S.office && !(S.pendingNames || []).includes("office") && (tagIdx >= 0 || (wantsOffice && won))){
+    if(tagIdx >= 0) S.tags.splice(tagIdx, 1);
+    /* 사무소는 4급 해결사부터 */
+    if(S.license && S.license <= 4) requestName("office");
+    else log({t:"sys", text:`해결사 사무소는 4급 해결사부터 차릴 수 있다(지금: ${S.license ? S.license + "급" : "자격 없음"}).`});
+  }
+  /* 사무소 직원 고용: 내 사무소가 있을 때 */
+  const hireTag = S.tags.findIndex(t => /^고용:/.test(t));
+  const wantsHire = input && /(고용|채용|영입|직원으로|사무소에 받아)/.test(input);
+  if(hireTag >= 0 || (wantsHire && won)){
+    let nm = "", role = "해결사";
+    if(hireTag >= 0){ const v = S.tags[hireTag].replace(/^고용:/, "").split("/"); nm = (v[0] || "").trim(); role = (v[1] || role).trim(); S.tags.splice(hireTag, 1); }
+    if(!S.office) log({t:"sys", text:"직원을 고용하려면 먼저 자기 사무소가 있어야 한다."});
+    else{
+      if(!nm){ const m = /([가-힣]{2,4})(?:을|를|씨를|씨를)?\s*(?:고용|채용|영입|직원으로)/.exec(input || ""); const cand = m ? m[1].replace(/(씨|님)?(을|를)$/, "").replace(/(씨|님)$/, "") : "";
+        nm = cand.length >= 2 && !/(직원|사람|해결사|누군가|사무)/.test(cand) ? cand : randName(rnd(2) ? "남성" : "여성"); }
+      if(!S.staff) S.staff = [];
+      if((S.staff || []).length >= 8) log({t:"sys", text:"사무소가 좁아 더는 사람을 들일 수 없다(최대 8명)."});
+      else if(!S.staff.some(p => p.name === nm)){
+        S.staff.push({name:nm, role, grade:9 - Math.min(5, rnd(3) + Math.floor(S.rep / 30))});
+        log({t:"sys", text:`${nm}이(가) 「${S.office}」의 ${role}(으)로 들어왔다. 월급은 매달 120만 안씩 나간다.`});
+      }
+    }
+  }
+  /* 다른 협회·사무소 가입: AI 태그(협회:…, 소속 사무소:…) 또는 "○○ 협회에 가입한다" 성공 */
+  const joinM = input && won && /([가-힣A-Za-z]+)\s*(협회|사무소)(?:\s*[가-힣]*\s*지부)?[^가-힣]*[가-힣]*\s*(가입|들어가|입사|합류|지원해 합격|소속)/.exec(input);
+  if(joinM && S.license){
+    const name = joinM[1] + " " + joinM[2];
+    if(joinM[2] === "협회" && !/하나/.test(joinM[1])){ S.tags = S.tags.filter(t => !/^협회:/.test(t)); S.tags.push("협회:" + name); log({t:"sys", text:`${name}에 들어갔다.`}); }
+    else if(joinM[2] === "사무소" && name !== S.office){ S.tags = S.tags.filter(t => !/^소속 사무소:/.test(t)); S.tags.push("소속 사무소:" + name); log({t:"sys", text:`${name}에 들어갔다.`}); }
+  }
+  /* 해결사 자격: 성인(20세)부터. AI가 "자격:해결사" 태그를 주거나, 시험을 보는 행동이 성공했을 때 9급 */
+  const aiLic = S.tags.findIndex(t => /^자격:.*해결사/.test(t) && !/^자격:하나 협회 해결사 \d급$/.test(t));
+  const tried = input && /(해결사|협회)/.test(input) && /(시험|자격|면허|라이선스|등록)/.test(input);
+  if(!S.license && (aiLic >= 0 || (tried && won))){
+    if(aiLic >= 0) S.tags.splice(aiLic, 1);
+    if(y >= 20){
+      S.license = 9; setLicenseTag();
+      log({t:"sys", text:"하나 협회 해결사 자격을 받았다. 9급 해결사다. 의뢰를 해내 실적이 차면 급수가 오른다."});
+    }else if(tried) log({t:"sys", text:"해결사 자격 시험은 성인(20세)부터 볼 수 있다."});
+  }
+  syncCareers();
+  /* 특색: 1급 해결사 + 평판 90 이상 */
+  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 90 && S.license === 1) requestName("color");
+}
+/* ───────── 소속 · 등급 · 실적 ─────────
+   해결사(하나 협회 자격), 조직(조직: 태그), 공무원(공무원: 태그)이면 소속마다 실적 게이지(0~100)가 생긴다.
+   소속 일에서 성공하면 실적이 오르고, 100이 되면 한 등급 올라간다(실적 30에서 다시). 실적 0에서 또 실패하면 한 등급 내려간다. */
+const CAREER = {
+  fixer:{ko:"해결사", ranks:["9급","8급","7급","6급","5급","4급","3급","2급","1급"], work:/(의뢰|해결사|사무소|토벌|호위|수색|조사|협회)/},
+  syndicate:{ko:"조직", ranks:["말단","조직원","행동대장","간부","부두목","두목"], work:/(조직|수금|보호비|구역|패거리|두목|간부|임무|거래|밀수|협박)/},
+  official:{ko:"공무원", ranks:["9급","8급","7급","6급","5급","4급","3급","2급","1급"], work:/(근무|업무|공무|출근|민원|순찰|단속|보고서|상관|부서)/}
+};
+function syncCareers(){
+  if(!S.careers) S.careers = {};
+  const C = S.careers;
+  if(S.license){
+    if(!C.fixer) C.fixer = {org:"하나 협회", rank:9 - S.license, merit:0};
+    C.fixer.rank = 9 - S.license;
+    const assoc = (S.tags.find(t => /^협회:/.test(t)) || "").replace(/^협회:/, "").trim();
+    const joined = (S.tags.find(t => /^소속 사무소:/.test(t)) || "").replace(/^소속 사무소:/, "").trim();
+    C.fixer.org = [assoc || "하나 협회", S.office ? `${S.office}(대표)` : joined].filter(Boolean).join(" · ");
+  }
+  const syn = S.tags.find(t => /^조직:/.test(t)) || S.tags.find(t => /^(소속|직업|일):/.test(t) && ORG_RE.test(t));
+  if(syn){ const org = syn.replace(/^[^:]+:/, "").trim(); if(!C.syndicate) C.syndicate = {org, rank:0, merit:0}; else C.syndicate.org = org; }
+  else delete C.syndicate;
+  const off = S.tags.find(t => /^공무원:/.test(t)) || S.tags.find(t => /^(소속|직업|일):.*(공무원|관청|시청|날개 직원|구청)/.test(t));
+  if(off){ const org = off.replace(/^[^:]+:/, "").trim(); if(!C.official) C.official = {org, rank:0, merit:0}; else C.official.org = org; }
+  else delete C.official;
+}
+function careerLabel(type){
+  const c = S.careers[type], d = CAREER[type];
+  return type === "fixer" ? `${c.org} 해결사 ${d.ranks[c.rank]}` : type === "syndicate" ? `${c.org} ${d.ranks[c.rank]}` : `${c.org} ${d.ranks[c.rank]} 공무원`;
+}
+function addMerit(type, delta){
+  const c = S.careers && S.careers[type]; if(!c || !delta) return;
+  const d = CAREER[type], before = c.merit;
+  c.merit = clamp(c.merit + delta, 0, 100);
+  if(c.merit >= 100 && c.rank < d.ranks.length - 1){
+    c.rank++; c.merit = 30;
+    if(type === "fixer"){ S.license = 9 - c.rank; setLicenseTag(); }
+    log({t:"sys", text:`실적을 인정받아 ${careerLabel(type)}(으)로 올랐다.`});
+  }else if(delta < 0 && before === 0 && c.rank > 0){
+    c.rank--; c.merit = 50;
+    if(type === "fixer"){ S.license = 9 - c.rank; setLicenseTag(); }
+    log({t:"sys", text:`실적이 바닥나 ${careerLabel(type)}(으)로 내려앉았다.`});
+  }
+}
+/* 이번 행동이 어느 소속의 일인지 고르고 실적을 매긴다. AI가 merit를 주면 그 값, 아니면 판정 결과로 */
+function applyMerit(input, results, n){
+  syncCareers();
+  const types = Object.keys(S.careers); if(!types.length) return;
+  const text = (input || "") + " " + (n && n.narration || "");
+  let hit = types.filter(t => CAREER[t].work.test(text));
+  const aiDelta = n && n.merit ? n.merit : 0;
+  if(!hit.length && aiDelta) hit = [types[0]];
+  if(!hit.length) return;
+  let delta = aiDelta;
+  if(!delta && results && results.length){
+    for(const r of results){ delta += r.cls === "crit" ? 12 : r.cls === "ok" ? 6 : r.cls === "fumble" ? -10 : r.cls === "fail" ? -4 : r.cls === "close" ? -1 : 0; }
+  }
+  for(const t of hit) addMerit(t, delta);
+}
+function setLicenseTag(){
+  S.tags = S.tags.filter(t => !/^자격:하나 협회 해결사/.test(t));
+  S.tags.push(`자격:하나 협회 해결사 ${S.license}급`);
+}
+/* 기기 AI(그냥 글)일 때 혈귀 관련 결말을 글에서 읽는다 */
+function plainStatusFromText(t){
+  const out = [];
+  if(/(당신은|당신이)[^.]{0,20}(권속이 (되었|된다|되어 버렸))/.test(t)) out.push("혈귀:권속");
+  if(/(당신은|당신이)[^.]{0,20}(피주머니가 (되었|된다|되어 버렸))/.test(t)) out.push("혈귀:피주머니");
+  return out.join(", ");
 }
 
 /* ───────── 기록 & 화면 ───────── */
@@ -1865,6 +2130,24 @@ function appendEntry(e, live){
         os.appendChild(b);
       }
       node.appendChild(os);
+    }
+  }
+  else if(e.t === "name"){
+    const k = NAME_KIND[e.kind];
+    node = el("div", "e-child");
+    if(!k) node.textContent = "";
+    else if(S[e.kind] && !(S.pendingNames || []).includes(e.kind)){
+      node.appendChild(el("div", "c-head", `${k.label}: 「${S[e.kind]}」`));
+    }else{
+      node.appendChild(el("div", "c-head", k.head));
+      const f = el("form", "c-form");
+      const inp = el("input"); inp.type = "text"; inp.maxLength = k.max; inp.placeholder = "비워 두면 무작위: " + k.ph[0];
+      inp.setAttribute("aria-label", k.label);
+      const b = el("button", "btn primary", "이름 짓기"); b.type = "submit";
+      f.append(inp, b);
+      f.addEventListener("submit", ev => { ev.preventDefault(); giveName(e.kind, inp.value); });
+      node.appendChild(f);
+      if(live) setTimeout(() => inp.focus(), 50);
     }
   }
   else if(e.t === "child"){
@@ -1931,6 +2214,33 @@ function lastNarr(){ for(let i = S.log.length - 1; i >= 0; i--) if(S.log[i].t ==
 function renderLog(){ const box = $("#log"); box.replaceChildren(); for(const e of S.log) appendEntry(e, false); box.scrollTop = box.scrollHeight; }
 
 let lastSpriteKey = "";
+function renderCareers(){
+  syncCareers();
+  const types = Object.keys(S.careers);
+  const card = $("#sCareerCard"), box = $("#sCareer"), hc = $("#hCareer");
+  card.hidden = !types.length; hc.hidden = !types.length;
+  box.replaceChildren(); hc.replaceChildren();
+  for(const t of types){
+    const c = S.careers[t];
+    const w = el("div", "g-merit");
+    const top = el("div", "g-top"); top.append(el("span", null, careerLabel(t)), el("span", null, `실적 ${c.merit} / 100`));
+    const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = c.merit + "%"; tr.appendChild(f);
+    tr.setAttribute("role", "meter"); tr.setAttribute("aria-valuenow", c.merit); tr.setAttribute("aria-valuemin", 0); tr.setAttribute("aria-valuemax", 100); tr.setAttribute("aria-label", careerLabel(t) + " 실적");
+    w.append(top, tr); box.appendChild(w);
+    const h = el("div", "g-merit");
+    const ht = el("div", "g-top"); ht.append(el("span", null, `${CAREER[t].ko} · ${CAREER[t].ranks[c.rank]}`), el("span", null, String(c.merit)));
+    const htr = el("div", "track"); const hf = el("div", "fill"); hf.style.width = c.merit + "%"; htr.appendChild(hf);
+    h.append(ht, htr); hc.appendChild(h);
+  }
+  if(S.office && (S.staff || []).length){
+    box.appendChild(el("div", "note", `「${S.office}」 직원 ${S.staff.length}명: ` + S.staff.map(p => `${p.name}(${p.role} ${p.grade}급)`).join(", ")));
+  }
+}
+function migrateSave(){
+  if(!S || S.v >= 3) return;
+  if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45);
+  S.v = 3;
+}
 function renderStatus(){
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
@@ -1952,19 +2262,20 @@ function renderStatus(){
   const hg = $("#hGauges"); hg.replaceChildren();
   for(const k of GAUGE_KEYS){
     const w = el("div", "g-" + k);
-    const top = el("div", "g-top"); top.append(el("span", null, GAUGE_KO[k]), el("span", null, String(S[k])));
-    const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = S[k] + "%"; tr.appendChild(f);
+    const top = el("div", "g-top"); top.append(el("span", null, GAUGE_KO[k]), el("span", null, gtext(k)));
+    const tr = el("div", "track" + (k === "sp" ? " mid" : "")); const f = el("div", "fill"); setFill(f, k); tr.appendChild(f);
     w.append(top, tr); hg.appendChild(w);
   }
   $("#sLook").textContent = S.look || "설명 없음";
   const g = $("#sGauges"); g.replaceChildren();
   for(const k of GAUGE_KEYS){
     const w = el("div", "g-" + k);
-    const top = el("div", "g-top"); top.append(el("span", null, GAUGE_KO[k]), el("span", null, `${S[k]} / 100`));
-    const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = S[k] + "%"; tr.appendChild(f);
-    tr.setAttribute("role", "meter"); tr.setAttribute("aria-valuenow", S[k]); tr.setAttribute("aria-valuemin", 0); tr.setAttribute("aria-valuemax", 100); tr.setAttribute("aria-label", GAUGE_KO[k]);
+    const top = el("div", "g-top"); top.append(el("span", null, GAUGE_KO[k]), el("span", null, k === "sp" ? `${gtext(k)} (−45~+45)` : `${S[k]} / 100`));
+    const tr = el("div", "track" + (k === "sp" ? " mid" : "")); const f = el("div", "fill"); setFill(f, k); tr.appendChild(f);
+    tr.setAttribute("role", "meter"); tr.setAttribute("aria-valuenow", S[k]); tr.setAttribute("aria-valuemin", GMIN(k)); tr.setAttribute("aria-valuemax", GMAX(k)); tr.setAttribute("aria-label", GAUGE_KO[k]);
     w.append(top, tr); g.appendChild(w);
   }
+  renderCareers();
   $("#sAhn").textContent = fmt(S.ahn);
   const st = $("#sStats"); st.replaceChildren();
   for(const k of STAT_KEYS){
@@ -1997,9 +2308,9 @@ function renderLite(){
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()} · ${S.location || ""}`;
   $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
   for(const k of GAUGE_KEYS){
-    document.querySelectorAll(".g-" + k + " .fill").forEach(f => { f.style.width = S[k] + "%"; });
-    const t = document.querySelector("#sGauges .g-" + k + " .g-top span:last-child"); if(t) t.textContent = `${S[k]} / 100`;
-    const h = document.querySelector("#hGauges .g-" + k + " .g-top span:last-child"); if(h) h.textContent = String(S[k]);
+    document.querySelectorAll(".g-" + k + " .fill").forEach(f => setFill(f, k));
+    const t = document.querySelector("#sGauges .g-" + k + " .g-top span:last-child"); if(t) t.textContent = k === "sp" ? `${gtext(k)} (−45~+45)` : `${S[k]} / 100`;
+    const h = document.querySelector("#hGauges .g-" + k + " .g-top span:last-child"); if(h) h.textContent = gtext(k);
   }
 }
 let engineNote = "";
@@ -2039,7 +2350,7 @@ function setBusy(b){ busy = b; renderStatus(); }
 async function doAction(input){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(busy || S.dead) return;
-  resolvePendingChild();
+  resolvePendingChild(); resolvePendingNames();
   setBusy(true);
   S.turn++;
   log({t:"me", text:input});
@@ -2063,7 +2374,7 @@ async function doAction(input){
         user: plainContext() + "\n\n주인공이 하려는 것: " + input + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + plainEvent(ev)}
         : {sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
         user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + eventLine(ev)}, 700, NARR_SCHEMA, false, done.live), 3);
-      if(n && n.plain){ tierEffects(n, input, results); if(!n.options.length) n.options = ruleOptions(); n.shop = visitsShop(input) || SHOP_EVENTS.includes(ev); }
+      if(n && n.plain){ tierEffects(n, input, results); if(!n.options.length) n.options = ruleOptions(); n.shop = visitsShop(input) || SHOP_EVENTS.includes(ev); n.tag_add = plainStatusFromText(n.narration); }
     }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
     done();
   }
@@ -2071,6 +2382,8 @@ async function doAction(input){
   const fin = guardNarr(n || ruleEvent(ruleNarrate(input, results), ev), results);
   fin.event = !!ev;
   applyNarr(fin);
+  checkMilestones(input, results);
+  applyMerit(input, results, fin);
   save(); setBusy(false);
   memoryTick();
   /* 공방은 버튼이 없다. 직접 찾아가야 열린다.
@@ -2953,7 +3266,7 @@ function cleanOutline(ctx, W, H){
 const FLOW_DAYS = {1:2, 2:4, 4:8, 8:16, 16:32, 32:64};
 const SPEEDS = [1, 2, 4, 8, 16, 32];
 const flow = {on:false, speed:1, timer:null, startDays:0, smalls:[], ahn:0};
-function bigRate(y){ if(y < 3) return 0.3; if(y < 6) return 0.6; return Math.min(4, 1.2 + (y - 6) * 0.2); }
+function bigRate(y){ const r = y < 3 ? 0.3 : y < 6 ? 0.6 : Math.min(4, 1.2 + (y - 6) * 0.2); return inSyndicate() ? r * ORG_MULT : r; }
 const SMALL = {
   baby:[["엄마 품에서 처음으로 소리 내어 웃었다",{sp:3}],["밤새 열이 올랐다가 내렸다",{hp:-4}],["처음으로 혼자 뒤집기를 했다",{en:-2}],["이웃이 낡은 딸랑이를 주고 갔다",{sp:2}],["새벽 3시 13분, 창밖에서 비명이 들렸다",{sp:-3}],["젖니가 나느라 칭얼댔다",{en:-3}]],
   child:[["골목 아이들과 술래잡기를 했다",{sp:3, en:-3}],["넘어져 무릎이 까졌다",{hp:-3}],["간판 글자를 몇 개 더 읽게 됐다",{sp:1}],["빵집 아저씨가 남은 빵을 쥐여 줬다",{sp:2}],["어른들이 해결사 이야기를 하는 걸 엿들었다",{sp:1}],["부모님이 돈 문제로 다퉜다",{sp:-3}],["길에서 동전을 주웠다",{ahn:500}],["감기에 걸려 며칠 앓았다",{hp:-4, en:-5}],["밤에 청소부 소리를 듣고 이불 속에 숨었다",{sp:-2}]],
@@ -2974,12 +3287,16 @@ function pickSmall(y){
 function oneDay(){
   const monthBefore = monthOf(S.days);
   applyDays(1);
-  S.en = Math.min(100, S.en + 3); S.hp = Math.min(100, S.hp + 1); if(S.days % 2 === 0) S.sp = Math.min(100, S.sp + 1);
+  S.en = Math.min(100, S.en + 3); S.hp = Math.min(100, S.hp + 1);
+  /* 정신력은 시간이 지나면 0(평온) 쪽으로 천천히 돌아온다 */
+  if(S.days % 2 === 0 && S.sp < 0) S.sp++; else if(S.days % 4 === 0 && S.sp > 0) S.sp--;
   if(monthOf(S.days) !== monthBefore && ageY() >= 18){
-    const job = S.tags.some(t => /^(직업|소속|일):/.test(t));
+    const job = S.tags.some(t => /^(직업|소속|일|조직|공무원|자격):/.test(t)) || !!(S.careers && Object.keys(S.careers).length);
     const income = (job ? 2500000 : 900000) * (0.9 + rand01() * 0.2);
     const cost = (S.origin === "nest" ? 1500000 : 750000) * (0.9 + rand01() * 0.2);
-    const net = Math.round((income - cost) / 1000) * 1000;
+    const staffCost = (S.staff || []).length * 1200000;
+    const officeIncome = S.office ? (1500000 + (S.staff || []).length * 1000000) * (0.6 + S.rep / 100 * 0.8) : 0;
+    const net = Math.round((income + officeIncome - cost - staffCost) / 1000) * 1000;
     S.ahn = Math.max(0, S.ahn + net); flow.ahn += net;
   }
   if(rand01() < 6 / 365){
@@ -2987,7 +3304,7 @@ function oneDay(){
     const deltas = [];
     for(const [k, v] of Object.entries(ev.fx)){
       if(k === "ahn"){ S.ahn = Math.max(0, S.ahn + v); flow.ahn += v; deltas.push({k:"안", v}); }
-      else { S[k] = clamp(S[k] + v, 0, 100); deltas.push({k:GAUGE_KO[k], v}); }
+      else { S[k] = gclamp(k, S[k] + v); deltas.push({k:GAUGE_KO[k], v}); }
     }
     log({t:"small", text:`${calendarText()} · ${ev.text}`, deltas});
     flow.dirty = true;
@@ -2996,6 +3313,8 @@ function oneDay(){
 }
 function checkBig(){
   const y = ageY();
+  /* 재생 중 의뢰: 해결사면 1년에 (2 + 평판×0.12)번 꼴 */
+  if(S.license && y >= 20 && rand01() < (2 + S.rep * 0.12) * (1 + (S.staff || []).length * 0.1) / 365) return {kind:"event", text:COMMISSIONS[rnd(COMMISSIONS.length)]};
   const spouse = S.family.find(f => f.rel === "배우자" && f.alive);
   if(spouse && y >= 18 && y <= 45 && !S.pendingChild && rand01() < 0.3 / 365) return {kind:"child"};
   for(const f of S.family){
@@ -3019,6 +3338,8 @@ function flowTick(){
   const ym = ageY() * 12 + monthOf(S.days);
   for(let i = 0; i < FLOW_DAYS[flow.speed] && !big; i++){ oneDay(); big = checkBig(); }
   if(ageY() * 12 + monthOf(S.days) !== ym || flow.dirty){ renderStatus(); flow.dirty = false; } else renderLite();
+  if(S.sp <= -45) checkDeath();
+  if(!flow.on) return;
   if(S.dead){ flow.on = false; updateFlowUI(); save(); return; }
   if(big){ stopFlow(big); return; }
   if(++flow.ticks % 8 === 0) save();
@@ -3042,7 +3363,7 @@ async function stopFlow(big){
 }
 function updateFlowUI(){
   const b = $("#btnFlow");
-  b.textContent = flow.on ? "⏸ 멈추기" : "▶ 흘려보내기";
+  b.textContent = flow.on ? "⏸ 멈춤" : "▶ 재생";
   b.classList.toggle("primary", flow.on);
   $("#btnSpeed").textContent = flow.speed + "×";
   $("#btnSpeed").setAttribute("aria-label", `배속 ${flow.speed}배, 눌러서 바꾸기`);
@@ -3071,7 +3392,7 @@ async function flowNarrate(elapsed, big){
       user: plainContext() + `\n\n방금 ${dayLabel(elapsed)}이 흘렀다. 그동안 있었던 일: ${smalls}. 이 기간은 한 문장으로만 돌아보고 지금 이 순간의 장면으로 이어라.` + (big && big.kind === "event" ? plainEvent(big.text) : (hint ? "\n" + hint.replace(/\[사건\]|family_dead는 ""|\(이미 처리됨, \)/g, "") : ""))}
       : ({sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
       user: stateSummary(local) + `\n\n[흘려보낸 시간] 방금 ${dayLabel(elapsed)}이 흘렀다(나이·계절·수치·돈은 이미 반영됨, 이 기간 소지금 변화 ${fmt(flow.ahn)}안). 그동안의 작은 일들: ${smalls}. 이 기간은 한 문장으로만 돌아보고 지금 이 순간의 장면으로 이어라(전체 3~5문장). days는 "없음", 변화는 지금 장면에서 새로 생긴 것만.` + hint}), 700, NARR_SCHEMA, false, done.live), 2);
-    if(n && n.plain){ if(!n.options.length) n.options = ruleOptions(); n.shop = !!(big && big.kind === "event" && SHOP_EVENTS.includes(big.text)); }
+    if(n && n.plain){ if(!n.options.length) n.options = ruleOptions(); n.shop = !!(big && big.kind === "event" && SHOP_EVENTS.includes(big.text)); n.tag_add = plainStatusFromText(n.narration); }
   }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
   done();
   if(big && big.kind === "child") log({t:"child", id:S.pendingChild});
@@ -3140,7 +3461,7 @@ function sellItem(slot){
   S.equip[slot] = null; S.ahn += got;
   if(isAug(it)) applyTags("", "의체:" + it.name);
   log({t:"sys", text:`${it.name}을(를) ${fmt(got)}안에 팔았다.` + (isAug(it) ? " 의체를 떼어 내는 일은 몸에 흔적을 남긴다." : "")});
-  if(isAug(it)){ S.hp = clamp(S.hp - 10, 0, 100); S.sp = clamp(S.sp - 5, 0, 100); checkDeath(); }
+  if(isAug(it)){ S.hp = clamp(S.hp - 10, 0, 100); S.sp = gclamp("sp", S.sp - 5); checkDeath(); }
   save(); renderStatus(); renderShop();
 }
 function buyItem(it){
@@ -3151,7 +3472,7 @@ function buyItem(it){
   S.equip[it.slot] = it.id;
   log({t:"sys", text:`${it.shop}에서 ${it.name}을(를) 샀다 (−${fmt(it.price)}안). ${fxText(it.fx)}`});
   if(isAug(it)){
-    S.hp = clamp(S.hp - 15, 0, 100); S.sp = clamp(S.sp - 10 - (it.union ? 5 : 0), 0, 100);
+    S.hp = clamp(S.hp - 15, 0, 100); S.sp = gclamp("sp", S.sp - 10 - (it.union ? 5 : 0));
     applyTags("의체:" + it.name, "");
     log({t:"sys", text:`이식 수술을 받고 7일 동안 회복했다. 체력 −15, 정신력 −${10 + (it.union ? 5 : 0)}`});
     applyDays(7);
@@ -3415,6 +3736,7 @@ async function continueLife(){
   if(S.doy0 == null) S.doy0 = rnd(365);
   if(!S.equip) S.equip = {};
   if(S.rng == null) S.rng = hashStr(String(Date.now()));
+  migrateSave();
   showGame();
   if(S.dead && !S.archived){ endLife(); return; }
   await ensureDeviceAI();
@@ -3511,12 +3833,12 @@ async function createLife(){
   let origin = $("#cOrigin").value;
   if(origin === "random") origin = rnd(5) === 0 ? "nest" : "back";
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, days:0, location:"",
-    hp:100, sp:100, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
+    hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
     str:1 + rnd(3), def:1 + rnd(3), spd:1 + rnd(3), int:1 + rnd(3), log:[], dead:null,
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
     choice:{district:$("#cDistrict").value, origin:$("#cOrigin").value}, hairColor:swVal("hairc"), eyeColor:swVal("eyec")};
   S.doy0 = rnd(365);
-  S.v = 2;
+  S.v = 3;
   const sur = surnameOf(name) || SURNAMES[rnd(SURNAMES.length)];
   const single = origin === "back" && rnd(4) === 0;
   if(!single) S.family.push({rel:"아버지", name:randName("남성", sur), gender:"남성", born:-365 * (26 + rnd(14)), alive:true});
@@ -3543,7 +3865,8 @@ $("#btnSpeed").addEventListener("click", () => {
   try{ localStorage.setItem("dosi_speed", String(flow.speed)); }catch(e){}
   updateFlowUI();
 });
-try{ const sp = Number(localStorage.getItem("dosi_speed")); if(SPEEDS.includes(sp)) flow.speed = sp; }catch(e){}
+/* 기본은 늘 1배속으로 시작 (바꾼 배속은 그 판에서만) */
+flow.speed = 1;
 updateFlowUI();
 $("#actInput").addEventListener("focus", () => { if(flow.on) stopFlow(null); });
 
