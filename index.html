@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2450"></script>
+<script src="parts.js?v=20261106-2505"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2450";
+const BUILD = "20261106-2505";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1856,6 +1856,23 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   let earMinL = 999, earMaxR = -1;
   for(let y = e0; y <= e1; y++){ if(L(y) < earMinL) earMinL = L(y); if(R(y) > earMaxR) earMaxR = R(y); }
   for(let y = e0; y <= e1; y++){ for(let x = L(y); x < fL(y); x++) ears.push([x, y]); for(let x = fR(y) + 1; x <= R(y); x++) ears.push([x, y]); }
+  /* 귀 주름(분홍 픽셀)의 가장 안쪽 x. 없으면 -1 */
+  const earPink = (side, y) => {
+    if(y < e0 - 2 || y > e1 + 2) return -1;
+    const by = y - oy; if(by < 0 || by >= B.h) return -1;
+    let best = -1, run = true, runLen = 0, runEnd = -1;
+    for(let k = 0; k <= 6; k++){
+      const X = side < 0 ? fL(y) + k : fR(y) - k, bx = X - ox;
+      if(bx < 0 || bx >= B.w){ run = false; continue; }
+      const i = (by * B.w + bx) * 4, d = B.px.d;
+      if(d[i + 3] && d[i] - d[i + 1] > 35 && d[i] > 150 && k <= 5) best = X;
+      /* 귀 아랫선: 바깥 윤곽에서 안쪽으로 길게 이어진 어두운 선(윤곽 두께 2칸보다 길면 귀의 선) */
+      const dark = d[i + 3] && lumOf(d[i], d[i + 1], d[i + 2]) < 80;
+      if(run && dark){ runLen++; runEnd = X; } else run = false;
+    }
+    if(runLen > 2 && y >= e0) best = side < 0 ? Math.max(best, runEnd) : (best < 0 ? runEnd : Math.min(best, runEnd));
+    return best;
+  };
   const s = plan.style, v = plan.v;
   /* 길이(아래 끝) */
   const neckY = chin + 1;
@@ -1951,7 +1968,9 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
            그 밖의 머리: 귀를 다 덮고, 아래로 갈수록 바깥으로 넓어진다. */
         const shortHair = s === "short" || s === "spiky";
         const earRow = y >= e0 && y <= e1;
-        const inner = side < 0 ? fL(yy) + 1 : fR(yy) - 1;
+        /* 귀 안쪽 분홍 주름은 얼굴선 안쪽까지 들어와 있다 → 그것까지 덮어야 머리카락이 귀 위에 있다 */
+        const pin = earPink(side, y);
+        const inner = side < 0 ? Math.max(fL(yy) + 1, pin >= 0 ? pin + 1 : -1) : Math.min(fR(yy) - 1, pin >= 0 ? pin - 1 : 999);
         let outer, w;
         if(cl.off !== 0){
           outer = side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv;
