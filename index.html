@@ -1758,8 +1758,9 @@ function hairPlan(tr, hseed, look){
 }
 function drawHairLayers(B, ox, oy, eb, plan, child){
   const W = SPRITE_W, H = SPRITE_H;
-  const back = new Uint8Array(W * H), front = new Uint8Array(W * H);
-  const set = (m, x, y, v) => { x = Math.round(x); y = Math.round(y); if(x >= 0 && y >= 0 && x < W && y < H && (m[y * W + x] === 0 || v !== 1)) m[y * W + x] = v; };
+  const back = new Uint8Array(W * H), front = new Uint8Array(W * H), fid = new Uint8Array(W * H);
+  let curId = 1;
+  const set = (m, x, y, v) => { x = Math.round(x); y = Math.round(y); if(x >= 0 && y >= 0 && x < W && y < H && (m[y * W + x] === 0 || v !== 1 || (m === front && curId >= 10 && fid[y * W + x] < 10))){ m[y * W + x] = v; if(m === front && v !== 3 && v !== 4) fid[y * W + x] = curId; } };
   const fillRow = (m, y, x0, x1, v) => { for(let x = Math.round(x0); x <= Math.round(x1); x++) set(m, x, y, v); };
   const disc = (m, cx, cy, r, v) => { for(let y = -r; y <= r; y++) for(let x = -r; x <= r; x++) if(x * x + y * y <= r * r + r * 0.6) set(m, cx + x, cy + y, v); };
   /* 머리(얼굴) 윤곽: 줄마다 왼쪽·오른쪽 끝 */
@@ -1800,12 +1801,23 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     /* 오른쪽(빛 반대편) 두 칸은 그늘 */
     if(y > top + 1){ set(front, b, y, 2); set(front, b - 1, y, 2); }
   }
+  /* 정수리도 크게 세 덩어리로: 가르마 쪽에서 바깥으로 휘어지는 경계 */
+  for(let y = top + 1; y < eyeT - 2; y++){
+    const k = (y - top) / Math.max(1, eyeT - top);
+    for(let x = L(y) - 1; x <= R(y) + 1; x++){
+      const i = y * W + x; if(!front[i] || fid[i] >= 10) continue;
+      const u = (x - L(y)) / Math.max(1, R(y) - L(y));
+      const b1 = 0.36 - k * 0.12, b2 = 0.64 + k * 0.12;
+      fid[i] = u < b1 ? 20 : u > b2 ? 22 : 21;
+    }
+  }
   /* 3) 앞머리: 끝이 뾰족한 다발들, 다발 사이엔 결 */
   const fx0 = L(eyeT), fx1 = R(eyeT);
   const cw = child ? 4 : 5;
   const nClump = Math.max(3, Math.round((fx1 - fx0 + 1) / cw));
   const cwR = (fx1 - fx0 + 1) / nClump;
   for(let c = 0; c < nClump; c++){
+    curId = 10 + c;
     const a = Math.round(fx0 + c * cwR), b = Math.round(fx0 + (c + 1) * cwR) - 1, mid = (a + b) / 2;
     const u = (mid - fx0) / Math.max(1, fx1 - fx0);
     let depth;
@@ -1817,23 +1829,29 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     for(let x = a; x <= b; x++){
       const pointy = plan.fringe === "straight" ? 0 : Math.round(Math.abs(x - mid) * 0.9);
       const bottom = eyeT - 2 + depth - pointy;
-      for(let y = eyeT - 3; y <= bottom; y++) set(front, x, y, y >= bottom - 0 ? 2 : 1);
+      for(let y = eyeT - (child ? 5 : 7); y <= bottom; y++) set(front, x, y, y >= bottom - 0 ? 2 : 1);
     }
-    if(c > 0 && plan.fringe !== "none") for(let y = eyeT - 4; y < eyeT - 2 + Math.max(0, depth - 2); y++) set(front, a, y, 4);
   }
-  /* 4) 옆머리: 관자놀이·귀를 덮고 끝이 가늘어지는 다발 */
-  const sideEnd = Math.max(eyeB, s === "long" ? chin : endY);
+  curId = 1;
+  /* 4) 옆머리: 귀까지 덮는 바깥 다발 + 조금 짧은 안쪽 다발, 끝은 뾰족하게 */
+  const sideEnd = Math.max(eyeB + 1, s === "long" ? chin : endY);
   for(const side of [-1, 1]){
-    for(let y = eyeT - 3; y <= sideEnd; y++){
-      const k = (y - eyeT + 3) / Math.max(1, sideEnd - eyeT + 3);
-      const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
-      const edgeX = side < 0 ? (y <= chin ? L(y) : L(chin)) - 2 + wv : (y <= chin ? R(y) : R(chin)) + 2 - wv;
-      const w = Math.max(1, Math.round((s === "short" || s === "spiky" ? 3 : 4) * (k < 0.75 ? 1 : 1 - (k - 0.75) * 3)));
-      for(let i2 = 0; i2 < w; i2++) set(front, edgeX - side * i2, y, i2 === w - 1 && y > eyeB ? 2 : 1);
-      if(y > eyeT && y % 4 === 0) set(front, edgeX - side * Math.floor(w / 2), y, 4);
+    const clumps = [{off:0, w:3, end:sideEnd, id:side < 0 ? 40 : 42}, {off:3, w:3, end:sideEnd - 2 - (v % 2), id:side < 0 ? 41 : 43}];
+    for(const cl of clumps){
+      curId = cl.id;
+      for(let y = eyeT - 3; y <= cl.end; y++){
+        const k = (y - eyeT + 3) / Math.max(1, cl.end - eyeT + 3);
+        const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
+        const outer = side < 0 ? (y <= chin ? L(y) : L(chin)) - 2 + wv : (y <= chin ? R(y) : R(chin)) + 2 - wv;
+        const x0 = outer - side * cl.off;
+        const w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
+      }
     }
   }
+  curId = 1;
   /* 5) 모양별 장식 */
+  curId = 60;
   const tieC = 5; /* 리본·끈 (그릴 때 강조색) */
   if(s === "spiky"){
     for(const [dx, h] of [[0.15, 3], [0.35, 4], [0.55, 4], [0.78, 3]]){ const x = L(top) + (R(top) - L(top)) * dx; for(let j = 0; j < h; j++) fillRow(front, top - 2 - j, x - Math.max(0, 1 - j), x + Math.max(0, 1 - j), 1); }
@@ -1869,6 +1887,7 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
       set(front, sx, neckY + (child ? 10 : 15), tieC); set(front, sx + 1, neckY + (child ? 10 : 15), tieC);
     }
   }
+  curId = 1;
   /* 6) 결: 정수리에서 앞머리로 흐르는 휘어진 선 몇 줄 */
   for(const u0 of [0.36, 0.68]){
     const y0s = Math.round(top + (eyeT - top) * 0.45);
@@ -1884,24 +1903,49 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     const u = (x - L(hy)) / Math.max(1, R(hy) - L(hy)); const yy = hy + Math.round(Math.pow((u - 0.5) * 2, 2) * 3);
     if(front[yy * W + x]) set(front, x, yy, 3);
   }
-  return {back, front};
+  return {back, front, fid};
 }
-function paintHair(D, layer, hairC, tie, behindOnly){
+function paintHair(D, layer, hairC, tie, behindOnly, ids){
   const W = SPRITE_W, H = SPRITE_H;
-  const base = hairC, shadow = hairC.map(c => c * 0.68), hi = hairC.map(c => c + (255 - c) * 0.42), strand = hairC.map(c => c * 0.55), line = hairC.map(c => c * 0.26);
-  const pal = {1:base, 2:shadow, 3:hi, 4:strand, 5:tie};
+  const base = hairC, light = hairC.map(c => c + (255 - c) * 0.12), shadow = hairC.map(c => c * 0.7), deep = hairC.map(c => c * 0.52);
+  const hi = hairC.map(c => c + (255 - c) * 0.45), strand = hairC.map(c => c * 0.55), line = hairC.map(c => c * 0.24);
   const has = (x, y) => x >= 0 && y >= 0 && x < W && y < H && layer[y * W + x] > 0;
+  const idAt = (x, y) => ids && x >= 0 && y >= 0 && x < W && y < H ? ids[y * W + x] : 0;
+  /* 다발마다 범위를 구해 다발 안에서 명암을 준다 */
+  const box = {};
+  if(ids) for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+    const id = ids[y * W + x]; if(id < 10 || !layer[y * W + x]) continue;
+    const b = box[id] || (box[id] = {x0:x, x1:x, y0:y, y1:y});
+    if(x < b.x0) b.x0 = x; if(x > b.x1) b.x1 = x; if(y < b.y0) b.y0 = y; if(y > b.y1) b.y1 = y;
+  }
   for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
     const v = layer[y * W + x]; if(!v) continue;
     const j = (y * W + x) * 4;
     if(behindOnly && D[j + 3]) continue;
-    /* 머리카락 덩어리의 가장자리는 진한 선 */
+    const id = idAt(x, y);
     const edge = !has(x - 1, y) || !has(x + 1, y) || !has(x, y - 1) || !has(x, y + 1);
-    const c = v === 5 ? tie : edge ? line : pal[v] || base;
+    /* 서로 다른 다발이 맞닿는 곳(정수리와의 경계는 빼고)도 선 */
+    let seam = false;
+    const grp = n => n >= 20 && n < 30 ? "crown" : n >= 10 && n < 20 ? "bang" : n >= 40 && n < 50 ? "side" : "x";
+    if(id >= 10) for(const [dx, dy] of [[1, 0], [-1, 0], [0, 1]]){
+      const o = idAt(x + dx, y + dy); if(o < 10 || o === id || o < id) continue;
+      const a = grp(id), b2 = grp(o);
+      if((a === "bang" && b2 === "crown") || (a === "crown" && b2 === "bang")) continue; /* 정수리↔앞머리는 이어지게 */
+      seam = true;
+    }
+    let c;
+    if(v === 5) c = tie;
+    else if(edge || seam) c = line;
+    else if(v === 3) c = hi;
+    else if(v === 4) c = strand;
+    else if(id >= 10 && box[id]){
+      const b = box[id], rx = (x - b.x0) / Math.max(1, b.x1 - b.x0), ry = (y - b.y0) / Math.max(1, b.y1 - b.y0);
+      if(id >= 20 && id < 30) c = rx > 0.86 ? shadow : rx < 0.2 ? light : base; /* 정수리 덩어리는 부드럽게 */
+      else c = ry > 0.82 ? deep : rx < 0.3 ? light : rx > 0.7 ? shadow : base;
+    }else c = v === 2 ? shadow : base;
     D[j] = Math.min(255, c[0]); D[j + 1] = Math.min(255, c[1]); D[j + 2] = Math.min(255, c[2]); D[j + 3] = 255;
   }
 }
-
 function drawSprite(cv, opt){
   const W = SPRITE_W, H = SPRITE_H;
   if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
@@ -1996,7 +2040,7 @@ function drawSprite(cv, opt){
     }
   }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
-  if(hairLayers){ paintHair(D, hairLayers.back, hairC.map(c => c * 0.86), TIE, true); paintHair(D, hairLayers.front, hairC, TIE, false); }
+  if(hairLayers){ paintHair(D, hairLayers.back, hairC.map(c => c * 0.86), TIE, true); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid); }
   ctx.putImageData(img, 0, 0);
   /* 소품: 픽셀 단위 사각형으로만 그린다 */
   const ex0 = eb[0] + ox, ey0 = eb[1] + oy, ex1 = eb[2] + ox, ey1 = eb[3] + oy, emx = Math.round((ex0 + ex1) / 2);
