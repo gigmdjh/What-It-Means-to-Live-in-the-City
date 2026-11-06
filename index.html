@@ -323,6 +323,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .inrow textarea{height:44px;font-size:16px;padding:9px 10px}
 }
 @media (prefers-reduced-motion: reduce){ .ld-fill.indet{animation:none;width:100%!important;opacity:.4} .fill{transition:none} .thinking i{animation:none} }
+.fan-note{margin:.6rem 0 0;padding:.55rem .7rem;border-left:2px solid var(--line, #3a3d4a);font-size:.74rem;line-height:1.55;opacity:.78}
+.fan-note b{font-weight:600}
 </style>
 </head>
 <body>
@@ -340,6 +342,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   <div class="menu-hero">
     <h2>도시에서 살아간다는 것</h2>
     <p class="note">머리가 다스리는 도시, 날개가 지키는 둥지와 그 바깥의 뒷골목. 당신은 이곳에서 0세로 태어난다.</p>
+    <p class="fan-note">이 게임은 Project Moon의 『로보토미 코퍼레이션』·『라이브러리 오브 루이나』·『림버스 컴퍼니』의 무대인 ‘도시’를 바탕으로 만든 <b>비공식 팬게임</b>입니다. 원작의 세계관·고유명사에 대한 권리는 Project Moon에 있으며, Project Moon과는 관계가 없습니다. 설정은 위키를 참고했고, 빈 곳은 게임을 위해 지어낸 부분이 있습니다.</p>
   </div>
   <form class="form" id="createForm">
     <label class="field"><span>이름</span><input type="text" id="cName" maxlength="20" required placeholder="예: 서윤"></label>
@@ -434,7 +437,6 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <div class="quick">
         <button class="btn" type="button" id="btnFlow">▶ 흘려보내기</button>
         <button class="btn speedbtn" type="button" id="btnSpeed" aria-label="배속 바꾸기">1×</button>
-        <button class="btn" type="button" id="btnShop">공방</button>
         <span class="note" id="flowDate"></span>
       </div>
       <div class="inrow">
@@ -565,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2415"></script>
+<script src="parts.js?v=20261106-2430"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2415";
+const BUILD = "20261106-2430";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1427,7 +1429,7 @@ function renderStatus(){
   for(const t of S.tags) tg.appendChild(el("span", "tag", "#" + t));
   const lock = busy || !!S.dead;
   $("#btnAct").disabled = lock; $("#actInput").disabled = lock;
-  $("#btnFlow").disabled = lock && !flow.on; $("#btnShop").disabled = lock;
+  $("#btnFlow").disabled = lock && !flow.on;
   document.querySelectorAll("#log .opt").forEach(b => b.disabled = lock);
 }
 
@@ -1495,6 +1497,13 @@ async function doAction(input){
   applyNarr(fin);
   save(); setBusy(false);
   memoryTick();
+  /* 공방은 버튼이 없다. 직접 찾아가야(“공방에 간다”, “무기 가게를 둘러본다” 등) 진열대가 열린다 */
+  if(!S.dead && visitsShop(input)) openShop();
+}
+function visitsShop(t){
+  const place = /(공방|대장간|무기\s?(점|가게|상점|상인)|장비\s?(점|가게|상점)|방어구\s?(점|가게|상점)|의체\s?(시술소|병원|가게|상점|공방|센터)|의수\s?(가게|공방)|의족\s?(가게|공방))/;
+  const go = /(가|간다|갈|찾|들르|들러|들른|방문|구경|둘러|들어|향|사러|사려|사고|맞추|맞춘|주문|맡기|팔러|팔려|팔고|이식)/;
+  return place.test(t) && go.test(t);
 }
 
 /* 기기 AI 로딩 화면. 건너뛰면 규칙으로 먼저 태어나고 내려받기는 뒤에서 계속된다 */
@@ -1644,12 +1653,24 @@ function findColor(text, nounRe){
   return kept.length ? kept[0].c : null;
 }
 const HAIR_DIRECT = [[/흑발/, "#1f1d24"], [/백금발/, "#ece2b8"], [/금발/, "#e0bd5a"], [/은발/, "#d6d8e2"], [/백발/, "#f4f4f6"], [/적발|홍발/, "#c0392b"], [/청발/, "#3e66b0"], [/갈발/, "#6b4a32"], [/녹발/, "#3f8a4e"], [/분홍 ?머/, "#e48aaa"]];
+/* 한자어 색: 백발·흑발·금발 / 황안·벽안·적안처럼 '색 한 글자 + 발(머리) / 안(눈)' */
+const HANJA_COLOR = [["백금", "#ece2b8"], ["흑", "#1f1d24"], ["백", "#f2f2f4"], ["은", "#d0d4de"], ["금", "#e0bd5a"], ["황", "#e6c440"],
+  ["적", "#c0392b"], ["홍", "#d2334a"], ["주", "#e07a2c"], ["청", "#3e66b0"], ["벽", "#4f86c6"], ["남", "#2c3e74"], ["녹", "#3f9a4e"],
+  ["취", "#2aa39a"], ["자", "#8a5ac0"], ["갈", "#6b4a32"], ["회", "#8c96a0"], ["분홍", "#e48aaa"]];
+function hanjaColor(t, tail){
+  for(const [k, c] of HANJA_COLOR){
+    /* 앞 글자가 한글이면 다른 낱말의 일부(예: '안경' 앞의 글자, '자발적') → 건너뛴다 */
+    const re = new RegExp("(^|[^가-힣])" + k + tail + "(?![가-힣]*적)", "");
+    if(re.test(t)) return c;
+  }
+  return null;
+}
 function lookTraitsOf(look, name, gender, seedKey, over){
   const t = " " + (look || "") + " ";
   const h = hashStr((name || "") + (seedKey || ""));
   const tr = {};
-  tr.hair = findColor(t, /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리|트윈테일|포니테일|양갈래|땋은)/) || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
-  tr.eye = findColor(t, /(눈동자|눈빛|홍채|눈(?!썹|매))/) || ["#3a2c26", "#2a2f3c", "#4a3a2a"][(h >>> 3) % 3];
+  tr.hair = findColor(t, /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리|트윈테일|포니테일|양갈래|땋은)/) || hanjaColor(t, "발") || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
+  tr.eye = findColor(t, /(눈동자|눈빛|홍채|눈(?!썹|매))/) || hanjaColor(t, "안") || ["#3a2c26", "#2a2f3c", "#4a3a2a"][(h >>> 3) % 3];
   /* 오드아이: "오드아이" 또는 "왼쪽 파란 눈, 오른쪽 붉은 눈" */
   const lr = /왼(쪽)?\s?([가-힣 ]{1,8}?)\s?눈.*?오른(쪽)?\s?([가-힣 ]{1,8}?)\s?눈/.exec(t);
   if(lr){ tr.eye = findColor(" " + lr[2] + " 눈", /눈/) || tr.eye; tr.eye2 = findColor(" " + lr[4] + " 눈", /눈/) || tr.eye; }
@@ -2866,7 +2887,7 @@ $("#btnSpeed").addEventListener("click", () => {
 try{ const sp = Number(localStorage.getItem("dosi_speed")); if(SPEEDS.includes(sp)) flow.speed = sp; }catch(e){}
 updateFlowUI();
 $("#actInput").addEventListener("focus", () => { if(flow.on) stopFlow(null); });
-$("#btnShop").addEventListener("click", openShop);
+
 document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { shopTab = b.dataset.tab; renderShop(); }));
 
 /* ───────── 설정 창 ───────── */
