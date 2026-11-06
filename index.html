@@ -565,10 +565,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2325"></script>
+<script src="parts.js?v=20261106-2340"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2325";
+const BUILD = "20261106-2340";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2005,6 +2005,17 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
     const b = box[id] || (box[id] = {x0:x, x1:x, y0:y, y1:y});
     if(x < b.x0) b.x0 = x; if(x > b.x1) b.x1 = x; if(y < b.y0) b.y0 = y; if(y > b.y1) b.y1 = y;
   }
+  /* 뒷머리 그라데이션은 뒷머리 전체 범위를 기준으로 한 번만 정해, 그 위에 겹친 옆머리도 같은 값을 쓴다 → 이음매 없음 */
+  let gb = null;
+  const gsrc = merge || (box[70] ? layer : null);
+  if(gsrc){ for(let y = 0; y < H; y++) for(let x = 0; x < W; x++) if(gsrc[y * W + x] === 2 || (gsrc === layer && ids && ids[y * W + x] === 70)){
+    if(!gb) gb = {x0:x, x1:x, y0:y, y1:y};
+    if(x < gb.x0) gb.x0 = x; if(x > gb.x1) gb.x1 = x; if(y < gb.y0) gb.y0 = y; if(y > gb.y1) gb.y1 = y; } }
+  const grad = (x, y) => {
+    const rx = (x - gb.x0) / Math.max(1, gb.x1 - gb.x0), ry = Math.max(0, (y - gb.y0) / Math.max(1, gb.y1 - gb.y0));
+    const k = 1.0 - ry * 0.32 - Math.max(0, rx - 0.55) * 0.3 + Math.max(0, 0.3 - rx) * 0.2;
+    return base.map(v => v * k);
+  };
   for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
     const v = layer[y * W + x]; if(!v) continue;
     const j = (y * W + x) * 4;
@@ -2028,12 +2039,8 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
     else if(id >= 10 && box[id]){
       const b = box[id], rx = (x - b.x0) / Math.max(1, b.x1 - b.x0), ry = (y - b.y0) / Math.max(1, b.y1 - b.y0);
       if(id >= 20 && id < 30) c = rx > 0.86 ? shadow : rx < 0.2 ? light : base; /* 정수리 덩어리는 부드럽게 */
-      else if(id === 70){
-        /* 뒷머리: 위는 밝고 아래로 갈수록, 오른쪽(빛 반대편)으로 갈수록 서서히 어두워진다 */
-        const k = 1.0 - ry * 0.32 - Math.max(0, rx - 0.55) * 0.3 + Math.max(0, 0.3 - rx) * 0.2;
-        c = base.map(v => v * k);
-      }
-      else if(merge && id >= 40 && id < 50) c = rx < 0.3 ? light : base;   /* 뒷머리와 이어지는 옆머리: 끝을 어둡게 끊지 않는다 */
+      else if(id === 70 && gb) c = grad(x, y);   /* 뒷머리: 아래로, 빛 반대편(오른쪽)으로 서서히 어두워진다 */
+      else if(gb && id >= 40 && id < 50) c = grad(x, y);   /* 뒷머리와 이어지는 옆머리는 뒷머리와 같은 그라데이션 */
       else c = ry > 0.82 ? deep : rx < 0.3 ? light : rx > 0.7 ? shadow : base;
     }else c = v === 2 ? shadow : base;
     D[j] = Math.min(255, c[0]); D[j + 1] = Math.min(255, c[1]); D[j + 2] = Math.min(255, c[2]); D[j + 3] = 255;
