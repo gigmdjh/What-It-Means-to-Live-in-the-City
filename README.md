@@ -2,7 +2,7 @@
 
 프로젝트 문의 '도시' 세계관을 배경으로, 0세에 태어나 한 사람의 삶을 살아가는 AI 텍스트 게임입니다.
 
-- 플레이: https://gigmdjh.github.io/what-it-means-to-live-in-the-city/
+- 플레이: https://gigmdjh.github.io/What-It-Means-to-Live-in-the-City/
 - API 키 없이도 기기 AI(WebLLM, WebGPU)로 무료 플레이. 설정에서 Claude·OpenAI 호환·Gemini 키를 넣으면 더 좋은 모델을 씁니다(요금은 키 주인 부담).
 - 진행 상황은 플레이하는 브라우저에 저장됩니다.
 

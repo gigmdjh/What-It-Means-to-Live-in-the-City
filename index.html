@@ -1936,7 +1936,7 @@ async function bioCanvas(life){
   y += 30; c.fillStyle = "#9c99a8"; c.font = `24px ${F.body}`;
   for(const l of factLines){ c.fillText(l, P, y); y += 38; }
   y += 40; c.fillStyle = "#6f6c7a"; c.font = `22px ${F.mono}`;
-  c.fillText("gigmdjh.github.io/what-it-means-to-live-in-the-city", P, y);
+  c.fillText(/^https?:/.test(location.protocol) ? (location.host + location.pathname).replace(/index\.html$/, "").replace(/\/$/, "") : "gigmdjh.github.io/What-It-Means-to-Live-in-the-City", P, y);
   return cv;
 }
 async function bioFile(life){
