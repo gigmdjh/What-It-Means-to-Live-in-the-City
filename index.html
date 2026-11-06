@@ -565,10 +565,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2340"></script>
+<script src="parts.js?v=20261106-2400"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2340";
+const BUILD = "20261106-2400";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1648,7 +1648,7 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   const t = " " + (look || "") + " ";
   const h = hashStr((name || "") + (seedKey || ""));
   const tr = {};
-  tr.hair = findColor(t, /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리)/) || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
+  tr.hair = findColor(t, /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리|트윈테일|포니테일|양갈래|땋은)/) || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
   tr.eye = findColor(t, /(눈동자|눈빛|홍채|눈(?!썹|매))/) || ["#3a2c26", "#2a2f3c", "#4a3a2a"][(h >>> 3) % 3];
   /* 오드아이: "오드아이" 또는 "왼쪽 파란 눈, 오른쪽 붉은 눈" */
   const lr = /왼(쪽)?\s?([가-힣 ]{1,8}?)\s?눈.*?오른(쪽)?\s?([가-힣 ]{1,8}?)\s?눈/.exec(t);
@@ -1794,7 +1794,7 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   const W = SPRITE_W, H = SPRITE_H;
   const back = new Uint8Array(W * H), front = new Uint8Array(W * H), fid = new Uint8Array(W * H), bid = new Uint8Array(W * H);
   let curId = 1;
-  const set = (m, x, y, v) => { x = Math.round(x); y = Math.round(y); if(x >= 0 && y >= 0 && x < W && y < H && (m[y * W + x] === 0 || v !== 1 || (m === front && curId >= 10 && fid[y * W + x] < 10))){ m[y * W + x] = v; if(m === front && v !== 3 && v !== 4) fid[y * W + x] = curId; } };
+  const set = (m, x, y, v) => { x = Math.round(x); y = Math.round(y); if(x >= 0 && y >= 0 && x < W && y < H && (m[y * W + x] === 0 || v !== 1 || (m === front && curId >= 10 && (fid[y * W + x] < 10 || (curId < 20 && fid[y * W + x] >= 20 && fid[y * W + x] < 30))))){ m[y * W + x] = v; if(m === front && v !== 3 && v !== 4) fid[y * W + x] = curId; } };
   const fillRow = (m, y, x0, x1, v) => { for(let x = Math.round(x0); x <= Math.round(x1); x++) set(m, x, y, v); };
   const disc = (m, cx, cy, r, v) => { for(let y = -r; y <= r; y++) for(let x = -r; x <= r; x++) if(x * x + y * y <= r * r + r * 0.6) set(m, cx + x, cy + y, v); };
   /* 머리(얼굴) 윤곽: 줄마다 왼쪽·오른쪽 끝 */
@@ -1853,7 +1853,8 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     }
   }
   /* 2) 정수리: 머리 윤곽을 따라 둥글게 1칸 크게 */
-  for(let y = top - 1; y < eyeT - 1; y++){
+  const bangTop = eyeT - (child ? 7 : 9);
+  for(let y = top - 1; y < (plan.fringe === "none" ? eyeT - 1 : bangTop); y++){
     let a = L(y) - 1, b = R(y) + 1;
     if(y === top - 1){ a = L(top) + 3; b = R(top) - 3; }
     else if(y === top){ a = L(top) - 0; b = R(top) + 0; }
@@ -1868,12 +1869,12 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
       const i = y * W + x; if(!front[i] || fid[i] >= 10) continue;
       const u = (x - L(y)) / Math.max(1, R(y) - L(y));
       const b1 = 0.36 - k * 0.12, b2 = 0.64 + k * 0.12;
-      fid[i] = u < b1 ? 20 : u > b2 ? 22 : 21;
+      fid[i] = 21; /* 정수리는 한 덩어리 (긴 결 선 없이) */
     }
   }
   /* 3) 앞머리: 끝이 뾰족한 다발들, 다발 사이엔 결 */
-  const fx0 = L(eyeT), fx1 = R(eyeT);
-  const cw = child ? 4 : 5;
+  const fx0 = Math.min(L(eyeT), L(eyeT - 4)), fx1 = Math.max(R(eyeT), R(eyeT - 4));
+  const cw = child ? 6 : 8;
   const nClump = Math.max(3, Math.round((fx1 - fx0 + 1) / cw));
   const cwR = (fx1 - fx0 + 1) / nClump;
   for(let c = 0; c < nClump; c++){
@@ -1885,11 +1886,14 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     else if(plan.fringe === "part") depth = Math.round(Math.abs(u - 0.5) * 6);
     else if(plan.fringe === "swept") depth = Math.round((1 - u) * 4);
     else if(plan.fringe === "none") depth = -2;
-    else depth = [3, 1, 2, 4, 2, 1, 3][(c + v) % 7];
+    else depth = [2, 1, 2, 0, 1, 2, 1][(c + v) % 7];
+    /* 다발 하나 = 끝이 뾰족한 V. 가운데가 가장 길고 양옆으로 짧아진다 */
+    const hw = Math.max(1, (b - a) / 2);
     for(let x = a; x <= b; x++){
-      const pointy = plan.fringe === "straight" ? 0 : Math.round(Math.abs(x - mid) * 0.9);
+      const q = Math.abs(x - mid) / hw;
+      const pointy = plan.fringe === "straight" ? 0 : Math.round(q * q * 3);
       const bottom = eyeT - 2 + Math.min(depth, 2) - pointy; /* 앞머리 끝은 눈매에 살짝 닿는 정도까지만 */
-      for(let y = eyeT - (child ? 5 : 7); y <= bottom; y++) set(front, x, y, y >= bottom - 0 ? 2 : 1);
+      for(let y = bangTop; y <= bottom; y++) set(front, x, y, 1);
     }
   }
   curId = 1;
@@ -1975,20 +1979,13 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     }
   }
   curId = 1;
-  /* 6) 결: 정수리에서 앞머리로 흐르는 휘어진 선 몇 줄 */
-  for(const u0 of [0.36, 0.68]){
-    const y0s = Math.round(top + (eyeT - top) * 0.45);
-    for(let y = y0s; y < eyeT - 3; y++){
-      const k = (y - y0s) / Math.max(1, eyeT - y0s);
-      const x = Math.round(L(y) + (R(y) - L(y)) * (u0 + (u0 - 0.5) * k * 0.3));
-      if(front[y * W + x] === 1) set(front, x, y, 4);
-    }
-  }
-  /* 7) 광택: 빛 받는 왼쪽 위에 매끈한 호 하나 */
-  const hy = Math.round(top + (eyeT - top) * 0.3);
-  for(let x = Math.round(L(hy) + (R(hy) - L(hy)) * 0.16); x <= Math.round(L(hy) + (R(hy) - L(hy)) * 0.5); x++){
-    const u = (x - L(hy)) / Math.max(1, R(hy) - L(hy)); const yy = hy + Math.round(Math.pow((u - 0.5) * 2, 2) * 3);
-    if(front[yy * W + x]) set(front, x, yy, 3);
+  /* 7) 광택: 머리 둥근 면을 따라 휘어진 띠(천사 고리) 하나. 빛 반대편(오른쪽)은 비운다 */
+  const hy = Math.round(top + (eyeT - top) * 0.32), hcx = (L(hy) + R(hy)) / 2, hhw = Math.max(1, (R(hy) - L(hy)) / 2);
+  for(let x = Math.round(L(hy) + 2); x <= Math.round(hcx + hhw * 0.35); x++){
+    const u = (x - hcx) / hhw, yy = hy + Math.round(u * u * 3);
+    if(!(front[yy * W + x] === 1)) continue;
+    set(front, x, yy, 3);
+    if(u < -0.3 && front[(yy + 1) * W + x] === 1) set(front, x, yy + 1, 3);   /* 왼쪽은 두 줄로 두껍게 */
   }
   return {back, front, fid, bid, ears};
 }
@@ -2029,6 +2026,8 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
       const o = idAt(x + dx, y + dy); if(o < 10 || o === id || o < id) continue;
       const a = grp(id), b2 = grp(o);
       if((a === "bang" && b2 === "crown") || (a === "crown" && b2 === "bang")) continue; /* 정수리↔앞머리는 이어지게 */
+      /* 앞머리 다발 사이 결은 아래쪽 절반에만 → 위는 정수리와 한 덩어리로 이어진다 */
+      if(a === "bang" && b2 === "bang" && box[id] && (y - box[id].y0) / Math.max(1, box[id].y1 - box[id].y0) < 0.45) continue;
       seam = true;
     }
     let c;
@@ -2041,6 +2040,7 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
       if(id >= 20 && id < 30) c = rx > 0.86 ? shadow : rx < 0.2 ? light : base; /* 정수리 덩어리는 부드럽게 */
       else if(id === 70 && gb) c = grad(x, y);   /* 뒷머리: 아래로, 빛 반대편(오른쪽)으로 서서히 어두워진다 */
       else if(gb && id >= 40 && id < 50) c = grad(x, y);   /* 뒷머리와 이어지는 옆머리는 뒷머리와 같은 그라데이션 */
+      else if(id >= 10 && id < 20) c = rx > 0.75 && ry > 0.45 ? shadow : base;   /* 앞머리: 끝을 진하게 띠처럼 칠하지 않는다 */
       else c = ry > 0.82 ? deep : rx < 0.3 ? light : rx > 0.7 ? shadow : base;
     }else c = v === 2 ? shadow : base;
     D[j] = Math.min(255, c[0]); D[j + 1] = Math.min(255, c[1]); D[j + 2] = Math.min(255, c[2]); D[j + 3] = 255;
@@ -2941,12 +2941,18 @@ async function checkUpdate(){
     if(!r.ok) return;
     const latest = (await r.text()).trim();
     if(latest && latest !== BUILD){
+      const go = () => { try{ save(); }catch(e){} location.replace(location.pathname + "?v=" + encodeURIComponent(latest)); };
+      /* 첫 화면(메뉴)에 있으면 바로 새 버전으로. 같은 버전으로 두 번 넘어가진 않게 막는다 */
+      let tried = ""; try{ tried = sessionStorage.getItem("dosi_upd") || ""; }catch(e){}
+      if($("#game").hidden && tried !== latest){ try{ sessionStorage.setItem("dosi_upd", latest); }catch(e){} go(); return; }
       const bar = $("#updateBar"); bar.hidden = false;
-      $("#btnUpdate").onclick = () => { save(); location.replace(location.pathname + "?v=" + encodeURIComponent(latest)); };
+      $("#btnUpdate").onclick = go;
     }
   }catch(e){}
 }
 document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") checkUpdate(); });
+window.addEventListener("pageshow", e => { if(e.persisted) checkUpdate(); });   /* 뒤로가기 캐시에서 되살아난 페이지도 확인 */
+setInterval(checkUpdate, 90 * 1000);                                              /* 켜 둔 채로 있어도 1분 반마다 확인 */
 loadParts();
 checkUpdate();
 (async function boot(){
