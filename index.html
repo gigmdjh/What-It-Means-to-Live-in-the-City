@@ -520,7 +520,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <p class="note">모델을 내 기기 GPU에서 돌립니다. 첫 실행 때 한 번 내려받고 이후엔 브라우저에 저장됩니다. WebGPU를 지원하는 브라우저가 필요합니다.</p>
       <label class="field"><span>모델</span>
         <select id="optWebllmModel">
-          <option value="">자동 (기기 메모리에 맞춤)</option>
+          <option value="">자동 (이 기기에 맞춤: 메모리·GPU·실제 속도)</option>
           <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B · 약 1GB · 모바일 추천(한국어·서술 균형)</option>
           <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B · 약 0.5GB · 가장 빠르고 가벼움(서술은 단순)</option>
           <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B · 약 2.5GB · 서술 가장 좋음(PC·고사양 폰)</option>
@@ -570,10 +570,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0035"></script>
+<script src="parts.js?v=20261107-0045"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0035";
+const BUILD = "20261107-0045";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -853,8 +853,18 @@ let currentProv = "rules";
 /* 모델을 직접 고르지 않았으면 기기 메모리에 맞춰 고른다 */
 /* 예전 기본(Qwen2.5)을 자동으로 쓰던 사람은 새 기본(Qwen3)으로 한 번 옮긴다(직접 고른 모델은 그대로) */
 try{ if(!CFG.webllm.model && /Qwen2\.5/.test(CFG.webllm.working || "") && !CFG.webllm.q3){ CFG.webllm.working = ""; CFG.webllm.q3 = true; saveCfg(); } }catch(e){}
+/* 모바일 자동 맞춤: 메모리·GPU 한도·실제 속도를 보고 고른다.
+   - 메모리 8GB 이상이고 GPU 버퍼 한도가 넉넉하며, 이전에 느리다고 판정되지 않았으면 1.7B
+   - 그 밖에는 0.6B(가볍고 빠름) */
+let GPU_INFO = null;
+function mobileTier(){
+  const mem = navigator.deviceMemory || 4, gi = GPU_INFO || {};
+  const roomy = !gi.maxBind || gi.maxBind >= 512 * 1024 * 1024;
+  return (mem >= 8 && roomy && !CFG.webllm.slow) ? "mid" : "low";
+}
 function webllmModel(){
   if(CFG.webllm.model) return CFG.webllm.model;
+  if(isMobile) return mobileTier() === "mid" ? "Qwen3-1.7B-q4f16_1-MLC" : "Qwen3-0.6B-q4f16_1-MLC";
   /* Qwen3: 같은 크기의 Qwen2.5보다 다국어(한국어)·계산·서술이 낫다. 생각(thinking) 모드는 꺼서 빠르게 */
   if(isMobile) return "Qwen3-1.7B-q4f16_1-MLC";
   return (navigator.deviceMemory || 4) >= 8 ? "Qwen3-4B-q4f16_1-MLC" : "Qwen3-1.7B-q4f16_1-MLC";
@@ -872,19 +882,23 @@ const shortModel = id => String(id || "").replace(/-MLC$/, "").replace("-q4f16_1
 function modelChain(f16){
   const base = webllmModel();
   const list = [];
-  if(CFG.webllm.working) list.push(CFG.webllm.working);
   list.push(base);
   list.push(base.replace("q4f16_1", "q4f32_1"));                       /* 16비트 셰이더가 안 되는 GPU용 */
   if(/Qwen3-4B/.test(base)) list.push("Qwen3-1.7B-q4f32_1-MLC");
   if(/Qwen2\.5-3B/.test(base)) list.push("Qwen2.5-1.5B-Instruct-q4f32_1-MLC");
+  if(/Qwen3-0\.6B/.test(base)) list.push("Qwen3-0.6B-q4f32_1-MLC");
   list.push("Qwen3-0.6B-q4f32_1-MLC");                                    /* 메모리가 정말 모자랄 때 */
-  return [...new Set(list)].filter(id => f16 || !/q4f16/.test(id));
+  let out = [...new Set(list)].filter(id => f16 || !/q4f16/.test(id));
+  /* 전에 이 기기에서 성공한 모델이 지금 후보 안에 있으면 그걸 먼저(더 큰 모델로 되돌아가지는 않게) */
+  const w = CFG.webllm.working;
+  if(w && out.includes(w)) out = [w].concat(out.filter(id => id !== w));
+  return out;
 }
 async function gpuInfo(){
   try{
     const ad = await navigator.gpu.requestAdapter();
     if(!ad) return null;
-    return {f16: ad.features.has("shader-f16")};
+    return {f16: ad.features.has("shader-f16"), maxBind: (ad.limits && ad.limits.maxStorageBufferBindingSize) || 0, maxBuf: (ad.limits && ad.limits.maxBufferSize) || 0};
   }catch(e){ return null; }
 }
 const isNetErr = e => /fetch|network|NetworkError|Failed to load|ERR_|404|403|timed out|30초/i.test(String(e && e.message));
@@ -908,6 +922,7 @@ async function loadWebLLM(onProg){
     if(!info) throw new Error("이 브라우저에서 GPU(WebGPU)를 쓸 수 없습니다.");
     onProg && onProg({progress:0, text:"AI 모듈을 받는 중…", step:"module"});
     const webllm = await withTimeout(import(WEBLLM_URL), 30000, "AI 모듈을 30초 안에 받지 못했습니다. 네트워크를 확인하세요");
+    GPU_INFO = info;
     const chain = modelChain(info.f16), tried = [];
     let lastErr = null;
     for(let i = 0; i < chain.length; i++){
@@ -947,7 +962,9 @@ async function loadWebLLM(onProg){
 /* AI(API·크롬 내장·기기 AI)를 쓰는 중이면 true → 잠깐 실패해도 '규칙 기반' 안내를 띄우지 않는다 */
 function aiOn(){ return (!!currentProv && currentProv !== "rules") || hasKey() || (CFG.provider !== "auto" && CFG.provider !== "rules" && CFG.provider !== "webllm"); }
 function deviceAIPlanned(){
-  return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey()));
+  /* 메모리 2GB 이하 폰은 자동으로는 기기 AI를 켜지 않는다(직접 고르면 시도) */
+  const tiny = isMobile && (navigator.deviceMemory || 4) <= 2;
+  return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey() && !tiny));
 }
 function withTimeout(promise, ms, msg){
   return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
@@ -1015,6 +1032,15 @@ async function callChrome(sys, user, maxTok, schema){
   } finally { try{ s.destroy(); }catch(e){} }
 }
 
+/* 실제 속도 재기: 모바일 자동 모드에서 1.7B가 초당 5토큰도 안 나오면 다음부터 0.6B로 */
+function noteSpeed(n, sec){
+  if(!isMobile || CFG.webllm.model || n < 40 || sec <= 0) return;
+  const tps = n / sec;
+  if(tps < 5 && /Qwen3-1\.7B/.test(webllmModelLoaded || "") && !CFG.webllm.slow){
+    CFG.webllm.slow = true; CFG.webllm.working = ""; saveCfg();
+    try{ log({t:"sys", text:"이 폰에서는 AI 응답이 느려서, 다음에 게임을 열 때부터 더 가벼운 모델로 자동으로 바꿉니다."}); }catch(e){}
+  }
+}
 /* Qwen3의 생각 모드 끄기(느려지고 형식이 깨지는 원인) */
 const qwen3Extra = () => /Qwen3/.test(webllmModelLoaded || "") ? {extra_body:{enable_thinking:false}} : {};
 const stripThink = t => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^[\s\S]*?<\/think>/, "");
@@ -1031,11 +1057,14 @@ async function callWebLLM(sys, user, maxTok, onText, schema){
   if(onText){
     try{
       const st = await eng.chat.completions.create(Object.assign({messages, temperature:0.8, max_tokens:maxTok, stream:true, response_format:rf}, qwen3Extra()));
-      let acc = "", last = 0;
+      let acc = "", last = 0, nTok = 0, t0 = 0;
       for await (const ch of st){
-        acc += ch.choices?.[0]?.delta?.content || "";
+        const piece = ch.choices?.[0]?.delta?.content || "";
+        if(piece){ if(!t0) t0 = performance.now(); nTok++; }
+        acc += piece;
         const now = performance.now(); if(now - last > 120){ last = now; try{ onText(acc); }catch(_){} }
       }
+      noteSpeed(nTok, t0 ? (performance.now() - t0) / 1000 : 0);
       return stripThink(acc);
     }catch(e){ console.warn("스트리밍 실패, 한 번에 받기로", e); if(rf.schema && /schema|grammar|xgrammar/i.test(String(e && e.message))){ webllmNoSchema = true; rf = {type:"json_object"}; } }
   }
