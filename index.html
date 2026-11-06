@@ -110,7 +110,7 @@ body.in-game .game{flex:1;min-height:0;height:auto}
 .seg label.on{border-color:var(--accent);color:var(--accent)}
 .menu{max-width:560px;margin:28px auto;display:grid;gap:16px;padding-bottom:max(24px, env(safe-area-inset-bottom, 0px))}
 .menu-hero{padding-block:18px 6px}
-.menu-hero h2{margin:0 0 8px;font:700 clamp(2rem, 9vw, 3rem)/1.15 var(--f-display);letter-spacing:-.01em}
+.menu-hero h2{margin:0 0 8px;font:700 clamp(1.6rem, 7vw, 2.4rem)/1.2 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
 .cont{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .cont-txt{display:grid;flex:1;min-width:0}
 .cont-txt b{font:700 1.1rem var(--f-display)}
@@ -130,6 +130,14 @@ body.in-game .game{flex:1;min-height:0;height:auto}
 .life-fav{flex:none;width:46px;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:1.2rem;color:var(--muted)}
 .life-fav.on{color:var(--accent);border-color:var(--accent)}
 .seedrow{display:flex;gap:8px}
+.lookrow{display:flex;gap:12px;align-items:stretch}
+.lookrow .field{flex:1;min-width:0}
+.lookrow textarea{height:100%;min-height:96px}
+.preview{margin:0;display:grid;justify-items:center;align-content:start;gap:2px;flex:none}
+.preview .sprite{width:96px;height:96px;margin:0;border-radius:8px;background:var(--bg)}
+.hint{margin:-8px 0 0;font-size:.74rem;line-height:1.5}
+.speedbtn{font-family:var(--f-mono);min-width:3.4em}
+.btn.danger{background:var(--panel-2)}
 .seedrow input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-family:var(--f-mono)}
 .bio{gap:14px}
 .bio-head{display:flex;gap:14px;align-items:center}
@@ -230,6 +238,42 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .top .btn{padding:5px 8px;font-size:.8rem}
 }
 @media (max-width: 860px){
+  body{font-size:14px}
+  .top h1,.brand h1{font-size:.95rem!important}
+  .top .btn{padding:4px 10px!important;font-size:.78rem!important}
+  .menu{margin:16px auto;gap:14px}
+  .menu-hero{padding-block:8px 0}
+  .form{padding:14px;gap:14px}
+  .field>span{font-size:.74rem}
+  .field input[type=text],.field select,.field textarea,.seedrow input{padding:7px 9px}
+  .seg label{padding:5px 11px;font-size:.85rem}
+  .preview .sprite{width:80px;height:80px}
+  .btn{font-size:.85rem;padding:6px 12px}
+  .hud{gap:6px!important;padding:8px 10px!important}
+  .hud-top b{font-size:.9rem!important}
+  .hud-top .info{font-size:.72rem!important}
+  .sprite.sm{width:32px;height:32px}
+  .hud-g .g-top,.hud-g .g-top span:last-child{font-size:.66rem!important}
+  .hud-bot{font-size:.7rem!important}
+  #log{padding:14px 16px!important;gap:16px!important}
+  .e-narr{font-size:.93rem!important;line-height:1.85!important}
+  .e-me{font-size:.86rem;padding:7px 11px}
+  .e-sys{font-size:.7rem}
+  .e-small{font-size:.74rem}
+  .e-roll{grid-template-columns:38px minmax(0,1fr)!important;gap:10px!important;padding:8px 10px!important}
+  .die{width:36px!important;height:36px!important;font-size:.95rem!important}
+  .r-text{font-size:.86rem}
+  .r-meta,.r-why{font-size:.7rem}
+  .tier{font-size:.68rem}
+  .d,.tag{font-size:.66rem!important}
+  .opts{gap:5px;margin-top:10px}
+  .opt{font-size:.8rem;padding:5px 10px}
+  .act{gap:6px!important}
+  .quick .btn{padding:4px 9px!important;font-size:.76rem!important}
+  .inrow .btn{padding-inline:14px}
+  .life-open{padding:8px 10px}
+  .life-open img{width:38px;height:38px}
+  .card{padding:10px 12px}
   .top{padding-block:max(8px, env(safe-area-inset-top, 0px)) 8px;gap:8px;flex-wrap:nowrap}
   .brand h1{font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .brand small,.top .chip{display:none}
@@ -265,7 +309,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .act{padding:8px 8px max(8px, env(safe-area-inset-bottom, 0px))}
   .quick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .quick .btn{flex:none}
-  .inrow textarea{height:48px;font-size:16px;padding:10px}
+  .inrow textarea{height:44px;font-size:16px;padding:9px 10px}
 }
 @media (prefers-reduced-motion: reduce){ .ld-fill.indet{animation:none;width:100%!important;opacity:.4} .fill{transition:none} .thinking i{animation:none} }
 </style>
@@ -279,28 +323,12 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   <button class="btn" id="btnSettings" type="button">설정</button>
 </header>
 
-<!-- 첫 화면 -->
+<!-- 첫 화면: 태어나기 · 이어서 하기 · 지나간 삶 -->
 <main class="menu" id="menu" hidden>
   <div class="menu-hero">
-    <h2>도시에서<br>살아간다는 것</h2>
-    <p class="note">머리가 다스리는 도시에서, 0세부터 한 사람의 삶을.</p>
+    <h2>도시에서 살아간다는 것</h2>
+    <p class="note">머리가 다스리는 도시, 날개가 지키는 둥지와 그 바깥의 뒷골목. 당신은 이곳에서 0세로 태어난다.</p>
   </div>
-  <div class="cont card" id="menuContinue" hidden>
-    <canvas class="sprite sm" id="contSprite" width="32" height="32" aria-hidden="true"></canvas>
-    <div class="cont-txt"><b id="contName"></b><span class="note" id="contInfo"></span></div>
-    <button class="btn primary" type="button" id="btnContinue">이어서 하기</button>
-  </div>
-  <button class="btn big" type="button" id="btnNewLife">새 인생 시작</button>
-  <section class="lives">
-    <h3 class="label">지나간 삶</h3>
-    <p class="note" id="livesNote"></p>
-    <div id="livesList"></div>
-  </section>
-</main>
-
-<!-- 캐릭터 생성 -->
-<main class="create" id="create" hidden>
-  <p class="lead">머리가 다스리는 <strong>도시</strong>. 스물여섯 개의 구역, 날개가 지키는 둥지와 그 바깥의 뒷골목.<br>당신은 이곳에서 <strong>0세</strong>로 태어난다.</p>
   <form class="form" id="createForm">
     <label class="field"><span>이름</span><input type="text" id="cName" maxlength="20" required placeholder="예: 서윤"></label>
     <div class="field"><span>성별</span>
@@ -311,7 +339,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       </div>
       <input type="text" id="cGenderOther" maxlength="20" placeholder="성별을 적어 주세요" hidden>
     </div>
-    <label class="field"><span>외모</span><textarea id="cLook" maxlength="300" placeholder="예: 잿빛 머리칼, 왼쪽 눈 밑의 작은 점, 또래보다 마른 체격"></textarea></label>
+    <div class="lookrow">
+      <label class="field"><span>외모</span><textarea id="cLook" maxlength="300" placeholder="예: 은발 포니테일, 붉은 눈, 안경, 검은 코트, 왼뺨의 흉터"></textarea></label>
+      <figure class="preview"><canvas class="sprite" id="cPreview" width="32" height="32" role="img" aria-label="외모 미리보기"></canvas><figcaption class="note">어른이 된 모습</figcaption></figure>
+    </div>
+    <p class="note hint">머리색·머리 모양(긴/단발/묶은/양갈래/땋은/곱슬/삐죽), 눈 색, 피부, 안경·선글라스·안대, 모자·후드, 목도리, 마스크, 수염, 주근깨·점, 흉터·붕대, 귀걸이, 옷 색과 종류(코트·후드·원피스), 체격이 그림에 반영됩니다.</p>
     <div class="row">
       <label class="field"><span>태어날 구역</span><select id="cDistrict"></select></label>
       <label class="field"><span>출생 환경</span>
@@ -328,6 +360,16 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <p class="note" id="reliveNote" hidden></p>
     <p class="note" id="createNote"></p>
   </form>
+  <div class="cont card" id="menuContinue" hidden>
+    <canvas class="sprite sm" id="contSprite" width="32" height="32" aria-hidden="true"></canvas>
+    <div class="cont-txt"><b id="contName"></b><span class="note" id="contInfo"></span></div>
+    <button class="btn primary" type="button" id="btnContinue">이어서 하기</button>
+  </div>
+  <section class="lives">
+    <h3 class="label">지나간 삶</h3>
+    <p class="note" id="livesNote"></p>
+    <div id="livesList"></div>
+  </section>
 </main>
 
 <!-- 게임 -->
@@ -379,9 +421,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <form class="act" id="actForm">
       <div class="quick">
         <button class="btn" type="button" id="btnFlow">▶ 흘려보내기</button>
-        <div class="speed" role="group" aria-label="배속">
-          <button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="4" aria-pressed="false">4×</button><button type="button" data-speed="8" aria-pressed="false">8×</button>
-        </div>
+        <button class="btn speedbtn" type="button" id="btnSpeed" aria-label="배속 바꾸기">1×</button>
         <button class="btn" type="button" id="btnShop">공방</button>
         <span class="note" id="flowDate"></span>
       </div>
@@ -605,7 +645,7 @@ function eventLine(ev){
   return ev ? `\n\n[돌발 상황] 장면 끝에서 갑작스럽게 "${ev}" 상황이 벌어지게 하라(현재 장소와 세계관에 맞게 각색). 플레이어가 반응해야 하는 순간에서 멈추고, options는 이 상황에 대한 대응으로 써라.` : "";
 }
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-if(matchMedia("(max-width: 860px)").matches) document.getElementById("actInput").placeholder = "무엇을 하나요? 여러 행동도 한 번에";
+if(matchMedia("(max-width: 860px)").matches) document.getElementById("actInput").placeholder = "무엇을 할까요?";
 
 /* 이름 생성 */
 const SURNAMES = "김이박최정강조윤장임한오서신권황안송류홍".split("");
@@ -1555,88 +1595,154 @@ function equipText(){
 /* ───────── SD 픽셀 캐릭터: 외모 글에서 특징을 읽어 32×32로 그린다 ───────── */
 function hashStr(s){ let h = 2166136261; for(const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
 const COLOR_WORDS = [
-  [/검은|흑|까만|검정|칠흑/, "#25232d"], [/갈색|밤색|브라운/, "#6b4a32"], [/금발|노란|금빛|황금/, "#d9b54a"],
-  [/은발|백발|흰|하얀|은빛|백색/, "#dcdce4"], [/잿빛|회색|회백|재색/, "#8c8b96"], [/빨간|붉은|적|빨강|다홍/, "#b23b30"],
-  [/파란|푸른|청|파랑|하늘/, "#3e66b0"], [/초록|녹색|녹|연두/, "#3f8a4e"], [/분홍|핑크|복숭아/, "#e08aaa"], [/보라|자주|보랏/, "#7c52aa"]
+  [/검은|검정|까만|칠흑|흑/, "#25232d"], [/갈색|밤색|브라운|고동/, "#6b4a32"], [/금발|노란|금빛|황금|노랑/, "#d9b54a"],
+  [/은발|백발|흰|하얀|은빛|백색|흰색/, "#dcdce4"], [/잿빛|회색|회백|재색|그레이/, "#8c8b96"], [/빨간|붉은|적|빨강|다홍|진홍/, "#b23b30"],
+  [/파란|푸른|청|파랑|하늘|남색|네이비/, "#3e66b0"], [/초록|녹색|녹|연두|카키/, "#3f8a4e"], [/분홍|핑크|복숭아/, "#e08aaa"], [/보라|자주|보랏/, "#7c52aa"],
+  [/주황|오렌지/, "#d27a2f"], [/베이지|아이보리|크림/, "#d8c9a8"]
 ];
+/* 색 낱말이 명사 바로 앞(사이 몇 글자 이내)에 있을 때만 그 명사의 색으로 본다 */
 function findColor(text, nounRe){
+  let best = null, bestPos = -1;
   for(const [re, c] of COLOR_WORDS){
-    const r = new RegExp("(" + re.source + ")[가-힣]{0,3}\\s?" + nounRe.source);
-    if(r.test(text)) return c;
+    const r = new RegExp("(" + re.source + ")[가-힣]{0,3}\\s?[가-힣]{0,3}?" + nounRe.source, "g");
+    let m; while((m = r.exec(text))){ if(m.index > bestPos){ best = c; bestPos = m.index; } }
   }
-  return null;
+  return best;
 }
-function lookTraits(){
-  const t = (S.look || "") + " ";
-  const h = hashStr(S.name + S.district);
+const HAIR_DIRECT = [[/흑발/, "#25232d"], [/금발/, "#d9b54a"], [/은발|백발/, "#dcdce4"], [/적발|홍발/, "#b23b30"], [/청발/, "#3e66b0"], [/갈발/, "#6b4a32"], [/녹발/, "#3f8a4e"], [/분홍 ?머/, "#e08aaa"]];
+function lookTraitsOf(look, name, gender, seedKey){
+  const t = " " + (look || "") + " ";
+  const h = hashStr((name || "") + (seedKey || ""));
   const tr = {};
-  tr.hair = findColor(t, /(머리|머리칼|머리카락|발|헤어)/) || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
-  tr.eye = findColor(t, /(눈|눈동자|눈빛)/) || ["#3a2c26", "#2a2f3c", "#4a3a2a"][(h >> 3) % 3];
-  tr.skin = /창백|하얀 피부|흰 피부|새하얀/.test(t) ? "#f3e0d2" : /까무잡잡|검은 피부|그을린|구릿빛|갈색 피부/.test(t) ? "#a9764f" : "#e9c6a8";
+  tr.hair = findColor(t, /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리)/) || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
+  tr.eye = findColor(t, /(눈동자|눈빛|홍채|눈)/) || ["#3a2c26", "#2a2f3c", "#4a3a2a"][(h >> 3) % 3];
+  tr.skin = /창백|하얀 피부|흰 피부|새하얀 피부|뽀얀/.test(t) ? "#f3e0d2" : /까무잡잡|검은 피부|그을린|구릿빛|갈색 피부|가무잡잡/.test(t) ? "#a9764f" : "#e9c6a8";
   if(/삭발|대머리|민머리/.test(t)) tr.style = "bald";
-  else if(/포니|묶은|묶어|올림/.test(t)) tr.style = "pony";
-  else if(/긴 ?머|장발|허리까지|길게|긴 머리칼|어깨를 넘는/.test(t)) tr.style = "long";
-  else if(/짧은|단발|스포츠|숏/.test(t)) tr.style = "short";
-  else tr.style = S.gender === "여성" ? "long" : S.gender === "남성" ? "short" : "bob";
-  tr.glasses = /안경/.test(t);
-  tr.scar = /흉터|상처|칼자국/.test(t);
-  tr.build = /마른|깡마른|가냘픈|왜소/.test(t) ? "thin" : /덩치|뚱뚱|통통|근육|건장|거구|떡대/.test(t) ? "big" : "mid";
+  else if(/트윈|양갈래|양 갈래|양쪽으로 묶/.test(t)) tr.style = "twin";
+  else if(/땋은|땋아|브레이드|댕기/.test(t)) tr.style = "braid";
+  else if(/포니|묶은|묶어|올림|하나로 묶/.test(t)) tr.style = "pony";
+  else if(/삐죽|뻗친|헝클|부스스|덥수룩/.test(t)) tr.style = "spiky";
+  else if(/곱슬|파마|웨이브|구불/.test(t)) tr.style = "curly";
+  else if(/긴 ?머|장발|허리까지|길게 기른|긴 머리칼|어깨를 넘는|긴 생머리/.test(t)) tr.style = "long";
+  else if(/단발|어깨까지|턱선/.test(t)) tr.style = "bob";
+  else if(/짧은|스포츠|숏컷|짧게/.test(t)) tr.style = "short";
+  else tr.style = gender === "여성" ? "long" : gender === "남성" ? "short" : "bob";
+  tr.bangs = !/이마를 드러|올백|앞머리 없|넘긴 머리|넘겨/.test(t);
+  tr.sunglasses = /선글라스|색안경/.test(t);
+  tr.glasses = /안경/.test(t) && !tr.sunglasses;
+  tr.eyepatch = /안대/.test(t);
+  tr.scar = /흉터|상처|칼자국|베인 자국/.test(t);
+  tr.mole = /눈물점|애교점|작은 점|검은 점|점이 있|밑의 점|밑 점|입가의 점|입가 점/.test(t);
+  tr.freckles = /주근깨/.test(t);
+  tr.mustache = /콧수염/.test(t);
+  tr.beard = /턱수염|구레나룻|덥수룩한 수염/.test(t) || (/수염/.test(t) && !tr.mustache);
+  tr.mask = /마스크|복면|입을 가린/.test(t);
+  tr.hood = /후드를 (쓴|눌러)|후드 쓴|모자 달린/.test(t);
+  tr.hat = !tr.hood && /모자|비니|베레모|캡|중절모|페도라/.test(t);
+  tr.hatColor = findColor(t, /(모자|비니|베레모|캡|중절모|페도라)/) || "#2c2b33";
+  tr.scarf = /목도리|스카프|머플러|목에 두른/.test(t);
+  tr.scarfColor = findColor(t, /(목도리|스카프|머플러)/) || "#a33a32";
+  tr.earring = /귀걸이|피어싱/.test(t);
+  tr.bandage = /붕대|반창고|밴드/.test(t);
+  tr.build = /마른|깡마른|가냘픈|왜소|호리호리/.test(t) ? "thin" : /덩치|뚱뚱|통통|근육|건장|거구|떡대|우람/.test(t) ? "big" : "mid";
+  tr.outfit = findColor(t, /(옷|코트|재킷|자켓|후드티|후드|셔츠|원피스|티셔츠|스웨터|니트|교복|드레스|외투|점퍼|조끼)/);
+  tr.otype = /원피스|드레스|치마|스커트/.test(t) ? "dress" : /후드티|후드/.test(t) ? "hoodie" : /코트|트렌치|외투|망토/.test(t) ? "coat" : "shirt";
   return tr;
 }
+function lookTraits(){ return lookTraitsOf(S.look, S.name, S.gender, String(S.district)); }
 
-function drawSprite(cv){
+function drawSprite(cv, opt){
   const W = 32, g = Array.from({length: W}, () => Array(W).fill(null));
   const px = (x, y, c) => { if(x >= 0 && y >= 0 && x < W && y < W) g[y][x] = c; };
   const rect = (x, y, w, h, c) => { for(let j = 0; j < h; j++) for(let i = 0; i < w; i++) px(x + i, y + j, c); };
-  const tr = lookTraits(), y0 = ageY();
+  const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return "#" + ((f(n >> 16) << 16) | (f((n >> 8) & 255) << 8) | f(n & 255)).toString(16).padStart(6, "0"); };
+  const o = opt || {};
+  const tr = o.traits || lookTraits(), y0 = o.age != null ? o.age : ageY();
   const METAL = "#a3adbb", METAL_D = "#6d7785";
   let hair = tr.hair; if(y0 >= 60 && tr.style !== "bald") hair = "#c9c9cf";
-  const eq = S.equip || {};
+  const hairD = shade(hair, 0.72);
+  const eq = o.equip || S.equip || {};
   const armor = eq.armor && itemById(eq.armor);
-  let outfit = S.origin === "nest" ? "#4a5d7a" : "#6f6457";
+  const origin = o.origin || S.origin;
+  let outfit = tr.outfit || (origin === "nest" ? "#4a5d7a" : "#6f6457");
   if(armor) outfit = armor.look === "suit" ? "#24262e" : armor.look;
+  const outD = shade(outfit, 0.7);
   const pants = armor && armor.look === "suit" ? "#24262e" : "#3a3a44";
 
-  if(y0 < 2){ /* 아기: 큰 머리와 포대기 */
+  if(y0 < 2){
     rect(10, 9, 12, 11, tr.skin); px(10, 9, null); px(21, 9, null);
-    rect(13, 8, 6, 2, hair); px(15, 7, hair);
-    rect(13, 14, 2, 1, "#3a2c26"); rect(18, 14, 2, 1, "#3a2c26");
+    if(tr.style !== "bald"){ rect(13, 8, 6, 2, hair); px(15, 7, hair); }
+    rect(13, 14, 2, 1, tr.eye); rect(18, 14, 2, 1, tr.eye);
     px(12, 16, "#eaa6a0"); px(19, 16, "#eaa6a0"); px(16, 17, "#a0565a");
     rect(9, 20, 14, 9, "#d9cba8"); rect(10, 29, 12, 1, "#d9cba8");
     rect(11, 22, 10, 1, "#c3b48f"); px(15, 21, tr.skin); px(16, 21, tr.skin);
   }else{
     const child = y0 < 13, oy = child ? 3 : 0;
     const tw = tr.build === "thin" ? 8 : tr.build === "big" ? 12 : 10, tx = 16 - tw / 2;
+    /* 뒷머리 */
     if(tr.style === "long") rect(8, 6 + oy, 16, child ? 12 : 15, hair);
-    if(tr.style === "pony") rect(23, 7 + oy, 3, 8, hair);
+    if(tr.style === "curly"){ rect(7, 5 + oy, 18, 10, hair); for(let j = 0; j < 10; j += 2){ px(6, 6 + oy + j, hair); px(25, 6 + oy + j, hair); } }
+    if(tr.style === "pony"){ rect(23, 6 + oy, 3, 9, hair); px(24, 15 + oy, hairD); }
+    if(tr.style === "twin"){ rect(5, 7 + oy, 3, 9, hair); rect(24, 7 + oy, 3, 9, hair); px(6, 16 + oy, hairD); px(25, 16 + oy, hairD); }
+    if(tr.style === "braid"){ for(let j = 0; j < 11; j++) px(23 + (j % 2), 8 + oy + j, j % 2 ? hairD : hair); rect(23, 19 + oy, 2, 1, "#a33a32"); }
+    if(tr.hood){ rect(7, 3 + oy, 18, 15, outfit); }
+    /* 얼굴 */
     rect(9, 5 + oy, 14, 12, tr.skin);
     px(9, 5 + oy, null); px(22, 5 + oy, null); px(9, 16 + oy, null); px(22, 16 + oy, null);
-    if(tr.style !== "bald"){
+    if(tr.hood){ rect(8, 4 + oy, 16, 3, outfit); rect(8, 7 + oy, 1, 9, outfit); rect(23, 7 + oy, 1, 9, outfit); }
+    /* 머리 */
+    if(tr.style !== "bald" && !tr.hood){
       rect(9, 3 + oy, 14, 5, hair); px(9, 3 + oy, null); px(22, 3 + oy, null);
-      rect(8, 6 + oy, 2, tr.style === "short" ? 4 : 7, hair); rect(22, 6 + oy, 2, tr.style === "short" ? 4 : 7, hair);
-      rect(10, 8 + oy, 12, 1, hair); px(13, 8 + oy, tr.skin); px(18, 8 + oy, tr.skin);
-      if(tr.style === "bob") { rect(8, 10 + oy, 2, 4, hair); rect(22, 10 + oy, 2, 4, hair); }
+      const side = tr.style === "short" || tr.style === "spiky" ? 4 : 7;
+      rect(8, 6 + oy, 2, side, hair); rect(22, 6 + oy, 2, side, hair);
+      if(tr.bangs){ rect(10, 8 + oy, 12, 1, hair); px(13, 8 + oy, tr.skin); px(18, 8 + oy, tr.skin); }
+      else { px(10, 8 + oy, hair); px(21, 8 + oy, hair); }
+      if(tr.style === "bob"){ rect(8, 10 + oy, 2, 4, hair); rect(22, 10 + oy, 2, 4, hair); }
+      if(tr.style === "spiky"){ px(10, 2 + oy, hair); px(13, 1 + oy, hair); px(13, 2 + oy, hair); px(17, 2 + oy, hair); px(20, 1 + oy, hair); px(20, 2 + oy, hair); px(8, 5 + oy, hair); px(23, 5 + oy, hair); }
+      rect(11, 4 + oy, 6, 1, shade(hair, 1.18));
+    }else if(tr.style === "bald" && !tr.hood){ px(12, 6 + oy, shade(tr.skin, 1.05)); }
+    if(tr.hat){ rect(9, 2 + oy, 14, 4, tr.hatColor); rect(7, 6 + oy, 18, 1, shade(tr.hatColor, 0.75)); px(9, 2 + oy, null); px(22, 2 + oy, null); }
+    /* 눈 */
+    if(tr.sunglasses){ rect(11, 11 + oy, 4, 2, "#121216"); rect(17, 11 + oy, 4, 2, "#121216"); rect(15, 11 + oy, 2, 1, "#121216"); px(11, 11 + oy, "#4a4a55"); px(17, 11 + oy, "#4a4a55"); }
+    else{
+      rect(12, 11 + oy, 2, 3, tr.eye); px(12, 11 + oy, "#ffffff");
+      if(tr.eyepatch){ rect(17, 10 + oy, 4, 4, "#1b1b1f"); for(let x = 9; x < 23; x++) if(x < 17 || x > 20) px(x, 9 + oy, "#1b1b1f"); }
+      else if(eq.eye){ rect(18, 11 + oy, 2, 3, "#45e0cf"); px(19, 12 + oy, "#d8fffa"); }
+      else { rect(18, 11 + oy, 2, 3, tr.eye); px(18, 11 + oy, "#ffffff"); }
     }
-    rect(12, 11 + oy, 2, 3, tr.eye); px(12, 11 + oy, "#ffffff");
-    if(eq.eye) { rect(18, 11 + oy, 2, 3, "#45e0cf"); px(19, 12 + oy, "#d8fffa"); }
-    else { rect(18, 11 + oy, 2, 3, tr.eye); px(18, 11 + oy, "#ffffff"); }
+    if(tr.glasses){ for(const gx of [11, 17]){ rect(gx, 10 + oy, 4, 1, "#c8ccd4"); rect(gx, 14 + oy, 4, 1, "#c8ccd4"); for(let j = 11; j <= 13; j++){ px(gx, j + oy, "#c8ccd4"); px(gx + 3, j + oy, "#c8ccd4"); } } px(15, 11 + oy, "#c8ccd4"); px(16, 11 + oy, "#c8ccd4"); }
     if(child){ px(11, 14 + oy, "#eaa6a0"); px(20, 14 + oy, "#eaa6a0"); }
-    rect(15, 15 + oy, 2, 1, "#8a4a4a");
-    if(tr.glasses){ for(const gx of [11, 17]){ rect(gx, 10 + oy, 4, 1, "#c8ccd4"); rect(gx, 14 + oy, 4, 1, "#c8ccd4"); px(gx, 11 + oy, "#c8ccd4"); px(gx, 12 + oy, "#c8ccd4"); px(gx, 13 + oy, "#c8ccd4"); px(gx + 3, 11 + oy, "#c8ccd4"); px(gx + 3, 12 + oy, "#c8ccd4"); px(gx + 3, 13 + oy, "#c8ccd4"); } px(15, 11 + oy, "#c8ccd4"); px(16, 11 + oy, "#c8ccd4"); }
+    if(tr.freckles){ px(11, 13 + oy, "#b9805e"); px(12, 14 + oy, "#b9805e"); px(20, 13 + oy, "#b9805e"); px(19, 14 + oy, "#b9805e"); }
+    if(tr.mole) px(20, 15 + oy, "#4a3226");
+    /* 입 · 수염 · 마스크 */
+    if(tr.mask){ rect(11, 14 + oy, 10, 3, "#d9d9de"); px(11, 14 + oy, null); px(20, 14 + oy, null); rect(13, 15 + oy, 6, 1, "#bdbdc4"); }
+    else{
+      rect(15, 15 + oy, 2, 1, "#8a4a4a");
+      if(tr.mustache && !child) rect(14, 14 + oy, 4, 1, hairD);
+      if(tr.beard && !child){ rect(11, 15 + oy, 10, 2, hairD); px(11, 15 + oy, null); px(20, 15 + oy, null); rect(15, 15 + oy, 2, 1, "#8a4a4a"); px(10, 13 + oy, hairD); px(21, 13 + oy, hairD); }
+    }
     if(tr.scar){ px(19, 15 + oy, "#b5524a"); px(20, 14 + oy, "#b5524a"); px(21, 13 + oy, "#b5524a"); }
+    if(tr.bandage){ rect(10, 7 + oy, 4, 1, "#ede6d6"); px(11, 6 + oy, "#ede6d6"); }
+    if(tr.earring){ px(8, 13 + oy, "#d9b54a"); px(23, 13 + oy, "#d9b54a"); }
     rect(14, 17 + oy, 4, 1, tr.skin);
+    /* 몸 */
     const th = child ? 5 : 7, ty = 18 + oy;
     rect(tx, ty, tw, th, outfit);
+    if(!armor && tr.otype === "hoodie"){ rect(tx + 1, ty, tw - 2, 1, outD); rect(tx + 3, ty + th - 3, tw - 6, 2, outD); px(15, ty + 1, "#d8d8de"); px(16, ty + 1, "#d8d8de"); }
+    if(!armor && tr.otype === "shirt"){ px(15, ty, "#e8e6e1"); px(16, ty, "#e8e6e1"); }
     if(armor && armor.look === "suit"){ rect(15, ty, 2, 3, "#e8e6e1"); px(15, ty + 1, "#a33a32"); px(16, ty + 2, "#a33a32"); }
     if(eq.body){ for(let j = 1; j < th - 1; j += 2) rect(tx + 1, ty + j, tw - 2, 1, METAL_D); }
-    rect(tx, ty + th - 1, tw, 1, "#2a2630");
+    if(tr.otype !== "dress") rect(tx, ty + th - 1, tw, 1, "#2a2630");
+    if(tr.scarf){ rect(12, ty - 1, 8, 2, tr.scarfColor); rect(18, ty + 1, 2, 3, tr.scarfColor); }
     const ah = child ? 4 : 6;
     rect(tx - 2, ty, 2, ah, outfit); rect(tx - 2, ty + ah, 2, 1, tr.skin);
     if(eq.arm){ rect(tx + tw, ty, 2, ah, METAL); px(tx + tw, ty + 2, METAL_D); rect(tx + tw, ty + ah, 2, 1, METAL_D); }
     else { rect(tx + tw, ty, 2, ah, outfit); rect(tx + tw, ty + ah, 2, 1, tr.skin); }
     const ly = ty + th, lh = child ? 3 : 4;
-    rect(12, ly, 3, lh, pants);
-    rect(17, ly, 3, lh, eq.leg ? METAL : pants); if(eq.leg) px(18, ly + 1, METAL_D);
+    rect(12, ly, 3, lh, tr.otype === "dress" && !armor ? tr.skin : pants);
+    rect(17, ly, 3, lh, eq.leg ? METAL : (tr.otype === "dress" && !armor ? tr.skin : pants)); if(eq.leg) px(18, ly + 1, METAL_D);
+    if(!armor && tr.otype === "dress"){ rect(tx - 1, ly, tw + 2, 2, outfit); rect(tx - 1, ly + 1, tw + 2, 1, outD); }
+    if(!armor && tr.otype === "coat"){ rect(tx, ly, 3, 2, outfit); rect(tx + tw - 3, ly, 3, 2, outfit); }
     rect(11, ly + lh, 4, 1, "#1f1d24"); rect(17, ly + lh, 4, 1, "#1f1d24");
     if(y0 >= 65) rect(6, ty + 2, 1, 12 - oy, "#7a5a3a");
     const w = eq.weapon && itemById(eq.weapon);
@@ -1653,7 +1759,6 @@ function drawSprite(cv){
       else if(L === "gun"){ rect(hx, hy - 1, 4, 1, "#2b2b31"); px(hx, hy, "#2b2b31"); }
     }
   }
-  /* 외곽선 */
   const out = g.map(r => r.slice());
   for(let y = 0; y < W; y++) for(let x = 0; x < W; x++){
     if(g[y][x]) continue;
@@ -1664,7 +1769,8 @@ function drawSprite(cv){
 }
 
 /* ───────── 흘려보내기: 배속으로 시간이 흐르고, 작은 일은 지나가고, 큰 일이 나면 멈춘다 ───────── */
-const FLOW_DAYS = {1:2, 2:4, 4:8, 8:16};
+const FLOW_DAYS = {1:2, 2:4, 4:8, 8:16, 16:32, 32:64};
+const SPEEDS = [1, 2, 4, 8, 16, 32];
 const flow = {on:false, speed:1, timer:null, startDays:0, smalls:[], ahn:0};
 function bigRate(y){ if(y < 3) return 0.3; if(y < 6) return 0.6; return Math.min(4, 1.2 + (y - 6) * 0.2); }
 const SMALL = {
@@ -1757,7 +1863,8 @@ function updateFlowUI(){
   const b = $("#btnFlow");
   b.textContent = flow.on ? "⏸ 멈추기" : "▶ 흘려보내기";
   b.classList.toggle("primary", flow.on);
-  document.querySelectorAll("[data-speed]").forEach(x => x.setAttribute("aria-pressed", String(Number(x.dataset.speed) === flow.speed)));
+  $("#btnSpeed").textContent = flow.speed + "×";
+  $("#btnSpeed").setAttribute("aria-label", `배속 ${flow.speed}배, 눌러서 바꾸기`);
   $("#flowDate").textContent = flow.on ? "시간이 흐르는 중…" : "";
   document.body.classList.toggle("flowing", flow.on);
 }
@@ -2063,7 +2170,9 @@ function renderMenu(){
     $("#contInfo").textContent = `${y}세 · ${corpOf(cur.district)} 구역 · ` + (cur.savedAt ? "자동 저장 " + new Date(cur.savedAt).toLocaleString("ko-KR", {month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit"}) : "자동 저장됨");
     try{ const keep = S; S = cur; if(!S.equip) S.equip = {}; if(S.doy0 == null) S.doy0 = 0; drawSprite($("#contSprite")); S = keep; }catch(e){}
   }
-  $("#btnNewLife").textContent = alive ? "새 인생 시작 (지금 삶은 지워짐)" : "새 인생 시작";
+  $("#btnBorn").textContent = "태어나기"; $("#btnBorn").classList.remove("danger"); bornArmed = false;
+  if(!$("#cSeed").value) $("#cSeed").value = randomSeed();
+  drawPreview();
   const list = $("#livesList"); list.replaceChildren();
   const lives = loadLives();
   $("#livesNote").textContent = lives.length ? `즐겨찾기하지 않은 삶은 최근 ${MAX_LIVES}개까지만 남습니다.` : "아직 끝난 삶이 없습니다. 생을 마치면 전기가 이곳에 남습니다.";
@@ -2101,14 +2210,14 @@ function relive(id){
     (l.choice ? "" : " 이 기록은 구역 선택 방식이 남아 있지 않아 출생이 조금 다를 수 있습니다.");
   const cur = store.get("dosi_save");
   if(cur && !cur.archived) $("#reliveNote").textContent += ` 태어나면 진행 중인 ${cur.name}의 삶은 지워집니다.`;
-  $("#cName").focus();
+  drawPreview();
   window.scrollTo(0, 0);
 }
 function showMenu(){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(S && !S.dead && !S.archived) save();
   document.body.classList.remove("in-game", "show-status");
-  $("#menu").hidden = false; $("#create").hidden = true; $("#game").hidden = true; $("#btnMenu").hidden = true;
+  $("#menu").hidden = false; $("#game").hidden = true; $("#btnMenu").hidden = true;
   renderMenu();
 }
 async function continueLife(){
@@ -2124,32 +2233,15 @@ async function continueLife(){
 }
 
 /* ───────── 화면 전환 ───────── */
-function showCreate(){
-  document.body.classList.remove("in-game", "show-status");
-  $("#menu").hidden = true; $("#create").hidden = false; $("#game").hidden = true; $("#btnMenu").hidden = false;
-  if(!$("#cSeed").value) $("#cSeed").value = randomSeed();
-  document.body.style.height = "";
-}
+function showCreate(){ showMenu(); window.scrollTo(0, 0); }
 function showGame(){
   document.body.classList.add("in-game");
-  $("#menu").hidden = true; $("#create").hidden = true; $("#game").hidden = false; $("#btnMenu").hidden = false;
+  $("#menu").hidden = true; $("#game").hidden = false; $("#btnMenu").hidden = false;
   renderLog(); renderStatus();
 }
 function newLife(){ showCreate(); }
 $("#btnMenu").addEventListener("click", showMenu);
 $("#btnContinue").addEventListener("click", continueLife);
-let newArmed = null;
-$("#btnNewLife").addEventListener("click", e => {
-  const b = e.currentTarget, cur = store.get("dosi_save");
-  if(cur && !cur.archived && !newArmed){
-    b.textContent = `정말 ${cur.name}의 삶을 지우고 새로 시작할까요?`; b.classList.add("danger");
-    newArmed = setTimeout(() => { newArmed = null; renderMenu(); b.classList.remove("danger"); }, 4000);
-    return;
-  }
-  clearTimeout(newArmed); newArmed = null; b.classList.remove("danger");
-  store.del("dosi_save"); S = null; showCreate();
-  $("#reliveNote").hidden = true; $("#cSeed").value = randomSeed();
-});
 $("#bioSave").addEventListener("click", saveBioImage);
 $("#bioShare").addEventListener("click", shareBio);
 $("#bioAgain").addEventListener("click", () => bioId && relive(bioId));
@@ -2162,6 +2254,18 @@ $("#bioDel").addEventListener("click", e => {
   const l = loadLives().filter(x => x.id !== bioId); store.set(LIVES_KEY, l);
   $("#bioDlg").close(); renderMenu();
 });
+function drawPreview(){
+  const g0 = document.querySelector("input[name=gender]:checked");
+  const gender = g0 && g0.value === "기타" ? $("#cGenderOther").value : (g0 ? g0.value : "");
+  const keep = S;
+  try{
+    S = {name:$("#cName").value, look:$("#cLook").value, gender, district:0, origin:$("#cOrigin").value === "nest" ? "nest" : "back", equip:{}, days:25 * 365};
+    drawSprite($("#cPreview"), {age:25, traits: lookTraitsOf($("#cLook").value, $("#cName").value, gender, "0")});
+  }catch(e){ console.warn(e); }
+  S = keep;
+}
+["cLook", "cName", "cGenderOther", "cOrigin"].forEach(id => $("#" + id).addEventListener("input", drawPreview));
+document.querySelectorAll("input[name=gender]").forEach(r => r.addEventListener("change", drawPreview));
 $("#cSeedDice").addEventListener("click", () => { $("#cSeed").value = randomSeed(); });
 /* 삼성 인터넷 등 :has() 미지원 대비 */
 document.querySelectorAll(".seg input").forEach(r => r.addEventListener("change", () => {
@@ -2178,8 +2282,17 @@ document.querySelectorAll(".seg input").forEach(r => r.addEventListener("change"
   }));
 })();
 
+let bornArmed = false;
 $("#createForm").addEventListener("submit", async e => {
   e.preventDefault();
+  const cur = store.get("dosi_save");
+  if(cur && !cur.archived && !bornArmed && $("#cName").value.trim()){
+    bornArmed = true;
+    $("#btnBorn").textContent = `진행 중인 ${cur.name}의 삶을 지우고 태어나기`; $("#btnBorn").classList.add("danger");
+    return;
+  }
+  bornArmed = false; $("#btnBorn").textContent = "태어나기"; $("#btnBorn").classList.remove("danger");
+  $("#reliveNote").hidden = true;
   try{ await createLife(); }
   catch(err){ console.error(err); if(S && !$("#game").hidden){ log({t:"sys", text:"오류: " + err.message}); setBusy(false); } else $("#createNote").textContent = "태어나기에 실패했습니다: " + err.message; }
 });
@@ -2221,7 +2334,13 @@ $("#actInput").addEventListener("keydown", e => {
   if(e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("#actForm").requestSubmit(); }
 });
 $("#btnFlow").addEventListener("click", () => flow.on ? stopFlow(null) : startFlow());
-document.querySelectorAll("[data-speed]").forEach(b => b.addEventListener("click", () => { flow.speed = Number(b.dataset.speed); updateFlowUI(); }));
+$("#btnSpeed").addEventListener("click", () => {
+  flow.speed = SPEEDS[(SPEEDS.indexOf(flow.speed) + 1) % SPEEDS.length];
+  try{ localStorage.setItem("dosi_speed", String(flow.speed)); }catch(e){}
+  updateFlowUI();
+});
+try{ const sp = Number(localStorage.getItem("dosi_speed")); if(SPEEDS.includes(sp)) flow.speed = sp; }catch(e){}
+updateFlowUI();
 $("#actInput").addEventListener("focus", () => { if(flow.on) stopFlow(null); });
 $("#btnShop").addEventListener("click", openShop);
 document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { shopTab = b.dataset.tab; renderShop(); }));
