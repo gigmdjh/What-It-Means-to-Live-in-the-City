@@ -1651,7 +1651,7 @@ function lookTraitsOf(look, name, gender, seedKey){
 }
 function lookTraits(){ return lookTraitsOf(S.look, S.name, S.gender, String(S.district)); }
 
-/* 전신 도트 캐릭터 (32×54, 약 3등신): 굵은 검은 외곽선, 왼쪽에서 빛을 받는 명암, 팔·다리 사이 선 */
+/* 전신 도트 캐릭터 (32×54): 큰 머리, 가는 몸과 긴 팔다리: 굵은 검은 외곽선, 왼쪽에서 빛을 받는 명암, 팔·다리 사이 선 */
 const SPRITE_W = 32, SPRITE_H = 54;
 function drawSprite(cv, opt){
   const W = SPRITE_W, H = SPRITE_H, g = Array.from({length: H}, () => Array(W).fill(null));
@@ -1687,105 +1687,115 @@ function drawSprite(cv, opt){
     solid(8, by + 15, 16, 12, "#e2d6b8"); for(let y = by + 17; y < by + 27; y += 3) row(y, 9, 22, "#cfc29f");
     rect(14, by + 15, 4, 2, skin);
   }else{
+    /* 큰 머리(머리숱이 어깨보다 넓다), 가는 몸, 긴 팔, 가는 다리 */
     const child = y0 < 13;
-    const th = child ? 10 : 13, lh = child ? 9 : 13;
+    const th = child ? 9 : 12, lh = child ? 8 : 12;
     const oy = child ? 7 : 0;
-    const bw = tr.build === "thin" ? 12 : tr.build === "big" ? 16 : 14;
+    const bw = tr.build === "thin" ? 10 : tr.build === "big" ? 16 : 12;
     const tx0 = 16 - bw / 2, tx1 = 15 + bw / 2;
-    const ty = 19 + oy, hy = ty + th, ly = hy + 3;
+    const ty = 21 + oy, hy = ty + th, ly = hy + 3;
     /* 뒷머리 */
-    if(tr.style === "long"){ solid(7, 6 + oy, 18, child ? 22 : 26, hair); for(let x = 7; x <= 24; x += 2) px(x, (child ? 27 : 31) + oy, null); }
-    if(tr.style === "bob") solid(7, 6 + oy, 18, 14, hair);
-    if(tr.style === "curly"){ solid(6, 4 + oy, 20, 16, hair); for(let j = 0; j < 16; j += 2){ px(5, 5 + oy + j, hair); px(26, 5 + oy + j, hair); } }
-    if(tr.style === "pony"){ for(let j = 0; j < 16; j++) rect(24 + Math.round(Math.sin(j / 4)), 5 + oy + j, j > 12 ? 2 : 3, 1, j % 3 === 2 ? hairD : hair); px(23, 6 + oy, "#c0392b"); px(23, 7 + oy, "#c0392b"); }
-    if(tr.style === "twin"){ for(const [sx, dir] of [[3, 1], [26, -1]]) for(let j = 0; j < 17; j++) rect(sx + (j > 10 ? dir : 0), 7 + oy + j, j > 14 ? 2 : 3, 1, j % 4 === 3 ? hairD : hair); px(6, 7 + oy, "#d24d6c"); px(25, 7 + oy, "#d24d6c"); }
-    if(tr.style === "braid"){ for(let j = 0; j < 14; j++) rect(22 + (j % 2), 13 + oy + j, 2, 1, j % 2 ? hairD : hair); px(22, 27 + oy, "#c0392b"); px(23, 27 + oy, "#c0392b"); }
-    if(tr.hood) solid(5, 1 + oy, 22, 19, outfit);
+    if(tr.style === "long"){ solid(6, 8 + oy, 20, child ? 22 : 26, hair); for(let x = 6; x <= 25; x += 2) px(x, (child ? 29 : 33) + oy, null); for(let y = 12; y < (child ? 28 : 32); y += 4){ px(9, y + oy, hairD); px(22, y + oy + 2, hairD); } }
+    if(tr.style === "bob") solid(6, 8 + oy, 20, 15, hair);
+    if(tr.style === "curly"){ solid(5, 5 + oy, 22, 18, hair); for(let j = 0; j < 18; j += 2){ px(4, 6 + oy + j, hair); px(27, 6 + oy + j, hair); } }
+    if(tr.style === "pony"){ for(let j = 0; j < 17; j++) rect(25 + Math.round(Math.sin(j / 4)), 7 + oy + j, j > 13 ? 2 : 3, 1, j % 3 === 2 ? hairD : hair); px(24, 8 + oy, "#c0392b"); px(24, 9 + oy, "#c0392b"); }
+    if(tr.style === "twin"){ for(const [sx, dir] of [[2, 1], [27, -1]]) for(let j = 0; j < 18; j++) rect(sx + (j > 11 ? dir : 0), 9 + oy + j, j > 15 ? 2 : 3, 1, j % 4 === 3 ? hairD : hair); px(5, 9 + oy, "#d24d6c"); px(26, 9 + oy, "#d24d6c"); }
+    if(tr.style === "braid"){ for(let j = 0; j < 15; j++) rect(23 + (j % 2), 17 + oy + j, 2, 1, j % 2 ? hairD : hair); px(23, 32 + oy, "#c0392b"); px(24, 32 + oy, "#c0392b"); }
+    if(tr.hood) solid(4, 1 + oy, 24, 21, outfit);
     /* 다리 · 신발 */
     const dress = !armor && tr.otype === "dress";
     const legC = dress ? skin : pants;
-    solid(10, ly, 5, lh, legC); solid(17, ly, 5, lh, eq.leg ? METAL : legC);
-    if(eq.leg){ row(ly + 3, 17, 21, METAL_D); row(ly + 8, 17, 21, METAL_D); }
-    if(dress){ rect(10, ly + lh - 3, 5, 2, "#e8e4dc"); rect(17, ly + lh - 3, 5, 2, "#e8e4dc"); }
-    rect(9, ly + lh, 6, 2, shoe); rect(17, ly + lh, 6, 2, shoe); px(9, ly + lh, mix(shoe, "#ffffff", 0.25)); px(17, ly + lh, mix(shoe, "#ffffff", 0.25));
+    solid(12, ly, 3, lh, legC); rect(17, ly, 3, lh, eq.leg ? METAL : shade(legC, 0.85));
+    if(eq.leg){ row(ly + 3, 17, 19, METAL_D); row(ly + 8, 17, 19, METAL_D); }
+    if(dress){ rect(12, ly + lh - 3, 3, 2, "#ece8e0"); rect(17, ly + lh - 3, 3, 2, "#ece8e0"); }
+    rect(11, ly + lh, 4, 2, shoe); rect(17, ly + lh, 4, 2, shoe); px(11, ly + lh, mix(shoe, "#ffffff", 0.25)); px(17, ly + lh, mix(shoe, "#ffffff", 0.25));
     /* 골반 */
     solid(tx0 + 1, hy, bw - 2, 3, dress ? outfit : pants);
-    /* 몸통 */
+    /* 몸통 (허리가 살짝 좁아진다) */
     solid(tx0, ty, bw, th, outfit);
     px(tx0, ty, null); px(tx1, ty, null);
-    if(dress){ for(let j = 0; j < 7; j++){ const sp = Math.floor(j / 2); row(hy - 1 + j, tx0 - sp, tx1 + sp, j > 4 ? outD : outfit); px(tx1 + sp, hy - 1 + j, outD); px(tx1 + sp - 1, hy - 1 + j, outD); } for(let x = tx0; x <= tx1; x += 3) px(x, hy + 4, outD); }
+    if(tr.build !== "big") for(let y = hy - 3; y < hy; y++){ px(tx0, y, null); px(tx1, y, null); }
+    if(dress){ for(let j = 0; j < 7; j++){ const sp = Math.floor(j / 2); row(hy - 1 + j, tx0 - sp, tx1 + sp, j > 4 ? outD : outfit); px(tx1 + sp, hy - 1 + j, outD); } for(let x = tx0; x <= tx1; x += 2) px(x, hy + 3, outD); }
     if(!armor && tr.otype === "shirt"){ px(14, ty, "#f2f0ea"); px(17, ty, "#f2f0ea"); px(15, ty + 1, "#f2f0ea"); px(16, ty + 1, "#f2f0ea"); for(let y = ty + 3; y < hy - 1; y += 3) px(15, y, outD); }
-    if(!armor && tr.otype === "hoodie"){ row(ty, tx0 + 2, tx1 - 2, outD); px(14, ty + 1, "#ececf2"); px(14, ty + 2, "#ececf2"); px(17, ty + 1, "#ececf2"); px(17, ty + 2, "#ececf2"); rect(tx0 + 3, hy - 4, bw - 6, 3, outD); row(hy - 4, tx0 + 3, tx1 - 3, shade(outfit, 0.8)); }
-    if(!armor && tr.otype === "coat"){ rect(15, ty + 2, 2, th - 2, outD); px(13, ty, mix(outfit, "#ffffff", 0.25)); px(18, ty, mix(outfit, "#ffffff", 0.25)); px(12, ty + 1, mix(outfit, "#ffffff", 0.25)); px(19, ty + 1, mix(outfit, "#ffffff", 0.25)); solid(tx0, hy, 5, 7, outfit); solid(tx1 - 4, hy, 5, 7, outfit); px(14, ty + 5, "#c9a24a"); px(14, ty + 8, "#c9a24a"); }
-    if(armor && armor.look === "suit"){ rect(14, ty, 4, 5, "#f2f0ea"); rect(15, ty + 1, 2, 6, "#a8302c"); px(13, ty, "#3b3e48"); px(18, ty, "#3b3e48"); }
+    if(!armor && tr.otype === "hoodie"){ row(ty, tx0 + 2, tx1 - 2, outD); px(14, ty + 1, "#ececf2"); px(14, ty + 2, "#ececf2"); px(17, ty + 1, "#ececf2"); px(17, ty + 2, "#ececf2"); rect(tx0 + 2, hy - 4, bw - 4, 3, outD); }
+    if(!armor && tr.otype === "coat"){ rect(15, ty + 2, 2, th - 2, outD); px(13, ty, mix(outfit, "#ffffff", 0.25)); px(18, ty, mix(outfit, "#ffffff", 0.25)); solid(tx0, hy, 4, 7, outfit); solid(tx1 - 3, hy, 4, 7, outfit); px(14, ty + 4, "#c9a24a"); px(14, ty + 7, "#c9a24a"); }
+    if(armor && armor.look === "suit"){ rect(14, ty, 4, 5, "#f2f0ea"); rect(15, ty + 1, 2, 6, "#a8302c"); }
     if(eq.body){ for(let j = 2; j < th - 1; j += 3) row(ty + j, tx0 + 2, tx1 - 2, METAL_D); }
     if(!dress) row(hy - 1, tx0 + 1, tx1 - 1, shade(outfit, 0.55));
-    /* 팔 (몸통과 한 칸 띄워 외곽선이 생기게) */
-    solid(tx0 - 3, ty + 1, 2, th - 1, outfit); rect(tx0 - 3, hy, 2, 2, skin);
-    if(eq.arm){ rect(tx1 + 2, ty + 1, 2, th - 1, METAL); row(ty + 4, tx1 + 2, tx1 + 3, METAL_D); row(ty + 8, tx1 + 2, tx1 + 3, METAL_D); rect(tx1 + 2, hy, 2, 2, METAL_D); }
-    else { rect(tx1 + 2, ty + 1, 2, th - 1, outD); rect(tx1 + 2, hy, 2, 2, skinD); }
+    /* 긴 팔: 손이 골반 아래까지 */
+    const armEnd = hy + 1;
+    solid(tx0 - 3, ty + 1, 2, armEnd - ty - 1, outfit); rect(tx0 - 3, armEnd, 2, 2, skin);
+    if(eq.arm){ rect(tx1 + 2, ty + 1, 2, armEnd - ty - 1, METAL); row(ty + 4, tx1 + 2, tx1 + 3, METAL_D); row(ty + 9, tx1 + 2, tx1 + 3, METAL_D); rect(tx1 + 2, armEnd, 2, 2, METAL_D); }
+    else { rect(tx1 + 2, ty + 1, 2, armEnd - ty - 1, outD); rect(tx1 + 2, armEnd, 2, 2, skinD); }
     /* 목 */
-    rect(14, 17 + oy, 4, 2, skin); px(17, 17 + oy, skinD); px(17, 18 + oy, skinD);
-    if(tr.scarf){ solid(10, 17 + oy, 12, 3, tr.scarfColor); rect(18, 20 + oy, 2, 5, tr.scarfColor); }
-    /* 얼굴 */
-    const FW = {6:6, 15:6, 16:5, 17:3};
-    for(let y = 6; y <= 17; y++){ const hw = FW[y] || 7; row(y + oy, 16 - hw, 15 + hw, skin); }
-    for(let y = 7; y <= 15; y++) px(22, y + oy, skinD);
-    if(tr.style === "bald" && !tr.hood){ for(let y = 1; y <= 6; y++){ const hw = [4, 6, 7, 7, 7, 7][y - 1]; row(y + oy, 16 - hw, 15 + hw, skin); } row(2 + oy, 12, 14, mix(skin, "#ffffff", 0.35)); }
-    /* 눈 */
-    const eye = (ex, color, glow) => {
-      const ey = 11 + oy;
-      row(ey, ex - 1, ex + 2, LINE);
-      rect(ex, ey + 1, 2, 2, glow ? "#45e0cf" : color);
-      px(ex + 1, ey + 2, glow ? "#9ff7ee" : shade(color, 0.45));
-      px(ex, ey + 1, "#ffffff");
+    rect(14, 19 + oy, 4, 2, skin); px(17, 19 + oy, skinD); px(17, 20 + oy, skinD);
+    if(tr.scarf){ solid(10, 19 + oy, 12, 3, tr.scarfColor); rect(18, 22 + oy, 2, 5, tr.scarfColor); }
+    /* 얼굴: 넓고 둥근 얼굴, 아래로 갈수록 좁아지는 턱 */
+    const FW = {7:7, 17:7, 18:6, 19:4};
+    for(let y = 7; y <= 19; y++){ const hw = FW[y] || 8; row(y + oy, 16 - hw, 15 + hw, skin); }
+    for(let y = 9; y <= 17; y++) px(23, y + oy, skinD);
+    if(tr.style === "bald" && !tr.hood){ for(let y = 1; y <= 7; y++){ const hw = [4, 6, 7, 8, 8, 8, 8][y - 1]; row(y + oy, 16 - hw, 15 + hw, skin); } row(2 + oy, 12, 14, mix(skin, "#ffffff", 0.35)); }
+    /* 눈: 굵은 윗눈매, 흰자, 진한 눈동자, 하이라이트 */
+    const eye = (ex, color, glow, flip) => {
+      const ey = 12 + oy;
+      row(ey, ex - 1, ex + 3, LINE); px(flip ? ex + 4 : ex - 2, ey + 1, LINE);
+      const ic = glow ? "#45e0cf" : color;
+      const wx = flip ? ex + 2 : ex, ix = flip ? ex : ex + 1;
+      rect(wx, ey + 1, 1, 2, "#f4f1ec");
+      rect(ix, ey + 1, 2, 3, ic);
+      row(ey + 1, ix, ix + 1, glow ? "#2bb5a8" : shade(color, 0.4));
+      px(ix, ey + 1, "#ffffff");
+      px(ix + 1, ey + 3, glow ? "#9ff7ee" : mix(color, "#ffffff", 0.3));
+      row(ey + 4, ex, ex + 2, skinD);
     };
-    if(tr.sunglasses){ rect(10, 11 + oy, 5, 3, "#121015"); rect(17, 11 + oy, 5, 3, "#121015"); row(11 + oy, 15, 16, "#121015"); px(11, 11 + oy, "#56536a"); px(18, 11 + oy, "#56536a"); }
+    if(tr.sunglasses){ rect(9, 12 + oy, 6, 4, "#121015"); rect(17, 12 + oy, 6, 4, "#121015"); row(12 + oy, 15, 16, "#121015"); px(10, 12 + oy, "#56536a"); px(18, 12 + oy, "#56536a"); }
     else{
-      eye(11, tr.eye, false);
-      if(tr.eyepatch){ rect(18, 10 + oy, 4, 5, "#1b1a20"); for(let x = 7; x <= 24; x++) if(x < 18 || x > 21) px(x, 8 + oy + Math.round((x - 7) / 9), "#1b1a20"); }
-      else eye(19, tr.eye, !!eq.eye);
+      eye(10, tr.eye, false, false);
+      if(tr.eyepatch){ rect(18, 11 + oy, 5, 6, "#1b1a20"); for(let x = 6; x <= 25; x++) if(x < 18 || x > 22) px(x, 9 + oy + Math.round((x - 6) / 10), "#1b1a20"); }
+      else eye(19, tr.eye, !!eq.eye, true);
     }
-    if(tr.glasses){ for(const gx of [9, 17]){ row(10 + oy, gx, gx + 5, "#8e94a0"); row(14 + oy, gx, gx + 5, "#8e94a0"); for(let y = 11; y <= 13; y++){ px(gx, y + oy, "#8e94a0"); px(gx + 5, y + oy, "#8e94a0"); } } }
+    if(tr.glasses){ for(const gx of [8, 18]){ row(11 + oy, gx, gx + 5, "#8e94a0"); row(16 + oy, gx, gx + 5, "#8e94a0"); for(let y = 12; y <= 15; y++){ px(gx, y + oy, "#8e94a0"); px(gx + 5, y + oy, "#8e94a0"); } } row(13 + oy, 14, 17, "#8e94a0"); }
     /* 볼 · 입 · 수염 · 마스크 */
     if(!tr.mask){
-      px(10, 14 + oy, blush); px(21, 14 + oy, blush);
-      px(15, 15 + oy, "#7a3340"); px(16, 15 + oy, "#7a3340"); if(child) px(15, 16 + oy, "#d9707e");
-      if(tr.mustache && !child) row(14 + oy, 13, 18, hairD);
-      if(tr.beard && !child){ for(let y = 14; y <= 18; y++){ const hw = [7, 6, 5, 4, 2][y - 14]; row(y + oy, 16 - hw, 15 + hw, hairD); } px(15, 15 + oy, "#7a3340"); px(16, 15 + oy, "#7a3340"); }
-    }else{ for(let y = 13; y <= 17; y++){ const hw = FW[y] || 7; row(y + oy, 16 - hw, 15 + hw, "#e3e3e8"); } row(15 + oy, 11, 20, "#c6c6ce"); }
-    if(tr.freckles) for(const [x, y] of [[10, 13], [12, 14], [19, 14], [21, 13]]) px(x, y + oy, mix(skin, "#8a4a2a", 0.45));
-    if(tr.mole) px(20, 15 + oy, "#3e2a20");
-    if(tr.scar) for(let i = 0; i < 3; i++) px(19 + i, 15 + oy - i, "#b5524a");
-    if(tr.bandage){ rect(18, 14 + oy, 3, 1, "#efe8d8"); px(19, 13 + oy, "#efe8d8"); }
-    /* 머리 */
+      row(16 + oy, 9, 10, blush); row(16 + oy, 21, 22, blush);
+      px(16, 16 + oy, skinD);
+      row(17 + oy, 15, 16, "#5a2030"); row(18 + oy, 15, 16, "#c8606a");
+      if(tr.mustache && !child) row(16 + oy, 13, 18, hairD);
+      if(tr.beard && !child){ for(let y = 16; y <= 20; y++){ const hw = [8, 7, 6, 4, 2][y - 16]; row(y + oy, 16 - hw, 15 + hw, hairD); } row(17 + oy, 15, 16, "#5a2030"); }
+    }else{ for(let y = 15; y <= 19; y++){ const hw = FW[y] || 8; row(y + oy, 16 - hw, 15 + hw, "#e3e3e8"); } row(17 + oy, 10, 21, "#c6c6ce"); }
+    if(tr.freckles) for(const [x, y] of [[9, 15], [11, 16], [20, 16], [22, 15]]) px(x, y + oy, mix(skin, "#8a4a2a", 0.45));
+    if(tr.mole) px(21, 17 + oy, "#3e2a20");
+    if(tr.scar) for(let i = 0; i < 3; i++) px(19 + i, 17 + oy - i, "#b5524a");
+    if(tr.bandage){ rect(19, 16 + oy, 3, 1, "#efe8d8"); px(20, 15 + oy, "#efe8d8"); }
+    /* 머리: 정수리가 크고 넓게, 결 따라 어두운 줄, 광택 */
     if(tr.style !== "bald" && !tr.hood){
-      const cap = [5, 7, 8, 9, 9, 9, 9, 9, 8];
-      for(let y = 1; y <= 9; y++){ const hw = cap[y - 1]; row(y + oy, 16 - hw, 15 + hw, hair); }
-      for(let y = 3; y <= 9; y++){ px(23, y + oy, hairD); px(24, y + oy, hairD); }
-      if(tr.style === "spiky"){ for(const [x, h] of [[11, 2], [15, 3], [19, 2]]) for(let j = 1; j <= h; j++) px(x + (j > 1 ? 1 : 0), 1 + oy - j + 1, hair); px(6, 6 + oy, hair); px(25, 6 + oy, hair); }
-      if(tr.bangs){ const saw = [2, 1, 3, 2, 1, 3, 2, 3, 1, 2, 3, 1, 2, 2]; for(let x = 9; x <= 22; x++){ const b = 8 + saw[x - 9]; for(let y = 9; y <= b; y++) px(x, y + oy, y === b ? hairD : hair); } }
-      else row(9 + oy, 9, 22, hair);
-      const sideEnd = {short:12, spiky:12, bob:18, long:22, curly:18, pony:15, twin:15, braid:15}[tr.style] || 15;
-      for(let y = 8; y <= sideEnd; y++){ rect(7, y + oy, 2, 1, hair); rect(23, y + oy, 2, 1, hairD); }
-      px(8, sideEnd + 1 + oy, hairD);
-      row(3 + oy, 11, 14, hairL); row(4 + oy, 10, 11, hairL); row(2 + oy, 13, 15, hairL);
+      const cap = [6, 8, 9, 10, 10, 10, 10, 10, 10, 10, 9];
+      for(let y = 0; y <= 10; y++){ const hw = cap[y]; row(y + oy, 16 - hw, 15 + hw, hair); }
+      for(let y = 3; y <= 10; y++){ px(24, y + oy, hairD); px(25, y + oy, hairD); }
+      for(const [x, y] of [[10, 5], [13, 3], [19, 4], [22, 6]]) { px(x, y + oy, hairD); px(x + 1, y + 1 + oy, hairD); }
+      if(tr.style === "spiky"){ for(const [x, h] of [[11, 2], [15, 3], [20, 2]]) for(let j = 1; j <= h; j++) px(x + (j > 1 ? 1 : 0), oy - j + 1, hair); px(5, 7 + oy, hair); px(26, 7 + oy, hair); }
+      if(tr.bangs){ const saw = [2, 3, 1, 3, 2, 1, 3, 2, 3, 1, 2, 3, 1, 2, 3, 2]; for(let x = 8; x <= 23; x++){ const b = 10 + saw[x - 8]; for(let y = 10; y <= b; y++) px(x, y + oy, y === b ? hairD : hair); } }
+      else row(10 + oy, 8, 23, hair);
+      const sideEnd = {short:14, spiky:14, bob:21, long:24, curly:21, pony:17, twin:17, braid:17}[tr.style] || 17;
+      for(let y = 9; y <= sideEnd; y++){ rect(6, y + oy, 2, 1, hair); rect(24, y + oy, 2, 1, hairD); }
+      px(7, sideEnd + 1 + oy, hairD); px(24, sideEnd + 1 + oy, hairD);
+      row(3 + oy, 10, 14, hairL); row(2 + oy, 12, 15, hairL); row(4 + oy, 9, 10, hairL);
     }
-    if(tr.hood){ for(let y = 1; y <= 5; y++){ const hw = [7, 9, 10, 10, 10][y - 1]; row(y + oy, 16 - hw, 15 + hw, outfit); } row(5 + oy, 7, 24, outD); rect(6, 6 + oy, 2, 13, outfit); rect(24, 6 + oy, 2, 13, outD); if(tr.style !== "bald") for(let x = 9; x <= 22; x++) for(let y = 6; y <= 7 + (x % 3); y++) px(x, y + oy, hair); }
-    if(tr.hat){ for(let y = 0; y <= 4; y++){ const hw = [5, 8, 9, 9, 9][y]; row(y + oy, 16 - hw, 15 + hw, tr.hatColor); } row(5 + oy, 5, 26, shade(tr.hatColor, 0.65)); row(1 + oy, 12, 15, mix(tr.hatColor, "#ffffff", 0.3)); }
-    if(tr.earring){ px(8, 14 + oy, "#e0bd55"); px(23, 14 + oy, "#e0bd55"); }
+    if(tr.hood){ for(let y = 1; y <= 6; y++){ const hw = [7, 9, 10, 11, 11, 11][y - 1]; row(y + oy, 16 - hw, 15 + hw, outfit); } row(6 + oy, 5, 26, outD); rect(5, 7 + oy, 2, 14, outfit); rect(25, 7 + oy, 2, 14, outD); if(tr.style !== "bald") for(let x = 8; x <= 23; x++) for(let y = 7; y <= 8 + (x % 3); y++) px(x, y + oy, hair); }
+    if(tr.hat){ for(let y = 0; y <= 5; y++){ const hw = [6, 9, 10, 10, 10, 10][y]; row(y + oy, 16 - hw, 15 + hw, tr.hatColor); } row(6 + oy, 4, 27, shade(tr.hatColor, 0.65)); row(1 + oy, 12, 15, mix(tr.hatColor, "#ffffff", 0.3)); }
+    if(tr.earring){ px(7, 16 + oy, "#e0bd55"); px(24, 16 + oy, "#e0bd55"); }
     if(y0 >= 65) rect(4, ty + 4, 1, ly + lh + 1 - (ty + 4), "#7a5a3a");
     /* 무기 (오른손) */
     const w = eq.weapon && itemById(eq.weapon);
     if(w){
-      const hx = tx1 + 2, hy2 = hy, L = w.look;
+      const hx = tx1 + 2, hy2 = armEnd, L = w.look;
       if(L === "knife"){ rect(hx + 1, hy2 - 3, 1, 3, "#dfe3ea"); }
       else if(L === "pipe") rect(hx + 2, hy2 - 12, 1, 16, "#7d7f86");
       else if(L === "sword" || L === "hotsword" || L === "blade"){ const bc = L === "hotsword" ? "#e3683a" : "#dfe3ea"; rect(hx + 2, hy2 - 15, 1, 15, bc); if(L === "blade") px(hx + 3, hy2 - 14, bc); row(hy2, hx, hx + 3, "#c09a3a"); rect(hx + 2, hy2 + 1, 1, 2, "#5a3f2a"); }
       else if(L === "greatsword"){ rect(hx + 2, hy2 - 18, 3, 18, "#cdd2dc"); rect(hx + 2, hy2 - 18, 1, 18, "#ffffff"); row(hy2, hx + 1, hx + 5, "#3a3a44"); rect(hx + 3, hy2 + 1, 1, 3, "#5a3f2a"); }
       else if(L === "mace"){ rect(hx + 2, hy2 - 9, 1, 12, "#5a3f2a"); rect(hx + 1, hy2 - 13, 3, 4, "#8a8f99"); }
       else if(L === "hammer"){ rect(hx + 2, hy2 - 9, 1, 12, "#5a3f2a"); rect(hx, hy2 - 12, 5, 3, "#8a8f99"); }
-      else if(L === "gauntlet"){ rect(tx0 - 4, hy - 1, 3, 3, "#c9a24a"); rect(tx1 + 2, hy - 1, 3, 3, "#c9a24a"); }
+      else if(L === "gauntlet"){ rect(tx0 - 4, armEnd - 1, 3, 3, "#c9a24a"); rect(tx1 + 2, armEnd - 1, 3, 3, "#c9a24a"); }
       else if(L === "gun"){ rect(hx + 1, hy2, 4, 1, "#2b2b31"); px(hx + 1, hy2 + 1, "#2b2b31"); }
     }
   }
