@@ -1852,16 +1852,17 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   const sideEnd = Math.max(eyeB + 4, s === "long" ? chin : endY);
   for(const side of [-1, 1]){
     /* 바깥 다발은 얼굴선 위 2칸, 안쪽 다발은 눈 아래에서 시작하는 짧은 2칸 → 눈은 가리지 않는다 */
-    const clumps = [{off:0, w:2, start:eyeT - 4, end:sideEnd, id:side < 0 ? 40 : 42}, {off:2, w:2, start:eyeB, end:sideEnd - 2 - (v % 2), id:side < 0 ? 41 : 43}];
+    const burnEnd = Math.min(sideEnd, Math.max(e1, eyeB) + ((s === "short" || s === "spiky") ? 2 : 4));
+    const clumps = [{off:0, w:2, start:eyeT - 4, end:burnEnd, id:side < 0 ? 40 : 42}, {off:2, w:2, start:eyeB, end:Math.max(eyeB + 1, burnEnd - 2 - (v % 2)), id:side < 0 ? 41 : 43}];
     for(const cl of clumps){
       curId = cl.id;
       for(let y = cl.start; y <= cl.end; y++){
         const k = (y - cl.start) / Math.max(1, cl.end - cl.start);
         const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
         const yy = Math.min(y, chin);
-        /* 구레나룻.
-           짧은 머리: 귀 윗부분은 덮고 아래쪽 귀 끝 한 줄은 살짝 보이게.
-           그 밖의 머리: 귀를 다 덮고, 그 굵기 그대로 끝까지 내려간 뒤 끝만 뾰족하게. */
+        /* 구레나룻 (귀 아래 몇 줄에서 끝난다).
+           짧은 머리: 위가 넓고 아래로 갈수록 가늘어지며, 귀 바깥쪽 끝이 보이게 귀 안쪽만 덮는다.
+           그 밖의 머리: 귀를 다 덮고, 아래로 갈수록 바깥으로 넓어진다. */
         const shortHair = s === "short" || s === "spiky";
         const earRow = y >= e0 && y <= e1;
         const inner = side < 0 ? fL(yy) + 1 : fR(yy) - 1;
@@ -1870,15 +1871,18 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
           outer = side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv;
           w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
         }else if(shortHair){
-          const lowerEar = earRow && (y - e0) / Math.max(1, e1 - e0) > 0.4;
-          outer = earRow ? (side < 0 ? L(yy) + (lowerEar ? 2 : 0) : R(yy) - (lowerEar ? 2 : 0)) : (side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv);
-          w = earRow ? Math.abs(inner - outer) + 1 : Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+          const t = (y - cl.start) / Math.max(1, cl.end - cl.start);
+          const earW = earRow ? (side < 0 ? baseL - L(yy) : R(yy) - baseR) : 0;
+          /* 귀 바깥 (튀어나온 폭 + 외곽선 1칸)은 남겨 둔다 */
+          outer = side < 0 ? (earRow ? L(yy) + earW + 1 : fL(yy) - 1) : (earRow ? R(yy) - earW - 1 : fR(yy) + 1);
+          w = Math.max(1, Math.round(4 - t * 3));
         }else{
+          const t = (y - cl.start) / Math.max(1, cl.end - cl.start);
           const earOut = side < 0 ? earMinL : earMaxR;
-          outer = y >= e0 ? earOut + (side < 0 ? wv : -wv) : (side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv);
-          const full = Math.abs(inner - outer) + 1;
-          const left2 = cl.end - y;
-          w = y >= e0 ? (left2 >= 2 ? full : Math.max(1, full - (2 - left2) * Math.ceil(full / 3))) : cl.w;
+          const flare = Math.round(t * 3);
+          outer = y >= e0 ? earOut - side * 0 + (side < 0 ? -flare : flare) : (side < 0 ? fL(yy) - 1 : fR(yy) + 1);
+          w = Math.abs(inner - outer) + 1;
+          if(y >= cl.end - 1) w = Math.max(2, w - 2);
         }
         const x0 = outer - side * cl.off;
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
