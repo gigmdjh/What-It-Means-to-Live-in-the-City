@@ -346,6 +346,13 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .hud-career{display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:6px 10px;margin-top:6px}
 .hud-career .g-top,.hud-career .g-top span:last-child{font-size:.66rem}
 .hud-career .track{height:5px;margin-top:2px}
+.talk{display:flex;gap:10px;align-items:flex-start;margin:10px 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+.talk-pic{flex:0 0 auto;width:48px;height:52px;overflow:hidden;border-radius:8px;background:var(--bg)}
+.talk-pic canvas{width:60px;height:92px;margin-left:-6px;margin-top:-2px;image-rendering:pixelated}
+.talk-body{min-width:0;flex:1}
+.talk-who{font:600 .8rem var(--f-mono);color:var(--accent)}
+.talk-act{font-size:.82rem;color:var(--muted);font-style:italic;margin-top:2px}
+.talk-say{margin-top:3px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -622,10 +629,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0220"></script>
+<script src="parts.js?v=20261107-0235"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0220";
+const BUILD = "20261107-0235";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -668,6 +675,8 @@ const NARR_RULES = `
 - [장비]의 무기·방어구·의체를 장면에 반영하라.
 - [외모] 글 전체를 직접 읽고, 그 사람의 생김새·인상·차림이 이 도시에서 어떻게 보일지 스스로 판단해 사람들의 반응과 사건에 반영하라(나이에 맞게, [외모에 더해진 것]도 함께). 돌발 상황을 지어낼 때도 외모가 계기가 될 수 있다. 매 장면 억지로 언급하지는 말고 자연스러울 때만.
 - shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 돌발 상황(심부름, 장인의 손짓, 피신 등)으로 공방 안에 들어오게 된 경우도 true. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
+- talk: 장면에서 다른 인물(가족·이웃·의뢰인 등)이 플레이어에게 말하면, 그 말과 행동을 talk에 1~3개 넣어라: [{"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이, 그 인물다운 말투)","act":"말하면서 하는 짧은 행동","look":"처음 나오는 인물만 짧은 외모(머리색·머리 모양·눈색·체격·옷), 가족이나 이미 나온 인물은 \"\"","gender":"남성/여성"}]. 가족은 [가족]의 이름과 외모를 그대로 쓴다. 대사는 narration에 다시 쓰지 말고, 말하는 사람이 없으면 [].
+- 플레이어가 누군가에게 말을 걸면 그 상대가 반드시 talk로 대답하게 하라.
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
 - 변화는 숫자가 아니라 말로 적는다(정확한 수치는 게임이 정한다. 숫자를 쓰지 마라):
   hp(체력), sp(정신력), en(기력), rep(평판): "없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복" 중 하나.
@@ -688,7 +697,7 @@ const NARR_RULES = `
 - 플레이어가 해결사 사무소를 차리는 데 성공하면 tag_add에 "사무소:새로 차림"이라고만 적어라(이름은 플레이어가 짓는다).
 - tag_remove: 더 이상 사실이 아닌 기존 태그(나은 부상, 갚은 빚 등)를 그대로 적는다. 없으면 "".
 - 가족은 [가족] 목록을 따르고 멋대로 바꾸지 마라. 이야기 속에서 결혼하면 spouse에 "이름/성별", 플레이어의 아이가 태어나면 child_born을 true, 가족이 죽으면 family_dead에 그 이름. 해당 없으면 ""와 false.
-반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false,"merit":"없음"}`;
+반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false,"merit":"없음","talk":[]}`;
 
 /* 기기 AI용 짧은 규칙: 폰에서는 프롬프트가 길면 읽는 데만 수십 초가 걸린다 */
 const NARR_RULES_LOCAL = `
@@ -704,7 +713,7 @@ const SUM_RULES = `
 반드시 JSON만 출력: {"summary":"요약"}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"}},required:["text","stat","difficulty","why","trivial"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},merit:{type:"string"}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},merit:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
 
 /* 계절 · 달력 */
@@ -843,15 +852,85 @@ const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 if(matchMedia("(max-width: 860px)").matches) document.getElementById("actInput").placeholder = "무엇을 할까요?";
 
 /* 이름 생성 */
-const SURNAMES = "김이박최정강조윤장임한오서신권황안송류홍".split("");
-const GIVEN = {
-  "남성":["도현","준우","시우","하준","지호","민재","태윤","건우","현우","서진","재민","우진","승민","유찬","도윤"],
-  "여성":["서연","지우","하은","수아","민서","채원","지민","예린","다인","소율","윤서","하린","서아","유나","가은"]
-};
+/* 이름: 도시는 여러 문화가 섞여 산다. 문화마다 성·이름과 쓰는 순서가 다르다 */
+const CULTURES = [
+  {id:"ko", w:3, order:"sg-tight", sur:"김이박최정강조윤장임한오서신권황안송류홍".split(""),
+    m:["도현","준우","시우","하준","지호","민재","태윤","건우","현우","서진","재민","우진","승민","유찬","도윤"],
+    f:["서연","지우","하은","수아","민서","채원","지민","예린","다인","소율","윤서","하린","서아","유나","가은"]},
+  {id:"ja", w:1, order:"sg", sur:["사토","스즈키","다카하시","다나카","와타나베","이토","야마모토","나카무라","고바야시","시미즈"],
+    m:["하루키","렌","소타","유토","가이토","다이키","하야토","료"], f:["유이","아오이","하나","미오","사쿠라","린","유나","히나"]},
+  {id:"zh", w:1, order:"sg", sur:["왕","리","장","류","천","양","황","자오","저우","린"],
+    m:["하오","웨이","쯔한","이천","하오란","쥔제","천위"], f:["메이","팅","쉬안","이눠","신이","위퉁","뤄시"]},
+  {id:"en", w:1, order:"gs", sur:["그레이","하퍼","브룩스","카터","휴즈","베넷","리드","포스터","헤일","몰리"],
+    m:["엘리엇","올리버","노아","케일럽","에드먼드","사일러스","오웬"], f:["클로이","에블린","노라","아이비","해리엇","마고","루시"]},
+  {id:"de", w:1, order:"gs", sur:["베버","슈미트","뮐러","코흐","바그너","하르트만","크라우스","포겔"],
+    m:["루카스","펠릭스","요나스","클라우스","디트리히","에밀"], f:["한나","리나","클라라","프리다","마틸데","이다"]},
+  {id:"ru", w:1, order:"gs", sur:[["소콜로프","소콜로바"],["볼코프","볼코바"],["모로조프","모로조바"],["레베데프","레베데바"],["오를로프","오를로바"],["파블로프","파블로바"]],
+    m:["이반","드미트리","알렉세이","니콜라이","유리","미하일"], f:["안나","소피야","율리야","나탈리야","베라","올가"]},
+  {id:"es", w:1, order:"gs", sur:["페레스","로시","가르시아","모레티","로메로","비앙키","산체스","콜롬보"],
+    m:["마테오","루카","알레한드로","다리오","산티아고","로렌초"], f:["루치아","소피아","카밀라","줄리아","발렌티나","이사벨"]},
+  {id:"fr", w:1, order:"gs", sur:["뒤부아","모로","르페브르","가르니에","보네","포르니에"],
+    m:["앙투안","레미","쥘","가스파르","테오"], f:["레아","카미유","마농","엘루아즈","쥘리에트"]},
+  {id:"me", w:1, order:"gs", sur:["하산","카림","하다드","나세르","유수프","아지즈"],
+    m:["아미르","카림","타리크","라시드","오마르"], f:["라일라","야스민","누르","사라","아밀라"]},
+  {id:"in", w:1, order:"gs", sur:["샤르마","메타","라오","아이어","카푸르","나이르"],
+    m:["아르준","라비","비크람","카비르","데브"], f:["프리야","아나냐","미라","이샤","칼리"]}
+];
+const SURNAMES = CULTURES[0].sur;
+function pickCulture(){ const tot = CULTURES.reduce((a, c) => a + c.w, 0); let r = rnd(tot); for(const c of CULTURES){ if((r -= c.w) < 0) return c; } return CULTURES[0]; }
+const cultureById = id => CULTURES.find(c => c.id === id) || CULTURES[0];
+function surOf(c, entry, g){ return Array.isArray(entry) ? entry[g === "여성" ? 1 : 0] : entry; }
+function nameIn(c, g, sur){
+  const pool = c[g === "여성" ? "f" : g === "남성" ? "m" : (rnd(2) ? "f" : "m")];
+  const given = pool[rnd(pool.length)];
+  let sn = sur;
+  if(sn == null){ const e = c.sur[rnd(c.sur.length)]; sn = surOf(c, e, g); }
+  else if(c.id === "ru"){ const e = c.sur.find(x => Array.isArray(x) && x.includes(sn)); if(e) sn = surOf(c, e, g); }
+  if(!sn) return given;
+  return c.order === "sg-tight" ? sn + given : c.order === "sg" ? `${sn} ${given}` : `${given} ${sn}`;
+}
+/* 사람마다 짧은 외모 글(그림과 AI 서술에 쓴다) */
+const LOOK_HAIR = ["검은","짙은 갈색","갈색","밤색","금발","잿빛","붉은","은발","회색","남색"];
+const LOOK_STYLE = {남성:["짧은 머리","덥수룩한 머리","단정한 머리","뒤로 넘긴 머리","짧은 곱슬머리"], 여성:["긴 머리","단발","묶은 머리","긴 웨이브 머리","땋은 머리"]};
+const LOOK_EYE = ["검은","갈색","짙은 갈색","회색","파란","초록","호박색"];
+const LOOK_BUILD = ["마른 체격","보통 체격","덩치 큰 체격","다부진 체격"];
+const LOOK_EXTRA = ["", "", "", "안경", "흉터", "주근깨", "수염", "피곤한 눈매", "날카로운 눈매"];
+function randLook(g, inherit){
+  const hair = inherit && inherit.hair && rnd(3) ? inherit.hair : LOOK_HAIR[rnd(LOOK_HAIR.length)];
+  const eye = inherit && inherit.eye && rnd(3) ? inherit.eye : LOOK_EYE[rnd(LOOK_EYE.length)];
+  const st = (LOOK_STYLE[g] || LOOK_STYLE[rnd(2) ? "남성" : "여성"]);
+  let ex = LOOK_EXTRA[rnd(LOOK_EXTRA.length)];
+  if(ex === "수염" && g !== "남성") ex = "";
+  const hairTxt = hair === "금발" || hair === "은발" ? `${hair} ${st[rnd(st.length)]}` : `${hair} ${st[rnd(st.length)]}`;
+  return [hairTxt, `${eye} 눈`, LOOK_BUILD[rnd(LOOK_BUILD.length)], ex].filter(Boolean).join(", ");
+}
+function lookParts(look){
+  const m = /^(\S+(?: \S+)?) (?:짧은|덥수룩한|단정한|뒤로|긴|단발|묶은|땋은)/.exec(look || ""), e = /([가-힣 ]+?) 눈/.exec(look || "");
+  return {hair: m ? m[1] : "", eye: e ? e[1].trim() : ""};
+}
 function randGender(){ return rnd(2) ? "남성" : "여성"; }
-function randGiven(g){ const l = GIVEN[g] || GIVEN[randGender()]; return l[rnd(l.length)]; }
-function randName(g, surname){ return (surname || SURNAMES[rnd(SURNAMES.length)]) + randGiven(g); }
-function surnameOf(name){ return /^[가-힣]{3}$/.test(name) ? name[0] : ""; }
+function randGiven(g){ const c = pickCulture(); const l = c[g === "여성" ? "f" : "m"]; return l[rnd(l.length)]; }
+/* 성이 주어지면 그 성이 속한 문화로, 아니면 아무 문화나 */
+function randName(g, surname){
+  if(surname){ const f = familyOf(surname); return nameIn(f.c, g, f.sur); }
+  return nameIn(pickCulture(), g);
+}
+/* 이름에서 성과 문화를 알아낸다: "김서윤"→한국 김, "엘리엇 그레이"→영미 그레이, "사토 하루키"→일본 사토 */
+function familyOf(name){
+  name = String(name || "").trim();
+  if(/^[가-힣]{3}$/.test(name) && CULTURES[0].sur.includes(name[0])) return {c:CULTURES[0], sur:name[0]};
+  const parts = name.split(/\s+/);
+  if(parts.length >= 2){
+    for(const c of CULTURES){
+      const flat = c.sur.flat();
+      if(c.order === "sg" && flat.includes(parts[0])) return {c, sur:parts[0]};
+      if(c.order === "gs" && flat.includes(parts[parts.length - 1])) return {c, sur:parts[parts.length - 1]};
+    }
+    return {c:cultureById("en"), sur:parts[parts.length - 1]};
+  }
+  return {c:CULTURES[0], sur:name.length === 1 ? name : ""};
+}
+function surnameOf(name){ const f = familyOf(name); return f.sur || ""; }
 
 /* ───────── 기본 도구 ───────── */
 const $ = s => document.querySelector(s);
@@ -1429,6 +1508,7 @@ function repairJSON(t){
    그래서 기기 AI에게는 장면 글과 선택지만 받고, 수치는 주사위 결과로 게임이 정한다. */
 const NARR_PLAIN = `너는 소설가다. 아래 상황을 이어서, 한국어로 짧은 장면을 쓴다.
 규칙: '당신'으로 부르는 2인칭 현재형, 짧게 1~2문단, 모두 합쳐 3~5문장. 꾸밈 묘사는 줄이고 일어난 일과 지금 상황만. 주인공의 나이에 맞게. 주인공 대신 결정하지 말고, 주인공이 무언가 반응해야 하는 순간에서 끝낸다.
+누군가 말을 하면 그 말은 따로 한 줄에 「이름: "대사"」로 적는다(가족은 주어진 이름 그대로).
 글 맨 끝에 한 줄로 "선택지: 행동1 / 행동2 / 행동3" 을 적는다(각 12자 이내).
 설명, 제목, 영어, 숫자 목록은 쓰지 않는다.`;
 function plainContext(){
@@ -1447,7 +1527,14 @@ function parsePlain(txt){
   const m = /(?:^|\n)\s*(?:선택지|선택|행동)\s*[:：]\s*(.+)\s*$/.exec(t);
   if(m){ opts = m[1].split(/[\/|,·]/).map(x => x.replace(/^[\s\d.\-]+/, "").trim()).filter(x => x && x.length <= 30).slice(0, 4); t = t.slice(0, m.index).trim(); }
   t = t.replace(/^(서술|장면|본문)\s*[:：]\s*/, "").trim();
-  return {narration:t, options:opts.join("|"), _plain:true};
+  /* "이름: “대사”" 줄은 대화로 뽑는다 */
+  const talk = [];
+  t = t.split("\n").filter(line => {
+    const m = /^\s*([가-힣A-Za-z][가-힣A-Za-z ]{0,11}?)\s*[:：]\s*["“”']?(.+?)["“”']?\s*$/.exec(line);
+    if(m && !/^(선택지|선택|행동|장면)$/.test(m[1]) && talk.length < 3){ talk.push({who:m[1].trim(), say:m[2].trim()}); return false; }
+    return true;
+  }).join("\n").trim();
+  return {narration:t, options:opts.join("|"), talk, _plain:true};
 }
 /* 엉킨 서술 걸러내기: 지시문의 항목 이름을 베꼈거나, 한글이 거의 없거나, 같은 말만 되풀이하면 버린다 */
 function looksBroken(t){
@@ -1553,7 +1640,7 @@ const originKo = o => o === "nest" ? "둥지" : "뒷골목";
 function famAge(f){ return Math.floor((S.days - f.born) / 365); }
 function familyText(){
   if(!S.family.length) return "없음";
-  return S.family.map(f => `${f.rel} ${f.name}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망"})`).join(", ");
+  return S.family.map(f => `${f.rel} ${f.name || "(이름 미정)"}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망"}${f.look ? ", 외모: " + f.look : ""})`).join(", ");
 }
 
 /* 외모 글을 게임이 읽은 결과를 AI가 상황에 쓰기 좋게 정리 (지금 나이·장비·의체 반영) */
@@ -1596,6 +1683,8 @@ function stateSummary(local){
   lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}(${statRel(eff(k))})`).join(", "));
   lines.push(`[장비] ${equipText()}`);
   lines.push(`[가족] ${familyText()}`);
+  const known = Object.entries(S.npcs || {}).filter(([n]) => !S.family.some(f => f.name === n)).slice(-6);
+  if(known.length) lines.push(`[만난 인물] ` + known.map(([n, v]) => `${n}(${v.gender || "?"}${v.look ? ", " + v.look : ""})`).join(", "));
   if(S.flowNote) lines.push(`[직전에 흘려보낸 시간] ${S.flowNote}`);
   if(S.tags.length) lines.push(`[기록 태그] ${S.tags.join(", ")}`);
   const T = PROMPT_TIGHT;
@@ -1679,6 +1768,9 @@ function normalizeNarr(j, statCap){
   n.options = parseOptions(j.options);
   n.shop = j.shop === true || j.shop === "true";
   n.merit = j.merit == null ? 0 : num(wordAmount(j.merit, "gauge"), -30, 30);
+  n.talk = (Array.isArray(j.talk) ? j.talk : []).filter(t => t && t.who && t.say).slice(0, 4).map(t => ({
+    who:String(t.who).slice(0, 20).trim(), say:String(t.say).replace(/^["“”']+|["“”']+$/g, "").slice(0, 200).trim(),
+    act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : ""}));
   n.plain = !!j._plain;
   return n;
 }
@@ -1791,7 +1883,7 @@ function applyFamily(n){
     let [name, g] = n.spouse.split("/").map(x => (x || "").trim());
     if(!/^(남성|여성)$/.test(g || "")) g = S.gender === "남성" ? "여성" : S.gender === "여성" ? "남성" : randGender();
     if(name){
-      S.family.push({rel:"배우자", name, gender:g, born: S.days - (365 * Math.max(18, ageY() + rnd(7) - 3)), alive:true});
+      S.family.push({rel:"배우자", name, gender:g, born: S.days - (365 * Math.max(18, ageY() + rnd(7) - 3)), alive:true, look:(S.npcs && S.npcs[name] && S.npcs[name].look) || randLook(g)});
       log({t:"sys", text:`${name}이(가) 배우자가 되었다.`});
     }
   }
@@ -1802,12 +1894,54 @@ function applyFamily(n){
   if(n.child_born && ageY() >= 16 && !S.pendingChild){
     const id = "c" + Date.now();
     const child = {rel:"자녀", name:"", gender:randGender(), born:S.days, alive:true, id};
+    child.look = childLook(child.gender);
     S.family.push(child);
     S.pendingChild = id;
     log({t:"child", id});
   }
 }
-function suggestChildName(c){ return randName(c.gender, surnameOf(S.name)); }
+function talkNode(t){
+  const row = el("div", "talk");
+  const pic = el("div", "talk-pic");
+  const cv = document.createElement("canvas"); cv.width = SPRITE_W; cv.height = SPRITE_H;
+  try{ drawSprite(cv, {age:t.age || 30, traits:lookTraitsOf(t.look, t.who, t.gender, "npc"), equip:{}, origin:"back", look:t.look, seedName:t.who}); }catch(e){}
+  pic.appendChild(cv);
+  const body = el("div", "talk-body");
+  const head = el("div", "talk-who", t.who + (t.rel ? ` · ${t.rel}` : ""));
+  body.appendChild(head);
+  if(t.act) body.appendChild(el("div", "talk-act", t.act));
+  body.appendChild(el("div", "talk-say", `“${t.say}”`));
+  if(t.look) body.title = t.look;
+  row.append(pic, body);
+  return row;
+}
+/* 말하는 사람을 기억해 두고(외모·성별) 그림에 쓴다. 가족이면 가족 정보를 쓴다 */
+function registerSpeaker(t){
+  const fam = S.family.find(f => f.name && (f.name === t.who || t.who.includes(f.name) || (f.rel && t.who === f.rel) || (t.who === "엄마" && f.rel === "어머니") || (t.who === "아빠" && f.rel === "아버지")));
+  if(fam) return {who:fam.name, rel:fam.rel, say:t.say, act:t.act || "", look:fam.look || "", gender:fam.gender, age:famAge(fam)};
+  if(!S.npcs) S.npcs = {};
+  const known = S.npcs[t.who];
+  const gender = t.gender || (known && known.gender) || (/(여자|여인|할머니|아주머니|소녀|언니|누나|아가씨|부인|그녀)/.test(t.who) ? "여성" : /(사내|남자|할아버지|아저씨|소년|형|오빠|청년)/.test(t.who) ? "남성" : randGender());
+  const look = (known && known.look) || t.look || randLook(gender);
+  const age = known && known.age || (/(할머니|할아버지|노인|노파)/.test(t.who + look) ? 70 : /(아이|소년|소녀|꼬마)/.test(t.who + look) ? 10 : 25 + rnd(25));
+  S.npcs[t.who] = {look, gender, age};
+  const keys = Object.keys(S.npcs); if(keys.length > 30) delete S.npcs[keys[0]];
+  return {who:t.who, say:t.say, act:t.act || "", look, gender, age};
+}
+function childLook(g){
+  const sp = S.family.find(f => f.rel === "배우자");
+  const mine = lookParts(S.look), theirs = lookParts(sp && sp.look);
+  const src = rnd(2) ? mine : theirs;
+  return randLook(g, {hair: src.hair || mine.hair, eye: (rnd(2) ? theirs : mine).eye});
+}
+function suggestChildName(c){
+  if(c.suggest) return c.suggest;
+  const mine = familyOf(S.name), sp = S.family.find(f => f.rel === "배우자");
+  const cul = sp && rnd(2) ? familyOf(sp.name).c : mine.c;
+  const sur = mine.sur || (S.fam && S.fam.sur) || "";
+  c.suggest = nameIn(cul, c.gender, sur || null);
+  return c.suggest;
+}
 function nameChild(id, name){
   const c = S.family.find(f => f.id === id);
   if(!c) return;
@@ -1851,7 +1985,8 @@ function applyNarr(n, forcedDays, shownDays){
   if(days > 0 || shownDays > 0) deltas.push({k:"경과", v:days || shownDays, days:true});
   if(n.event) deltas.push({k:"돌발", v:0, event:true});
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
-  log({t:"narr", text:n.narration, deltas, tags:tagChanges, options:n.options || []});
+  const talk = (n.talk || []).map(t => registerSpeaker(t));
+  log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
   applyDays(days);
   applyFamily(n);
   checkDeath();
@@ -2106,6 +2241,7 @@ function appendEntry(e, live){
   else if(e.t === "narr"){
     node = el("div", "e-narr");
     for(const p of e.text.split(/\n+/)) if(p.trim()) node.appendChild(el("p", null, p.trim()));
+    for(const t of e.talk || []) node.appendChild(talkNode(t));
     if(e.deltas && e.deltas.length){
       const ds = el("div", "deltas");
       for(const d of e.deltas){
@@ -2237,9 +2373,9 @@ function renderCareers(){
   }
 }
 function migrateSave(){
-  if(!S || S.v >= 3) return;
-  if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45);
-  S.v = 3;
+  if(!S) return;
+  if(!S.v || S.v < 3){ if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45); S.v = 3; }
+  if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
   $("#sName").textContent = S.name;
@@ -3034,7 +3170,8 @@ function drawSprite(cv, opt){
   const g = tr.gender === "남성" ? "M" : tr.gender === "여성" ? "F" : "O";
   const stage = y0 < 7 ? 0 : y0 < 18 ? 1 : 2;
   const B = PART.bodies[g + stage]; if(!B || !B.px) return;
-  const hseed = hashStr((S && S.name || "") + (tr.gender || ""));
+  const hseed = hashStr((o.seedName != null ? o.seedName : (S && S.name || "")) + (tr.gender || ""));
+  const lookTxt = o.look != null ? o.look : (S && S.look);
   const baby = y0 < 2;
   let outfit = tr.outfit || (origin === "nest" ? "#45587a" : "#6a6152");
   if(baby) outfit = "#e8dcc0";
@@ -3049,7 +3186,7 @@ function drawSprite(cv, opt){
   const sd = B.px.d, rg = B.rg.d;
   const hairOn = !(tr.style === "bald" || baby) && !tr.hood;
   let hairC = hexRGB(tr.hair); if(y0 >= 60) hairC = [207, 207, 214];
-  const hairLayers = hairOn ? drawHairLayers(B, ox, oy, B.eye, hairPlan(tr, hseed, S && S.look), stage < 2) : null;
+  const hairLayers = hairOn ? drawHairLayers(B, ox, oy, B.eye, hairPlan(tr, hseed, lookTxt), stage < 2) : null;
   const TIE = [192, 57, 75];
   const legLen = Math.max(1, (B.h - 1) - B.crotch);
   const regAt = (x, y) => (x < 0 || y < 0 || x >= B.w || y >= B.h) ? 0 : Math.round(rg[(y * B.w + x) * 4] / 20);
@@ -3095,7 +3232,7 @@ function drawSprite(cv, opt){
   const put = (X, Y, r, gg, b) => { if(X < 0 || Y < 0 || X >= W || Y >= H) return; const j = (Y * W + X) * 4; D[j] = r; D[j + 1] = gg; D[j + 2] = b; D[j + 3] = 255; };
   /* 눈 */
   const eb = B.eye;
-  const eyeK = pickEyes(S && S.look, hseed >>> 2);
+  const eyeK = pickEyes(lookTxt, hseed >>> 2);
   const E = ((PART.eyes[g] || [])[eyeK] || [])[stage];
   if(E && E.px && !tr.sunglasses){
     /* 왼쪽 눈 하나만 읽어 좌우로 뒤집어 그린다 → 두 눈이 완전히 대칭 */
@@ -3376,7 +3513,7 @@ async function flowNarrate(elapsed, big){
   let hint = "";
   if(big && big.kind === "child"){
     const id = "c" + Date.now();
-    S.family.push({rel:"자녀", name:"", gender:randGender(), born:S.days, alive:true, id});
+    { const gg = randGender(); S.family.push({rel:"자녀", name:"", gender:gg, born:S.days, alive:true, id, look:childLook(gg)}); }
     S.pendingChild = id;
     hint = "\n\n[사건] 방금 플레이어의 아이가 태어났다(이미 처리됨, child_born은 false). 출산 장면으로 끝내라.";
   }else if(big && big.kind === "death"){
@@ -3838,11 +3975,13 @@ async function createLife(){
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
     choice:{district:$("#cDistrict").value, origin:$("#cOrigin").value}, hairColor:swVal("hairc"), eyeColor:swVal("eyec")};
   S.doy0 = rnd(365);
-  S.v = 3;
-  const sur = surnameOf(name) || SURNAMES[rnd(SURNAMES.length)];
+  S.v = 4;
+  const fam = familyOf(name), famCul = fam.sur ? fam.c : pickCulture();
+  S.fam = {cul:famCul.id, sur:fam.sur || surOf(famCul, famCul.sur[rnd(famCul.sur.length)], "남성")};
   const single = origin === "back" && rnd(4) === 0;
-  if(!single) S.family.push({rel:"아버지", name:randName("남성", sur), gender:"남성", born:-365 * (26 + rnd(14)), alive:true});
-  S.family.push({rel:"어머니", name:randName("여성"), gender:"여성", born:-365 * (22 + rnd(14)), alive:true});
+  if(!single) S.family.push({rel:"아버지", name:nameIn(famCul, "남성", S.fam.sur), gender:"남성", born:-365 * (26 + rnd(14)), alive:true});
+  S.family.push({rel:"어머니", name:nameIn(rnd(3) ? famCul : pickCulture(), "여성"), gender:"여성", born:-365 * (22 + rnd(14)), alive:true});
+  for(const f of S.family) f.look = randLook(f.gender);
   showGame();
   log({t:"sys", text:`시드 ${seed} · ${corpOf(S.district)} 구역 ${originKo(origin)}. 출생 능력치: ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${S[k]}`).join(", ")});
   await birth();
