@@ -333,6 +333,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .polli-cta .note{flex:1 1 200px;min-width:0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);max-width:min(92vw,420px);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:.85rem;z-index:50;transition:opacity .5s}
 .toast.out{opacity:0}
+.login-btns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -511,6 +512,19 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 </dialog>
 
 <!-- 설정 -->
+<!-- 첫 방문 로그인 창 -->
+<dialog id="loginDlg">
+  <div class="dlg">
+    <h2>AI로 플레이하기</h2>
+    <p>Pollinations 무료 계정으로 로그인하면 폰에 모델을 내려받지 않고 바로 AI 서술로 플레이할 수 있어요. 비용은 내 계정의 무료 사용량(pollen)에서만 쓰이고, 승인할 때 예산과 기간을 정할 수 있어요.</p>
+    <p class="note">로그인하지 않아도 플레이할 수 있어요(내 기기 AI 또는 규칙으로 진행). 가입 전 Pollinations의 이용 조건(나이 등)을 확인하세요.</p>
+    <div class="row login-btns">
+      <button class="btn" type="button" id="btnLoginClose">닫기</button>
+      <button class="btn primary" type="button" id="btnLoginGo" autofocus>Pollinations로 로그인</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="settings">
   <form method="dialog" class="dlg" id="setForm">
     <h2>AI 엔진 설정</h2>
@@ -590,10 +604,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0135"></script>
+<script src="parts.js?v=20261107-0145"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0135";
+const BUILD = "20261107-0145";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3505,6 +3519,14 @@ $("#optProvider").addEventListener("change", showProvSections);
 $("#btnPolliLogin").addEventListener("click", () => { readSettings(); saveCfg(); polliLogin(); });
 $("#btnPolliLogout").addEventListener("click", polliLogout);
 $("#btnPolliMenu").addEventListener("click", polliLogin);
+$("#btnLoginGo").addEventListener("click", () => { $("#loginDlg").close(); polliLogin(); });
+$("#btnLoginClose").addEventListener("click", () => { try{ sessionStorage.setItem("dosi_login_closed", "1"); }catch(e){} $("#loginDlg").close(); });
+/* 사이트를 열었을 때 로그인 안 했고(내 API 키도 없고) 이번에 닫은 적이 없으면 로그인 창을 띄운다 */
+function maybeShowLogin(){
+  let closed = false; try{ closed = sessionStorage.getItem("dosi_login_closed") === "1"; }catch(e){}
+  if(polliKey() || hasKey() || CFG.provider === "rules" || closed) return;
+  try{ $("#loginDlg").showModal(); }catch(e){}
+}
 $("#btnSettings").addEventListener("click", () => { fillSettings(); renderUsage(); checkCredit(); $("#settings").showModal(); });
 $("#settings").addEventListener("close", async () => { readSettings(); currentProv = await pickProvider(); renderEngineChip(); });
 
@@ -3572,6 +3594,7 @@ checkUpdate();
   const pl = await polliFinishLogin();
   if(pl === "ok") setTimeout(() => alertNote("Pollinations에 로그인했습니다. 이제 폰 부담 없이 AI로 진행합니다."), 50);
   else if(pl === "fail") setTimeout(() => alertNote("Pollinations 로그인을 마치지 못했습니다. 설정에서 다시 시도해 주세요."), 50);
+  if(pl !== "ok") setTimeout(maybeShowLogin, 300);
   showMenu();
   currentProv = await pickProvider(); renderEngineChip();
   const note = $("#createNote");
