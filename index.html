@@ -569,10 +569,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0015"></script>
+<script src="parts.js?v=20261107-0025"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0015";
+const BUILD = "20261107-0025";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -891,7 +891,9 @@ function friendlyErr(e, tried){
   if(/memory|allocat|OOM|out of/i.test(m)) return new Error(`이 기기의 메모리가 모자라 AI 모델을 열지 못했습니다. 시도한 모델: ${tried.map(shortModel).join(", ")}`);
   return e instanceof Error ? e : new Error(m);
 }
-let webllmWorker = null, webllmTrying = "";
+let webllmWorker = null, webllmTrying = "", webllmCtx = 4096;
+/* 프롬프트를 얼마나 줄일지 (0 보통, 1·2 더 짧게). 기기 AI의 문맥 길이를 넘지 않게 runAI가 정한다 */
+let PROMPT_TIGHT = 0, webllmNoSchema = false;
 async function loadWebLLM(onProg){
   if(webllmEngine) return webllmEngine;
   if(webllmLoading) return webllmLoading;
@@ -910,6 +912,7 @@ async function loadWebLLM(onProg){
         ? {progress:0, text:"모델 파일을 확인하는 중…", step:"model", model:id}
         : {progress:0, text:`이 기기에 맞는 모델로 다시 시도하는 중 (${i + 1}/${chain.length})`, step:"retry", model:id});
       const chatOpts = {context_window_size: isMobile ? (i > 0 ? 2048 : 4096) : 8192};
+      webllmCtx = chatOpts.context_window_size;
       try{
         let worker = null;
         try{
@@ -1008,26 +1011,29 @@ async function callChrome(sys, user, maxTok, schema){
   } finally { try{ s.destroy(); }catch(e){} }
 }
 
-async function callWebLLM(sys, user, maxTok, onText){
+async function callWebLLM(sys, user, maxTok, onText, schema){
   let eng;
   try{ eng = await loadWebLLM(p => setEngineNote("기기 AI " + Math.round((p.progress || 0) * 100) + "%")); }
   catch(e){ webllmFailed = true; setEngineNote(""); throw new Error("기기 AI를 불러오지 못했습니다(" + e.message + ")"); }
   setEngineNote("");
   const messages = [{role:"system", content:sys}, {role:"user", content:user}];
+  /* 스키마를 주면 모델이 문법상 틀린 JSON을 아예 만들 수 없게 묶는다(실패 방지의 핵심) */
+  let rf = {type:"json_object"};
+  if(schema && !webllmNoSchema) rf = {type:"json_object", schema:JSON.stringify(schema)};
   /* 글자가 나오는 대로 보여 준다(기다리는 느낌 줄이기) */
   if(onText){
     try{
-      const st = await eng.chat.completions.create({messages, temperature:0.8, max_tokens:maxTok, stream:true, response_format:{type:"json_object"}});
+      const st = await eng.chat.completions.create({messages, temperature:0.8, max_tokens:maxTok, stream:true, response_format:rf});
       let acc = "", last = 0;
       for await (const ch of st){
         acc += ch.choices?.[0]?.delta?.content || "";
         const now = performance.now(); if(now - last > 120){ last = now; try{ onText(acc); }catch(_){} }
       }
       return acc;
-    }catch(e){ console.warn("스트리밍 실패, 한 번에 받기로", e); }
+    }catch(e){ console.warn("스트리밍 실패, 한 번에 받기로", e); if(rf.schema && /schema|grammar|xgrammar/i.test(String(e && e.message))){ webllmNoSchema = true; rf = {type:"json_object"}; } }
   }
   try{
-    const r = await eng.chat.completions.create({messages, temperature:0.8, max_tokens:maxTok, response_format:{type:"json_object"}});
+    const r = await eng.chat.completions.create({messages, temperature:0.8, max_tokens:maxTok, response_format:rf});
     return r.choices[0].message.content;
   }catch(e){
     const r = await eng.chat.completions.create({messages, temperature:0.8, max_tokens:maxTok});
@@ -1076,7 +1082,14 @@ async function runAI(build, maxTok, schema, quiet, onText){
   if(!quiet){ currentProv = p; renderEngineChip(); }
   if(p === "rules") return null;
   const local = (p === "chrome" || p === "webllm");
-  const {sys, user} = build(local);
+  /* 기기 AI: (프롬프트 + 답) 이 문맥 길이를 넘으면 실패한다 → 넘지 않을 때까지 기억·최근 기록을 줄인다 */
+  const est = t => Math.ceil(t.length * 1.25);
+  let sys, user;
+  for(PROMPT_TIGHT = 0; PROMPT_TIGHT <= 3; PROMPT_TIGHT++){
+    ({sys, user} = build(local));
+    if(p !== "webllm" || est(sys + user) + Math.min(maxTok, 800) + 80 <= webllmCtx) break;
+  }
+  PROMPT_TIGHT = 0;
   /* API일 때만: 한국어 서술은 토큰을 많이 먹어 잘리기 쉬우니 넉넉하게, 실패하면 한 번 더 요청.
      기기 AI·크롬 내장 AI는 느리니 이 과정을 건너뛴다(고쳐 읽기만 한다) */
   const api = p === "anthropic" || p === "openai" || p === "gemini";
@@ -1086,9 +1099,21 @@ async function runAI(build, maxTok, schema, quiet, onText){
     if(p === "openai") return callOpenAI(sys, u, tok);
     if(p === "gemini") return callGemini(sys, u, tok);
     if(p === "chrome") return callChrome(sys, u, tok, schema);
-    return callWebLLM(sys, u, local ? Math.min(tok, 800) : tok, onText);
+    if(p === "webllm"){
+      const room = Math.max(250, webllmCtx - est(sys + u) - 60);
+      return callWebLLM(sys, u, Math.min(tok, 800, room), onText, schema);
+    }
+    return callWebLLM(sys, u, tok, onText, schema);
   };
-  let txt = await call(user);
+  let txt;
+  try{ txt = await call(user); }
+  catch(e){
+    /* 기기 AI가 한 번 삐끗하면(문맥 초과·일시 오류) 더 짧은 프롬프트로 한 번 더 */
+    if(p !== "webllm" || /불러오지 못/.test(e.message)) throw e;
+    console.warn("기기 AI 재시도", e);
+    PROMPT_TIGHT = 3; ({sys, user} = build(local)); PROMPT_TIGHT = 0;
+    txt = await call(user);
+  }
   let j = parseJSON(txt);
   /* 한 번 더: 형식만 다시 요구 */
   if(!j && api){ txt = await call(user + "\n\n[형식] 설명·코드블록 없이 올바른 JSON 객체 하나만 출력하라. 문자열 안의 줄바꿈은 \\n 으로 쓴다."); j = parseJSON(txt); }
@@ -1142,12 +1167,14 @@ function stateSummary(local){
   lines.push(`[가족] ${familyText()}`);
   if(S.flowNote) lines.push(`[직전에 흘려보낸 시간] ${S.flowNote}`);
   if(S.tags.length) lines.push(`[기록 태그] ${S.tags.join(", ")}`);
-  const ltm = S.ltm.slice(local ? -2 : -6);
+  const T = PROMPT_TIGHT;
+  const ltm = T >= 3 ? [] : S.ltm.slice(local ? (T >= 2 ? -1 : -2) : -6);
   if(ltm.length) lines.push("[장기 기억]\n" + ltm.map(m => "- " + m).join("\n"));
-  const stm = S.stm.slice(local ? -1 : -3);
+  const stm = T >= 3 ? [] : S.stm.slice(local ? -1 : -3);
   if(stm.length) lines.push("[단기 기억]\n" + stm.map(m => "- " + m).join("\n"));
-  const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? -3 : -6);
-  if(recent.length) lines.push("[최근 상황]\n" + recent.map(e => (e.t === "me" ? "플레이어: " : "서술: ") + e.text.slice(0, local ? 400 : 900)).join("\n"));
+  const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -6);
+  const cut = local ? [400, 260, 160, 120][T] : 900;
+  if(recent.length) lines.push("[최근 상황]\n" + recent.map(e => (e.t === "me" ? "플레이어: " : "서술: ") + (e.text.length > cut ? "…" + e.text.slice(-cut) : e.text)).join("\n"));
   return lines.join("\n");
 }
 
