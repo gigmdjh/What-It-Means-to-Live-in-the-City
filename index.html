@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2505"></script>
+<script src="parts.js?v=20261106-2515"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2505";
+const BUILD = "20261106-2515";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1978,9 +1978,9 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
         }else if(shortHair){
           const t = (y - cl.start) / Math.max(1, cl.end - cl.start);
           /* 귀는 덮고, 귀 아래쪽 끝(아래 40%)에서만 바깥 두 칸을 남겨 귀 끝이 살짝 보이게 */
-          const tipRow = earRow && (y - e0) / Math.max(1, e1 - e0) > 0.6;
-          outer = earRow ? (side < 0 ? L(yy) + (tipRow ? 2 : 0) : R(yy) - (tipRow ? 2 : 0)) : (side < 0 ? fL(yy) - 1 : fR(yy) + 1);
-          w = earRow ? Math.max(2, Math.abs(inner - outer) + 1 - (tipRow ? 0 : 0)) : Math.max(1, Math.round(4 - t * 3));
+          /* 짧은 구레나루는 얼굴선에 붙여 안쪽에: 귀 높이에선 귀가 붙은 첫 칸만 덮고(귀 바깥은 보인다), 그 아래는 얼굴선 안쪽으로 가늘어진다 */
+          outer = earRow ? (side < 0 ? fL(yy) - 1 : fR(yy) + 1) : (side < 0 ? fL(yy) : fR(yy));
+          w = earRow ? Math.max(2, Math.abs(inner - outer) + 1) : Math.max(1, Math.round(3 - t * 2));
         }else{
           const t = (y - cl.start) / Math.max(1, cl.end - cl.start);
           const earOut = side < 0 ? earMinL : earMaxR;
