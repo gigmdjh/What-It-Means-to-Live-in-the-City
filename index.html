@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2530"></script>
+<script src="parts.js?v=20261106-2540"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2530";
+const BUILD = "20261106-2540";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -921,8 +921,35 @@ function parseJSON(txt){
   if(!txt) return null;
   let t = String(txt).replace(/```(?:json)?/gi, "");
   const a = t.indexOf("{"), b = t.lastIndexOf("}");
-  if(a < 0 || b <= a) return null;
-  try{ return JSON.parse(t.slice(a, b + 1)); }catch(e){ return null; }
+  if(a < 0) return null;
+  if(b > a){ try{ return JSON.parse(t.slice(a, b + 1)); }catch(e){} }
+  return repairJSON(t.slice(a));
+}
+/* 흔한 고장 고치기: 문자열 안의 줄바꿈, 끝의 쉼표, +3 같은 숫자, 길이 제한으로 잘린 끝(닫히지 않은 문자열·괄호) */
+function repairJSON(t){
+  let out = "", inStr = false, esc = false; const stack = [];
+  for(const ch of t){
+    if(inStr){
+      if(esc){ out += ch; esc = false; continue; }
+      if(ch === "\\"){ out += ch; esc = true; continue; }
+      if(ch === '"'){ inStr = false; out += ch; continue; }
+      if(ch === "\n"){ out += "\\n"; continue; }
+      if(ch === "\r"){ continue; }
+      if(ch === "\t"){ out += " "; continue; }
+      out += ch; continue;
+    }
+    if(ch === '"'){ inStr = true; out += ch; continue; }
+    if(ch === "{" || ch === "["){ stack.push(ch === "{" ? "}" : "]"); out += ch; continue; }
+    if(ch === "}" || ch === "]"){ stack.pop(); out += ch; if(!stack.length) break; continue; }
+    out += ch;
+  }
+  if(inStr) out += '"';
+  out = out.replace(/:\s*\+(\d)/g, ": $1").replace(/[“”]/g, '"');
+  /* 잘린 끝 정리: 값이 없는 키, 매달린 쉼표·콜론 */
+  out = out.replace(/,\s*"[^"]*"\s*:?\s*$/, "").replace(/[,:]\s*$/, "");
+  while(stack.length) out += stack.pop();
+  out = out.replace(/,\s*([}\]])/g, "$1");
+  try{ return JSON.parse(out); }catch(e){ return null; }
 }
 
 /* build(local) → {sys, user}. 결과가 null이면 규칙 기반으로 진행 */
@@ -932,13 +959,24 @@ async function runAI(build, maxTok, schema, quiet){
   if(p === "rules") return null;
   const local = (p === "chrome" || p === "webllm");
   const {sys, user} = build(local);
-  let txt;
-  if(p === "anthropic") txt = await callAnthropic(sys, user, maxTok);
-  else if(p === "openai") txt = await callOpenAI(sys, user, maxTok);
-  else if(p === "gemini") txt = await callGemini(sys, user, maxTok);
-  else if(p === "chrome") txt = await callChrome(sys, user, maxTok, schema);
-  else if(p === "webllm") txt = await callWebLLM(sys, user, maxTok);
-  const j = parseJSON(txt);
+  /* 한국어 서술은 토큰을 많이 먹어 잘리기 쉽다 → 넉넉하게 */
+  const tok = Math.round(maxTok * 1.8);
+  const call = async u => {
+    if(p === "anthropic") return callAnthropic(sys, u, tok);
+    if(p === "openai") return callOpenAI(sys, u, tok);
+    if(p === "gemini") return callGemini(sys, u, tok);
+    if(p === "chrome") return callChrome(sys, u, tok, schema);
+    return callWebLLM(sys, u, tok);
+  };
+  let txt = await call(user);
+  let j = parseJSON(txt);
+  /* 한 번 더: 형식만 다시 요구 */
+  if(!j){ txt = await call(user + "\n\n[형식] 설명·코드블록 없이 올바른 JSON 객체 하나만 출력하라. 문자열 안의 줄바꿈은 \\n 으로 쓴다."); j = parseJSON(txt); }
+  /* 그래도 안 되면, 서술이 필요한 자리에서는 글 자체를 서술로 쓰고 수치는 0으로 */
+  if(!j && schema && schema.properties && schema.properties.narration && txt && txt.replace(/[{}\s]/g, "").length > 20){
+    const m = /"narration"\s*:\s*"([\s\S]*?)("\s*,\s*"|$)/.exec(txt);
+    j = {narration: (m ? m[1] : txt.replace(/[{}]/g, "")).replace(/\\n/g, "\n").trim()};
+  }
   if(!j) throw new Error("AI 응답을 해석하지 못했습니다.");
   return j;
 }
