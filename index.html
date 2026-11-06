@@ -569,10 +569,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2640"></script>
+<script src="parts.js?v=20261106-2655"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2640";
+const BUILD = "20261106-2655";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -595,7 +595,7 @@ const JUDGE_RULES = `
 구역은 날개 이름(L사 구역 등)으로 부른다.
 능력치(stat): 힘(때리기·들기·부수기), 방어력(버티기·견디기·막기), 속도(달리기·회피·손재주), 지력(관찰·지식·말솜씨·설득·속임수).
 난이도(difficulty)는 다음 중 하나: 사소함, 매우 쉬움, 쉬움, 보통, 어려움, 매우 어려움, 극히 어려움, 불가능.
-난이도는 지금 상황 자체의 어려움이다: 상대의 강함과 수, 장소, 날씨, 나이로 인한 몸의 한계 등을 종합한다. 예: 0세 아기가 일어서 걷기는 불가능, 우는 것은 사소함.
+난이도는 지금 상황 자체의 어려움이다: 상대의 강함과 수, 장소, 날씨, 나이로 인한 몸의 한계, 그리고 겉모습이 주는 영향(덩치·흉터·무기는 협박을 쉽게, 눈에 띄는 머리색·오드아이·의체는 숨기·미행·변장을 어렵게, 단정한 차림은 설득을 쉽게, 초라한 차림은 둥지 출입을 어렵게 등)을 종합한다. 예: 0세 아기가 일어서 걷기는 불가능, 우는 것은 사소함.
 플레이어의 능력치·장비·의체 보정과 지침·부상 벌점은 주사위가 따로 계산하니 난이도에 다시 넣지 마라(두 번 계산하지 않게). 숫자는 쓰지 마라.
 실패할 여지가 없는 사소한 행동(둘러보기, 쉬기, 먹기 등)은 trivial: true.
 반드시 JSON만 출력: {"actions":[{"text":"행동 요약(짧게)","stat":"속도","difficulty":"보통","why":"난이도 이유 한 줄","trivial":false}]}`;
@@ -609,6 +609,7 @@ const NARR_RULES = `
 - 계절과 날씨를 장면에 자연스럽게 녹여라.
 - 구역은 날개 이름으로 부른다(예: 12구역은 'L사 구역', 23구역은 'W사 구역'). location도 "L사 구역 뒷골목"처럼 적어라.
 - [장비]의 무기·방어구·의체를 장면에 반영하라.
+- [지금 겉모습]과 외모 글을 읽고 상황에 영향을 줘라: 사람들의 첫인상과 반응(덩치·흉터·무기는 위압감, 마른 아이는 만만해 보임, 고운 옷은 뒷골목에서 표적), 눈에 띄는 특징(오드아이·특이한 머리색·의체·안대)은 시선과 소문을 끌고 기억되기 쉽다. 돌발 상황을 지어낼 때도 겉모습이 계기가 될 수 있다. 다만 매 장면 억지로 언급하지는 말고 자연스러울 때만.
 - shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 돌발 상황(심부름, 장인의 손짓, 피신 등)으로 공방 안에 들어오게 된 경우도 true. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
 - 변화는 숫자가 아니라 말로 적는다(정확한 수치는 게임이 정한다. 숫자를 쓰지 마라):
@@ -628,6 +629,7 @@ const NARR_RULES_LOCAL = `
 너는 텍스트 RPG 서술자다. 판정 결과를 바꾸지 말고 그대로 그린다(대성공은 기대 이상, 대실패는 대가).
 한국어, '당신' 2인칭, 현재형, 2~3문단. 나이에 맞게. 플레이어 대신 결정하지 말고, 반응해야 할 상황으로 끝낸다.
 변화는 말로: hp·sp·en·rep는 "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복", ahn은 "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎", str·def·spd·int는 "없음/오름/내림", days는 "없음/하루/며칠/일주일/한 달/몇 달".
+겉모습(체격·흉터·눈에 띄는 색·의체·옷)이 사람들의 반응과 사건에 자연스럽게 영향을 주게 하라.
 options: 할 법한 행동 3개를 "|"로. tag_add/tag_remove: "분류:내용" 또는 "". shop: 공방 안에서 끝나면 true.
 JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
 
@@ -1068,10 +1070,34 @@ function familyText(){
   return S.family.map(f => `${f.rel} ${f.name}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망"})`).join(", ");
 }
 
+/* 외모 글을 게임이 읽은 결과를 AI가 상황에 쓰기 좋게 정리 (지금 나이·장비·의체 반영) */
+function nearestColorName(hex, list){
+  if(!hex || hex === "odd") return "";
+  const a = hexRGB(hex); let best = "", bd = 1e9;
+  for(const [name, h] of list){ if(h === "odd") continue; const b = hexRGB(h); const d = (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2; if(d < bd){ bd = d; best = name; } }
+  return best;
+}
+function appearanceText(){
+  const tr = lookTraits(), y = ageY(), out = [];
+  const hair = y >= 60 ? "희끗한 백발" : nearestColorName(tr.hair, HAIR_COLORS) + " 머리";
+  const styleKo = {bald:"민머리", twin:"양갈래", braid:"땋은 머리", pony:"묶은 머리", spiky:"뻗친 머리", curly:"곱슬", long:"긴 머리", bob:"단발", short:"짧은 머리"}[tr.style] || "";
+  out.push(tr.style === "bald" ? "민머리" : `${hair}(${styleKo})`);
+  out.push(tr.eye2 && tr.eye2 !== tr.eye ? `오드아이(${nearestColorName(tr.eye, EYE_COLORS)}·${nearestColorName(tr.eye2, EYE_COLORS)})` : nearestColorName(tr.eye, EYE_COLORS) + " 눈");
+  if(tr.skin === "#f3e0d2") out.push("창백한 피부"); else if(tr.skin === "#a9764f") out.push("가무잡잡한 피부");
+  out.push(tr.build === "thin" ? "마른 체격" : tr.build === "big" ? "덩치 큰 체격" : "보통 체격");
+  for(const [k, w] of [["glasses","안경"],["sunglasses","선글라스"],["scar","흉터"],["eyepatch","안대"],["mask","마스크"],["bandage","붕대"],["earring","귀걸이"],["freckles","주근깨"],["mole","점"],["beard","수염"],["mustache","콧수염"],["hat","모자"],["hood","후드"],["scarf","목도리"]]) if(tr[k]) out.push(w);
+  const aug = ["arm","leg","eye","body"].filter(sl => S.equip && S.equip[sl]).map(sl => (itemById(S.equip[sl]) || {}).name).filter(Boolean);
+  if(aug.length) out.push("의체: " + aug.join(", "));
+  const arm = S.equip && S.equip.armor && itemById(S.equip.armor), wp = S.equip && S.equip.weapon && itemById(S.equip.weapon);
+  const oKo = {dress:"원피스·치마", hoodie:"후드티", coat:"코트", shirt:"셔츠"}[tr.otype];
+  if(!arm && tr.outfit) out.push(`옷: ${nearestColorName(tr.outfit, EYE_COLORS.filter(c => c[0] !== "짙은 갈색"))} ${oKo}`.replace(/\s+/g, " "));
+  if(arm) out.push("차림: " + arm.name); if(wp) out.push("지닌 무기: " + wp.name);
+  return out.join(", ");
+}
 function stateSummary(local){
   const lines = [];
-  const hc = (HAIR_COLORS.find(c => c[1] === S.hairColor) || [])[0], ec = S.eyeColor === "odd" ? "오드아이" : (EYE_COLORS.find(c => c[1] === S.eyeColor) || [])[0];
-  lines.push(`[캐릭터] 이름 ${S.name} / 성별 ${S.gender} / 외모: ${S.look || "특별한 설명 없음"}` + (hc ? ` / 머리색 ${hc}` : "") + (ec ? ` / 눈 색 ${ec}` : ""));
+  lines.push(`[캐릭터] 이름 ${S.name} / 성별 ${S.gender} / 외모(플레이어가 쓴 글): ${S.look || "특별한 설명 없음"}`);
+  lines.push(`[지금 겉모습] ${appearanceText()}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [계절] ${calendarText()}`);
   lines.push(`[게이지 0~100] 체력 ${S.hp}, 정신력 ${S.sp}, 기력 ${S.en}, 평판 ${S.rep}`);
   lines.push(`[소지금] ${fmt(S.ahn)}안`);
