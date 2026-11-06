@@ -1776,6 +1776,12 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   const eyeT = eb[1] + oy, eyeB = eb[3] + oy, cx = (hl[eyeT] + hr[eyeT]) / 2;
   const L = y => hl[Math.min(chin, Math.max(top, y))], R = y => hr[Math.min(chin, Math.max(top, y))];
   const headW = R(eyeT) - L(eyeT);
+  /* 귀를 뺀 얼굴 윤곽: 귀가 있는 높이는 위아래 윤곽을 이어서 만든다 */
+  const e0 = eyeT - 4, e1 = Math.min(chin - 1, eyeB + 5);
+  const fL = y => (y < e0 || y > e1) ? L(y) : Math.round(L(e0) + (L(e1) - L(e0)) * (y - e0) / Math.max(1, e1 - e0));
+  const fR = y => (y < e0 || y > e1) ? R(y) : Math.round(R(e0) + (R(e1) - R(e0)) * (y - e0) / Math.max(1, e1 - e0));
+  const ears = [];
+  for(let y = e0; y <= e1; y++){ for(let x = L(y); x < fL(y); x++) ears.push([x, y]); for(let x = fR(y) + 1; x <= R(y); x++) ears.push([x, y]); }
   const s = plan.style, v = plan.v;
   /* 길이(아래 끝) */
   const neckY = chin + 1;
@@ -1833,28 +1839,20 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     }
   }
   curId = 1;
-  /* 4) 옆머리: 귀까지 덮는 바깥 다발 + 조금 짧은 안쪽 다발, 끝은 뾰족하게 */
+  /* 4) 옆머리: 구레나룻처럼 얼굴 옆선을 따라 내려오는 바깥 다발 + 조금 짧은 안쪽 다발 (귀 자리를 덮음) */
   const sideEnd = Math.max(eyeB + 4, s === "long" ? chin : endY);
-  /* 귀가 튀어나오는 줄을 찾아, 그 줄들에서는 바깥 다발을 얼굴 선까지 넓혀 귀를 완전히 덮는다 */
-  const faceL = Math.max(...[eyeT - 6, eyeT - 5, eyeT - 4].map(y => L(y))), faceR = Math.min(...[eyeT - 6, eyeT - 5, eyeT - 4].map(y => R(y)));
-  let earBot = eyeT;
-  for(let y = eyeT; y <= chin; y++) if(L(y) < faceL - 1 || R(y) > faceR + 1) earBot = y;
   for(const side of [-1, 1]){
-    const clumps = [{off:0, w:3, end:sideEnd, id:side < 0 ? 40 : 42}, {off:3, w:3, end:sideEnd - 2 - (v % 2), id:side < 0 ? 41 : 43}];
+    /* 바깥 다발은 얼굴선 위 2칸, 안쪽 다발은 눈 아래에서 시작하는 짧은 2칸 → 눈은 가리지 않는다 */
+    const clumps = [{off:0, w:2, start:eyeT - 4, end:sideEnd, id:side < 0 ? 40 : 42}, {off:2, w:2, start:eyeB, end:sideEnd - 2 - (v % 2), id:side < 0 ? 41 : 43}];
     for(const cl of clumps){
       curId = cl.id;
-      for(let y = eyeT - 3; y <= cl.end; y++){
-        const k = (y - eyeT + 3) / Math.max(1, cl.end - eyeT + 3);
+      for(let y = cl.start; y <= cl.end; y++){
+        const k = (y - cl.start) / Math.max(1, cl.end - cl.start);
         const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
-        const outer = side < 0 ? (y <= chin ? L(y) : L(chin)) - 2 + wv : (y <= chin ? R(y) : R(chin)) + 2 - wv;
+        const yy = Math.min(y, chin);
+        const outer = side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv;
         const x0 = outer - side * cl.off;
-        let w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
-        /* 귀가 있는 높이(눈썹 위 ~ 눈 아래 몇 줄)에서는 바깥 다발을 눈 바로 옆까지 넓혀 귀를 확실히 덮는다 */
-        if(cl.off === 0 && y >= eyeT - 3 && y <= Math.max(earBot, eyeB) + 4){
-          const inner = side < 0 ? eb[0] + ox - 3 : eb[2] + ox + 2;
-          const need = side < 0 ? inner - x0 + 1 : x0 - inner + 1;
-          w = Math.max(w, need);
-        }
+        const w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
       }
     }
@@ -1913,7 +1911,7 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
     const u = (x - L(hy)) / Math.max(1, R(hy) - L(hy)); const yy = hy + Math.round(Math.pow((u - 0.5) * 2, 2) * 3);
     if(front[yy * W + x]) set(front, x, yy, 3);
   }
-  return {back, front, fid};
+  return {back, front, fid, ears};
 }
 function paintHair(D, layer, hairC, tie, behindOnly, ids){
   const W = SPRITE_W, H = SPRITE_H;
@@ -2050,7 +2048,9 @@ function drawSprite(cv, opt){
     }
   }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
-  if(hairLayers){ paintHair(D, hairLayers.back, hairC.map(c => c * 0.86), TIE, true); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid); }
+  if(hairLayers){
+    for(const [x, y] of hairLayers.ears){ if(x >= 0 && y >= 0 && x < W && y < H) D[(y * W + x) * 4 + 3] = 0; }
+    paintHair(D, hairLayers.back, hairC.map(c => c * 0.86), TIE, true); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid); }
   ctx.putImageData(img, 0, 0);
   /* 소품: 픽셀 단위 사각형으로만 그린다 */
   const ex0 = eb[0] + ox, ey0 = eb[1] + oy, ex1 = eb[2] + ox, ey1 = eb[3] + oy, emx = Math.round((ex0 + ex1) / 2);
