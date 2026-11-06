@@ -560,7 +560,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=4"></script>
+<script src="parts.js?v=5"></script>
 <script>
 "use strict";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
@@ -1834,28 +1834,12 @@ function drawSprite(cv, opt){
   /* 머리카락: 단계별로 미리 맞춘 크기를 그대로, 앞머리 끝을 눈썹 바로 위에 */
   if(!(tr.style === "bald" || baby) && !tr.hood){
     let hairC = hexRGB(tr.hair); if(y0 >= 60) hairC = [207, 207, 214];
-    /* 먼저 정수리부터 눈썹 위까지 머리 영역 전체를 머리색으로 덮어 맨살이 보이지 않게 */
-    const capBottom = eb[1] - 1;
-    const base = hairC.map(v => v * 0.82), baseD = hairC.map(v => v * 0.62);
-    for(let y = 0; y < capBottom; y++) for(let x = 0; x < B.w; x++){
-      const i = (y * B.w + x) * 4; if(!sd[i + 3]) continue;
-      if(Math.round(rg[i] / 20) !== 2 || rg[i + 1] > 128) continue;
-      const edge = regAt(x - 1, y) !== 2 || regAt(x + 1, y) !== 2 || regAt(x, y - 1) !== 2;
-      const c = (edge || y > capBottom - 2) ? baseD : base;
-      put(x + ox, y + oy, c[0], c[1], c[2]);
-    }
-    /* 관자놀이: 눈 높이까지 얼굴 바깥 두 칸도 머리색 */
-    for(let y = capBottom; y < eb[3]; y++){
-      let l = -1, r2 = -1;
-      for(let x = 0; x < B.w; x++){ const i = (y * B.w + x) * 4; if(sd[i + 3] && Math.round(rg[i] / 20) === 2 && rg[i + 1] <= 128){ if(l < 0) l = x; r2 = x; } }
-      if(l < 0 || r2 - l < 10) continue;
-      for(const x of [l, l + 1, r2 - 1, r2]) if(x < eb[0] - 1 || x > eb[2] + 1) put(x + ox, y + oy, baseD[0], baseD[1], baseD[2]);
-    }
     const [hg, hi] = pickHair(g, tr.style, hseed);
     const Hh = ((PART.hair[hg] || [])[hi] || [])[stage];
     if(Hh && Hh.px){
       const hx0 = Math.round(ox + (B.headL + B.headR) / 2 - (Hh.coreL + Hh.coreR) / 2);
-      const hy0 = Math.round(oy + eb[1] - HAIR_LIFT - Hh.bangs);
+      /* 크기와 높이는 두피를 다 덮도록 미리 계산된 값(lift)을 쓴다 */
+      const hy0 = Math.round(oy + eb[1] - (Hh.lift != null ? Hh.lift : HAIR_LIFT) - Hh.bangs);
       const lineC = [hairC[0] * 0.28, hairC[1] * 0.28, hairC[2] * 0.28];
       for(let yy = 0; yy < Hh.h; yy++) for(let xx = 0; xx < Hh.w; xx++){
         const i = (yy * Hh.w + xx) * 4; if(!Hh.px.d[i + 3]) continue;
@@ -1907,6 +1891,33 @@ function drawSprite(cv, opt){
     else if(L === "gauntlet"){ box(ox, hy - 2, 5, 4, "#c9a24a"); box(ox + B.w - 5, hy - 2, 5, 4, "#c9a24a"); }
     else if(L === "gun"){ box(hx - 1, hy - 1, 7, 2, "#2b2b31"); box(hx - 1, hy + 1, 2, 3, "#2b2b31"); }
   }
+  cleanOutline(ctx, W, H);
+}
+/* 외곽선 후처리: 외톨이 점 지우기 · 바늘구멍 메우기 · 밝은 가장자리 바깥에 1칸 외곽선 */
+function cleanOutline(ctx, W, H){
+  const im = ctx.getImageData(0, 0, W, H), d = im.data;
+  const A = (x, y) => x >= 0 && y >= 0 && x < W && y < H && d[(y * W + x) * 4 + 3] > 0;
+  const LINE = [30, 20, 26];
+  const n4 = (x, y) => (A(x - 1, y) ? 1 : 0) + (A(x + 1, y) ? 1 : 0) + (A(x, y - 1) ? 1 : 0) + (A(x, y + 1) ? 1 : 0);
+  const drop = [], fill = [];
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+    const on = A(x, y), n = n4(x, y);
+    if(on && n === 0) drop.push([x, y]);
+    if(!on && n === 4) fill.push([x, y]);
+  }
+  for(const [x, y] of drop) d[(y * W + x) * 4 + 3] = 0;
+  for(const [x, y] of fill){ const j = (y * W + x) * 4, k = (y * W + x - 1) * 4; d[j] = d[k]; d[j + 1] = d[k + 1]; d[j + 2] = d[k + 2]; d[j + 3] = 255; }
+  /* 가장자리 픽셀이 밝으면(외곽선이 없는 곳) 바깥쪽에 외곽선을 한 칸 둘러 준다 */
+  const add = [];
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+    if(A(x, y)) continue;
+    for(const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){
+      const X = x + dx, Y = y + dy; if(!A(X, Y)) continue;
+      const j = (Y * W + X) * 4; if(lumOf(d[j], d[j + 1], d[j + 2]) > 72){ add.push([x, y]); break; }
+    }
+  }
+  for(const [x, y] of add){ const j = (y * W + x) * 4; d[j] = LINE[0]; d[j + 1] = LINE[1]; d[j + 2] = LINE[2]; d[j + 3] = 255; }
+  ctx.putImageData(im, 0, 0);
 }
 
 /* ───────── 흘려보내기: 배속으로 시간이 흐르고, 작은 일은 지나가고, 큰 일이 나면 멈춘다 ───────── */
