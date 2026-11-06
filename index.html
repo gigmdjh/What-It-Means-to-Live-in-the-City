@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2545"></script>
+<script src="parts.js?v=20261106-2550"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2545";
+const BUILD = "20261106-2550";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -961,8 +961,10 @@ async function runAI(build, maxTok, schema, quiet){
   if(p === "rules") return null;
   const local = (p === "chrome" || p === "webllm");
   const {sys, user} = build(local);
-  /* 한국어 서술은 토큰을 많이 먹어 잘리기 쉽다 → 넉넉하게 */
-  const tok = Math.round(maxTok * 1.8);
+  /* API일 때만: 한국어 서술은 토큰을 많이 먹어 잘리기 쉬우니 넉넉하게, 실패하면 한 번 더 요청.
+     기기 AI·크롬 내장 AI는 느리니 이 과정을 건너뛴다(고쳐 읽기만 한다) */
+  const api = p === "anthropic" || p === "openai" || p === "gemini";
+  const tok = api ? Math.round(maxTok * 1.8) : maxTok;
   const call = async u => {
     if(p === "anthropic") return callAnthropic(sys, u, tok);
     if(p === "openai") return callOpenAI(sys, u, tok);
@@ -973,7 +975,7 @@ async function runAI(build, maxTok, schema, quiet){
   let txt = await call(user);
   let j = parseJSON(txt);
   /* 한 번 더: 형식만 다시 요구 */
-  if(!j){ txt = await call(user + "\n\n[형식] 설명·코드블록 없이 올바른 JSON 객체 하나만 출력하라. 문자열 안의 줄바꿈은 \\n 으로 쓴다."); j = parseJSON(txt); }
+  if(!j && api){ txt = await call(user + "\n\n[형식] 설명·코드블록 없이 올바른 JSON 객체 하나만 출력하라. 문자열 안의 줄바꿈은 \\n 으로 쓴다."); j = parseJSON(txt); }
   /* 그래도 안 되면, 서술이 필요한 자리에서는 글 자체를 서술로 쓰고 수치는 0으로 */
   if(!j && schema && schema.properties && schema.properties.narration && txt && txt.replace(/[{}\s]/g, "").length > 20){
     const m = /"narration"\s*:\s*"([\s\S]*?)("\s*,\s*"|$)/.exec(txt);
@@ -1116,7 +1118,7 @@ const TIER_LINE = {
 };
 function ruleNarrate(input, results){
   const paras = results.map(r => `당신은 ${r.text}. ` + TIER_LINE[r.tier][rnd(2)]);
-  const n = blankNarr(paras.join("\n\n") + (aiOn() ? "" : "\n\n(규칙 기반 서술입니다. 기기 AI나 API를 켜면 장면이 살아납니다.)"));
+  const n = blankNarr(paras.join("\n\n") + (aiOn() ? "" : "\n\n(규칙 기반 서술입니다.)"));
   for(const r of results){
     if(!r.auto) n.en -= 4;
     if(r.tier === "대실패"){ n.hp -= 8; n.sp -= 5; }
@@ -1601,9 +1603,9 @@ async function ensureDeviceAI(){
     log({t:"sys", text:"AI 없이 먼저 태어납니다. 기기 AI는 뒤에서 계속 내려받고, 준비되면 알려 드립니다."});
     loadP.then(v => {
       if(v === "ok") announceReady();
-      else { setEngineNote(""); if(S) log({t:"sys", text:"기기 AI를 불러오지 못했습니다(" + v.message + "). 규칙 기반으로 진행합니다. '설정'에서 API 키를 넣을 수 있습니다."}); }
+      else { setEngineNote(""); if(S) log({t:"sys", text:"기기 AI를 불러오지 못했습니다(" + v.message + "). 규칙 기반으로 진행합니다."}); }
     });
-  }else log({t:"sys", text:"기기 AI를 불러오지 못했습니다(" + r.message + "). 규칙 기반으로 진행합니다. '설정'에서 API 키를 넣을 수 있습니다."});
+  }else log({t:"sys", text:"기기 AI를 불러오지 못했습니다(" + r.message + "). 규칙 기반으로 진행합니다."});
   currentProv = await pickProvider(); renderEngineChip();
 }
 
@@ -3092,8 +3094,8 @@ checkUpdate();
   showMenu();
   currentProv = await pickProvider(); renderEngineChip();
   const note = $("#createNote");
-  if(deviceAIPlanned() && currentProv === "rules") note.textContent = "API 키가 없으면 태어나는 순간 기기 AI(약 1~2GB, 처음 한 번만)를 내려받아 무료로 진행합니다. 좋은 모델을 쓰려면 '설정'에서 API 키를 넣으세요.";
-  else if(currentProv === "rules" && !hasKey()) note.textContent = "이 브라우저는 기기 AI(WebGPU)를 지원하지 않아 규칙으로만 진행됩니다. '설정'에서 API 키를 넣으면 AI가 켜집니다.";
+  if(deviceAIPlanned() && currentProv === "rules") note.textContent = "태어나는 순간 기기 AI(약 1~2GB, 처음 한 번만)를 내려받아 무료로 진행합니다.";
+  else if(currentProv === "rules" && !hasKey()) note.textContent = "이 브라우저는 기기 AI(WebGPU)를 지원하지 않아 규칙으로만 진행됩니다.";
   else note.textContent = `AI 엔진: ${PROV_KO[currentProv]}`;
 })();
 </script>
