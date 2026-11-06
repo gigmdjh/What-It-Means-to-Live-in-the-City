@@ -1850,9 +1850,12 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
         const k = (y - cl.start) / Math.max(1, cl.end - cl.start);
         const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
         const yy = Math.min(y, chin);
-        const outer = side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv;
+        /* 구레나룻: 귀가 있는 줄에서는 귀 바깥 끝(머리 윤곽)부터 얼굴선 안쪽 한 칸까지 덮는다 */
+        const earRow = y >= e0 && y <= e1;
+        const outer = earRow && cl.off === 0 ? (side < 0 ? L(yy) : R(yy)) : (side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv);
         const x0 = outer - side * cl.off;
-        const w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        let w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        if(earRow && cl.off === 0) w = Math.max(w, Math.abs((side < 0 ? fL(yy) + 1 : fR(yy) - 1) - outer) + 1);
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
       }
     }
@@ -2049,7 +2052,6 @@ function drawSprite(cv, opt){
   }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
   if(hairLayers){
-    for(const [x, y] of hairLayers.ears){ if(x >= 0 && y >= 0 && x < W && y < H) D[(y * W + x) * 4 + 3] = 0; }
     paintHair(D, hairLayers.back, hairC.map(c => c * 0.86), TIE, true); paintHair(D, hairLayers.front, hairC, TIE, false, hairLayers.fid); }
   ctx.putImageData(img, 0, 0);
   /* 소품: 픽셀 단위 사각형으로만 그린다 */
