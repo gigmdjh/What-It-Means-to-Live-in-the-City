@@ -1834,7 +1834,11 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   }
   curId = 1;
   /* 4) 옆머리: 귀까지 덮는 바깥 다발 + 조금 짧은 안쪽 다발, 끝은 뾰족하게 */
-  const sideEnd = Math.max(eyeB + 1, s === "long" ? chin : endY);
+  const sideEnd = Math.max(eyeB + 4, s === "long" ? chin : endY);
+  /* 귀가 튀어나오는 줄을 찾아, 그 줄들에서는 바깥 다발을 얼굴 선까지 넓혀 귀를 완전히 덮는다 */
+  const faceL = Math.max(...[eyeT - 6, eyeT - 5, eyeT - 4].map(y => L(y))), faceR = Math.min(...[eyeT - 6, eyeT - 5, eyeT - 4].map(y => R(y)));
+  let earBot = eyeT;
+  for(let y = eyeT; y <= chin; y++) if(L(y) < faceL - 1 || R(y) > faceR + 1) earBot = y;
   for(const side of [-1, 1]){
     const clumps = [{off:0, w:3, end:sideEnd, id:side < 0 ? 40 : 42}, {off:3, w:3, end:sideEnd - 2 - (v % 2), id:side < 0 ? 41 : 43}];
     for(const cl of clumps){
@@ -1844,7 +1848,8 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
         const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
         const outer = side < 0 ? (y <= chin ? L(y) : L(chin)) - 2 + wv : (y <= chin ? R(y) : R(chin)) + 2 - wv;
         const x0 = outer - side * cl.off;
-        const w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        let w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        if(cl.off === 0 && y <= earBot + 2){ const need = side < 0 ? (faceL + 1) - x0 + 1 : x0 - (faceR - 1) + 1; w = Math.max(w, need); }
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
       }
     }
