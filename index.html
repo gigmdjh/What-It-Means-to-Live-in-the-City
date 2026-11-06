@@ -1777,10 +1777,19 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
   const L = y => hl[Math.min(chin, Math.max(top, y))], R = y => hr[Math.min(chin, Math.max(top, y))];
   const headW = R(eyeT) - L(eyeT);
   /* 귀를 뺀 얼굴 윤곽: 귀가 있는 높이는 위아래 윤곽을 이어서 만든다 */
-  const e0 = eyeT - 4, e1 = Math.min(chin - 1, eyeB + 5);
-  const fL = y => (y < e0 || y > e1) ? L(y) : Math.round(L(e0) + (L(e1) - L(e0)) * (y - e0) / Math.max(1, e1 - e0));
-  const fR = y => (y < e0 || y > e1) ? R(y) : Math.round(R(e0) + (R(e1) - R(e0)) * (y - e0) / Math.max(1, e1 - e0));
+  /* 귀: 눈 근처에서 머리 윤곽이 바로 위 줄보다 바깥으로 튀어나온 줄들 */
+  const baseY = eyeT - 6, baseL = L(baseY), baseR = R(baseY);
+  let e0 = -1, e1 = -1;
+  for(let y = baseY + 1; y <= Math.min(chin - 1, eyeB + 4); y++){
+    if(L(y) < baseL || R(y) > baseR){ if(e0 < 0) e0 = y; e1 = y; }
+    else if(e0 >= 0) break;
+  }
+  if(e0 < 0){ e0 = eyeT; e1 = eyeT - 1; }
+  const fL = y => (y >= e0 && y <= e1) ? Math.max(L(y), baseL) : L(y);
+  const fR = y => (y >= e0 && y <= e1) ? Math.min(R(y), baseR) : R(y);
   const ears = [];
+  let earMinL = 999, earMaxR = -1;
+  for(let y = e0; y <= e1; y++){ if(L(y) < earMinL) earMinL = L(y); if(R(y) > earMaxR) earMaxR = R(y); }
   for(let y = e0; y <= e1; y++){ for(let x = L(y); x < fL(y); x++) ears.push([x, y]); for(let x = fR(y) + 1; x <= R(y); x++) ears.push([x, y]); }
   const s = plan.style, v = plan.v;
   /* 길이(아래 끝) */
@@ -1850,12 +1859,28 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
         const k = (y - cl.start) / Math.max(1, cl.end - cl.start);
         const wv = plan.wavy ? Math.round(Math.sin(y * 0.8 + v + side) * 1.1) : 0;
         const yy = Math.min(y, chin);
-        /* 구레나룻: 귀가 있는 줄에서는 귀 바깥 끝(머리 윤곽)부터 얼굴선 안쪽 한 칸까지 덮는다 */
+        /* 구레나룻.
+           짧은 머리: 귀 윗부분은 덮고 아래쪽 귀 끝 한 줄은 살짝 보이게.
+           그 밖의 머리: 귀를 다 덮고, 그 굵기 그대로 끝까지 내려간 뒤 끝만 뾰족하게. */
+        const shortHair = s === "short" || s === "spiky";
         const earRow = y >= e0 && y <= e1;
-        const outer = earRow && cl.off === 0 ? (side < 0 ? L(yy) : R(yy)) : (side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv);
+        const inner = side < 0 ? fL(yy) + 1 : fR(yy) - 1;
+        let outer, w;
+        if(cl.off !== 0){
+          outer = side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv;
+          w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        }else if(shortHair){
+          const lowerEar = earRow && (y - e0) / Math.max(1, e1 - e0) > 0.4;
+          outer = earRow ? (side < 0 ? L(yy) + (lowerEar ? 2 : 0) : R(yy) - (lowerEar ? 2 : 0)) : (side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv);
+          w = earRow ? Math.abs(inner - outer) + 1 : Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
+        }else{
+          const earOut = side < 0 ? earMinL : earMaxR;
+          outer = y >= e0 ? earOut + (side < 0 ? wv : -wv) : (side < 0 ? fL(yy) - 1 + wv : fR(yy) + 1 - wv);
+          const full = Math.abs(inner - outer) + 1;
+          const left2 = cl.end - y;
+          w = y >= e0 ? (left2 >= 2 ? full : Math.max(1, full - (2 - left2) * Math.ceil(full / 3))) : cl.w;
+        }
         const x0 = outer - side * cl.off;
-        let w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
-        if(earRow && cl.off === 0) w = Math.max(w, Math.abs((side < 0 ? fL(yy) + 1 : fR(yy) - 1) - outer) + 1);
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
       }
     }
