@@ -1849,7 +1849,12 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
         const outer = side < 0 ? (y <= chin ? L(y) : L(chin)) - 2 + wv : (y <= chin ? R(y) : R(chin)) + 2 - wv;
         const x0 = outer - side * cl.off;
         let w = Math.max(1, Math.round(cl.w * (k < 0.7 ? 1 : 1 - (k - 0.7) * 2.6)));
-        if(cl.off === 0 && y <= earBot + 2){ const need = side < 0 ? (faceL + 1) - x0 + 1 : x0 - (faceR - 1) + 1; w = Math.max(w, need); }
+        /* 귀가 있는 높이(눈썹 위 ~ 눈 아래 몇 줄)에서는 바깥 다발을 눈 바로 옆까지 넓혀 귀를 확실히 덮는다 */
+        if(cl.off === 0 && y >= eyeT - 3 && y <= Math.max(earBot, eyeB) + 4){
+          const inner = side < 0 ? eb[0] + ox - 3 : eb[2] + ox + 2;
+          const need = side < 0 ? inner - x0 + 1 : x0 - inner + 1;
+          w = Math.max(w, need);
+        }
         for(let i2 = 0; i2 < w; i2++) set(front, x0 - side * i2, y, 1);
       }
     }
