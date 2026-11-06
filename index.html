@@ -467,7 +467,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
           <option value="">자동 (기기 메모리에 맞춤)</option>
           <option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC">Qwen2.5 1.5B · 약 1GB · 가볍고 빠름</option>
           <option value="Qwen2.5-3B-Instruct-q4f16_1-MLC">Qwen2.5 3B · 약 2GB · 한국어 더 나음</option>
-          <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama 3.2 3B · 약 2GB</option>
+          <option value="Qwen2.5-1.5B-Instruct-q4f32_1-MLC">Qwen2.5 1.5B 32비트 · 약 1.5GB · GPU 오류 나는 기기용</option>
+          <option value="Qwen2.5-0.5B-Instruct-q4f32_1-MLC">Qwen2.5 0.5B 32비트 · 약 0.6GB · 가장 가벼움</option>
         </select></label>
       <div class="row"><button class="btn" type="button" id="btnLoadWebllm">내려받고 불러오기</button></div>
       <div class="prog" id="webllmProg"></div>
@@ -660,7 +661,7 @@ const CFG_DEFAULT = {
   anthropic:{key:"", model:"claude-haiku-5-5"},
   openai:{base:"https://api.openai.com/v1", key:"", model:""},
   gemini:{key:"", model:""},
-  webllm:{model:"", autoload:false}
+  webllm:{model:"", autoload:false, working:""}
 };
 function loadCfg(){
   const c = store.get("dosi_cfg") || {};
@@ -695,27 +696,76 @@ async function chromeStatus(){
   catch(e){ return "none"; }
 }
 
+const shortModel = id => String(id || "").replace(/-MLC$/, "").replace("-q4f16_1", " (16비트)").replace("-q4f32_1", " (32비트)");
+/* 시도할 모델 순서: 이전에 성공한 모델 → 원래 모델 → 32비트 버전 → 더 작은 32비트 모델.
+   일부 안드로이드 GPU(Vulkan 드라이버)는 16비트 셰이더를 만들다 실패하므로 32비트로 다시 시도한다. */
+function modelChain(f16){
+  const base = webllmModel();
+  const size = (/Qwen2\.5-(\d+(?:\.\d+)?B)/.exec(base) || [])[1];
+  const list = [];
+  if(CFG.webllm.working) list.push(CFG.webllm.working);
+  list.push(base);
+  if(size) list.push(`Qwen2.5-${size}-Instruct-q4f32_1-MLC`);
+  if(size === "3B") list.push("Qwen2.5-1.5B-Instruct-q4f32_1-MLC");
+  list.push("Qwen2.5-0.5B-Instruct-q4f32_1-MLC");
+  return [...new Set(list)].filter(id => f16 || !/q4f16/.test(id));
+}
+async function gpuInfo(){
+  try{
+    const ad = await navigator.gpu.requestAdapter();
+    if(!ad) return null;
+    return {f16: ad.features.has("shader-f16")};
+  }catch(e){ return null; }
+}
+const isNetErr = e => /fetch|network|NetworkError|Failed to load|ERR_|404|403|timed out|30초/i.test(String(e && e.message));
+function friendlyErr(e, tried){
+  const m = String(e && e.message || e);
+  if(/VK_ERROR|CreateComputePipeline|Dawn|dawn|GPU|WebGPU|device (was )?lost|shader|pipeline|adapter/i.test(m))
+    return new Error(`이 기기의 GPU 드라이버가 AI 계산을 처리하지 못했습니다. 시도한 모델: ${tried.map(shortModel).join(", ")}`);
+  if(/memory|allocat|OOM|out of/i.test(m)) return new Error(`이 기기의 메모리가 모자라 AI 모델을 열지 못했습니다. 시도한 모델: ${tried.map(shortModel).join(", ")}`);
+  return e instanceof Error ? e : new Error(m);
+}
+let webllmWorker = null, webllmTrying = "";
 async function loadWebLLM(onProg){
-  if(webllmEngine && webllmModelLoaded === webllmModel()) return webllmEngine;
+  if(webllmEngine) return webllmEngine;
   if(webllmLoading) return webllmLoading;
-  if(!navigator.gpu) throw new Error("이 브라우저는 WebGPU를 지원하지 않습니다. 최신 크롬·엣지에서 시도하세요.");
-  const chatOpts = {context_window_size: isMobile ? 4096 : 8192};
-  const opts = {initProgressCallback: p => onProg && onProg(p)};
+  if(!navigator.gpu) throw new Error("이 브라우저는 WebGPU를 지원하지 않습니다. 최신 크롬·삼성 인터넷·엣지에서 시도하세요.");
+  const opts = {initProgressCallback: p => onProg && onProg(Object.assign({}, p, {model: webllmTrying}))};
   webllmLoading = (async () => {
-    if(webllmEngine){ await webllmEngine.reload(webllmModel(), chatOpts); webllmModelLoaded = webllmModel(); return webllmEngine; }
+    const info = await gpuInfo();
+    if(!info) throw new Error("이 브라우저에서 GPU(WebGPU)를 쓸 수 없습니다.");
     onProg && onProg({progress:0, text:"AI 모듈을 받는 중…", step:"module"});
     const webllm = await withTimeout(import(WEBLLM_URL), 30000, "AI 모듈을 30초 안에 받지 못했습니다. 네트워크를 확인하세요");
-    onProg && onProg({progress:0, text:"모델 파일을 확인하는 중…", step:"model"});
-    try{
-      const src = `import { WebWorkerMLCEngineHandler } from "${WEBLLM_URL}"; const h = new WebWorkerMLCEngineHandler(); self.onmessage = (m) => h.onmessage(m);`;
-      const worker = new Worker(URL.createObjectURL(new Blob([src], {type:"text/javascript"})), {type:"module"});
-      webllmEngine = await webllm.CreateWebWorkerMLCEngine(worker, webllmModel(), opts, chatOpts);
-    }catch(e){
-      console.warn("워커 실행 실패, 메인 스레드로 실행", e);
-      webllmEngine = await webllm.CreateMLCEngine(webllmModel(), opts, chatOpts);
+    const chain = modelChain(info.f16), tried = [];
+    let lastErr = null;
+    for(let i = 0; i < chain.length; i++){
+      const id = chain[i]; webllmTrying = id; tried.push(id);
+      onProg && onProg(i === 0
+        ? {progress:0, text:"모델 파일을 확인하는 중…", step:"model", model:id}
+        : {progress:0, text:`이 기기에 맞는 모델로 다시 시도하는 중 (${i + 1}/${chain.length})`, step:"retry", model:id});
+      const chatOpts = {context_window_size: isMobile ? (i > 0 ? 2048 : 4096) : 8192};
+      try{
+        let worker = null;
+        try{
+          const src = `import { WebWorkerMLCEngineHandler } from "${WEBLLM_URL}"; const h = new WebWorkerMLCEngineHandler(); self.onmessage = (m) => h.onmessage(m);`;
+          worker = new Worker(URL.createObjectURL(new Blob([src], {type:"text/javascript"})), {type:"module"});
+        }catch(e){ worker = null; }
+        if(worker){ webllmWorker = worker; webllmEngine = await webllm.CreateWebWorkerMLCEngine(worker, id, opts, chatOpts); }
+        else webllmEngine = await webllm.CreateMLCEngine(id, opts, chatOpts);
+        webllmModelLoaded = id;
+        if(CFG.webllm.working !== id){ CFG.webllm.working = id; saveCfg(); }
+        return webllmEngine;
+      }catch(e){
+        console.warn("모델 실패:", id, e);
+        lastErr = e;
+        try{ webllmWorker && webllmWorker.terminate(); }catch(_){}
+        webllmWorker = null; webllmEngine = null;
+        if(CFG.webllm.working === id){ CFG.webllm.working = ""; saveCfg(); }
+        if(isNetErr(e)) break;
+        try{ await webllm.deleteModelAllInfoInCache(id); }catch(_){}
+      }
     }
-    webllmModelLoaded = webllmModel();
-    return webllmEngine;
+    throw friendlyErr(lastErr, tried);
   })();
   try{ return await webllmLoading; } finally { webllmLoading = null; }
 }
@@ -1395,16 +1445,17 @@ function onLoadProgress(pr){
   const mb = /([\d.]+)\s*MB/.exec(pr.text || "");
   if(!$("#loader").hidden){
     if(pr.step === "module") $("#ldStep").textContent = "AI 모듈을 받는 중…";
+    else if(pr.step === "retry"){ $("#ldStep").textContent = pr.text; $("#ldFill").style.width = "0%"; $("#ldFill").classList.add("indet"); }
     else if(pr.step === "model") $("#ldStep").textContent = "모델 파일을 확인하는 중…";
     else if(pct < 100) $("#ldStep").textContent = `AI 모델을 내려받는 중 ${pct}%` + (mb ? ` (${mb[1]}MB)` : "");
     else $("#ldStep").textContent = "GPU에서 모델을 여는 중…";
     if(pct > 0){ $("#ldFill").classList.remove("indet"); $("#ldFill").style.width = pct + "%"; }
-    $("#ldDetail").textContent = webllmModel().replace("-q4f16_1-MLC", "");
+    $("#ldDetail").textContent = shortModel(pr.model || webllmTrying || webllmModel());
   }else setEngineNote(pct ? `기기 AI ${pct}%` : "기기 AI 준비 중");
 }
 function announceReady(){
   setEngineNote("");
-  if(S) log({t:"sys", text:"기기 AI 준비 완료: " + webllmModel().replace("-q4f16_1-MLC", "") + " · 이제부터 AI가 이야기를 씁니다."});
+  if(S) log({t:"sys", text:"기기 AI 준비 완료: " + shortModel(webllmModelLoaded) + " · 이제부터 AI가 이야기를 씁니다."});
   pickProvider().then(p => { currentProv = p; renderEngineChip(); });
 }
 async function ensureDeviceAI(){
@@ -2177,10 +2228,14 @@ $("#settings").addEventListener("close", async () => { readSettings(); currentPr
 $("#btnLoadWebllm").addEventListener("click", async () => {
   readSettings();
   const prog = $("#webllmProg"), btn = $("#btnLoadWebllm");
-  btn.disabled = true; prog.textContent = "준비 중…";
+  btn.disabled = true; prog.textContent = "준비 중…"; webllmFailed = false;
+  if(webllmEngine && CFG.webllm.model && CFG.webllm.model !== webllmModelLoaded){
+    try{ webllmWorker && webllmWorker.terminate(); }catch(e){}
+    webllmEngine = null; webllmWorker = null; CFG.webllm.working = ""; saveCfg();
+  }
   try{
-    await loadWebLLM(p => { prog.textContent = `${Math.round((p.progress || 0) * 100)}% · ${p.text || ""}`; });
-    prog.textContent = "불러오기 완료. 이제 이 모델로 판정합니다."; webllmFailed = false;
+    await loadWebLLM(p => { prog.textContent = `${shortModel(p.model)} · ${Math.round((p.progress || 0) * 100)}% · ${p.text || ""}`; });
+    prog.textContent = "불러오기 완료: " + shortModel(webllmModelLoaded) + ". 이제 이 모델로 판정합니다.";
     CFG.webllm.autoload = true; saveCfg();
     currentProv = await pickProvider(); renderEngineChip();
   }catch(e){ prog.textContent = "실패: " + e.message; }
