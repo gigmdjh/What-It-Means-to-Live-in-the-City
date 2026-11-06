@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2540"></script>
+<script src="parts.js?v=20261106-2545"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2540";
+const BUILD = "20261106-2545";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -833,6 +833,8 @@ async function loadWebLLM(onProg){
 }
 
 /* API 키가 없으면 기기 AI를 쓸 계획인지 */
+/* AI(API·크롬 내장·기기 AI)를 쓰는 중이면 true → 잠깐 실패해도 '규칙 기반' 안내를 띄우지 않는다 */
+function aiOn(){ return (!!currentProv && currentProv !== "rules") || hasKey() || (CFG.provider !== "auto" && CFG.provider !== "rules" && CFG.provider !== "webllm"); }
 function deviceAIPlanned(){
   return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey()));
 }
@@ -1040,7 +1042,7 @@ function ruleJudge(input){
     else if(/막|버티|견디|참|방어|맞서/.test(p)) stat = "def";
     else if(/달리|뛰|도망|피하|숨|훔치|잡|기어|재빠|오르/.test(p)) stat = "spd";
     const trivial = /둘러보|쉬|잠|자고|잔다|먹|기다|운다|울|웃/.test(p);
-    return {text: p.slice(0, 80), stat, dc: 12 + ageAdd, why: "규칙 기반 판정 (AI 없음)", trivial};
+    return {text: p.slice(0, 80), stat, dc: 12 + ageAdd, why: aiOn() ? "간이 판정" : "규칙 기반 판정 (AI 없음)", trivial};
   });
 }
 
@@ -1114,7 +1116,7 @@ const TIER_LINE = {
 };
 function ruleNarrate(input, results){
   const paras = results.map(r => `당신은 ${r.text}. ` + TIER_LINE[r.tier][rnd(2)]);
-  const n = blankNarr(paras.join("\n\n") + "\n\n(규칙 기반 서술입니다. 기기 AI나 API를 켜면 장면이 살아납니다.)");
+  const n = blankNarr(paras.join("\n\n") + (aiOn() ? "" : "\n\n(규칙 기반 서술입니다. 기기 AI나 API를 켜면 장면이 살아납니다.)"));
   for(const r of results){
     if(!r.auto) n.en -= 4;
     if(r.tier === "대실패"){ n.hp -= 8; n.sp -= 5; }
@@ -1519,7 +1521,7 @@ async function doAction(input){
   let done = thinking("난이도를 가늠하는 중…");
   try{
     actions = normalizeActions(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + JUDGE_RULES, user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input}), 500, JUDGE_SCHEMA));
-  }catch(e){ aiOK = false; log({t:"sys", text:"AI 판정 실패: " + e.message + " 규칙 기반으로 판정합니다."}); }
+  }catch(e){ aiOK = false; log({t:"sys", text:"AI 판정 실패: " + e.message + (aiOn() ? " 이번 행동은 간이 판정으로 처리합니다." : " 규칙 기반으로 판정합니다.")}); }
   done();
   if(!actions) actions = ruleJudge(input);
   const results = actions.map(a => Object.assign({}, a, rollCheck(a)));
@@ -1613,7 +1615,7 @@ async function birth(){
   try{
     n = normalizeNarr(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + NARR_RULES,
       user: stateSummary(local) + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [가족]의 부모를 그대로 등장시키고 가정 형편을 정해 tag_add에 '형편:…' 태그로 적어라. spouse, family_dead는 \"\", child_born은 false. 숫자 변화는 모두 0, days는 0."}), 1100, NARR_SCHEMA), 0);
-  }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message + " 규칙 기반으로 진행합니다."}); }
+  }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message + (aiOn() ? "" : " 규칙 기반으로 진행합니다.")}); }
   done();
   applyNarr(n || ruleBirth(), 0);
   save(); setBusy(false);
