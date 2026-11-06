@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2440"></script>
+<script src="parts.js?v=20261106-2450"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2440";
+const BUILD = "20261106-2450";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -607,7 +607,7 @@ const NARR_RULES = `
 - 계절과 날씨를 장면에 자연스럽게 녹여라.
 - 구역은 날개 이름으로 부른다(예: 12구역은 'L사 구역', 23구역은 'W사 구역'). location도 "L사 구역 뒷골목"처럼 적어라.
 - [장비]의 무기·방어구·의체를 장면에 반영하라.
-- shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
+- shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 돌발 상황(심부름, 장인의 손짓, 피신 등)으로 공방 안에 들어오게 된 경우도 true. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
 - 숫자는 변화량(증감)만 적는다: hp(체력), sp(정신력), en(기력), rep(평판)은 0~100 게이지에서의 증감. ahn은 소지금 증감(안). str, def, spd, int는 능력치 증감으로 대부분 0, 의미 있는 훈련·경험이면 +1, 큰 부상이면 -1. days는 행동에 걸린 경과 일수(정수, 몇 시간이면 0).
 - 값 판단 기준: 평범한 행동은 en -2~-8. 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 실패한 행동으로 이득을 주지 마라. 평판은 남들이 보거나 소문이 날 때만 움직인다. 아기·어린이는 스스로 돈을 벌기 어렵다.
@@ -653,7 +653,12 @@ function rollEvent(daysAhead){
   if(rand01() >= chance) return null;
   return pickEvent(y, seasonOf(S.days + (daysAhead || 0)));
 }
+/* 가끔 공방에 들르게 되는 상황 (12세부터). 장면이 공방 안에서 끝나면 서술 AI가 shop:true → 공방 창이 열린다 */
+const SHOP_EVENTS = ["심부름으로 공방에 물건을 받으러 가게 된다","단골 공방 장인이 잠깐 들어와 보라며 손짓한다","쫓기다 몸을 피해 들어간 곳이 공방이다",
+  "맡겨 둔 물건을 찾아가라는 공방의 연락이 온다","공방에서 일손을 구한다며 안으로 안내한다","의체 시술소에서 무료 진단을 해 주겠다며 부른다",
+  "공방 재고 정리 할인에 사람들이 몰려든다","지인이 무기를 고르는 데 따라가 달라고 한다"];
 function pickEvent(y, season){
+  if(y >= 12 && rnd(100) < 12) return SHOP_EVENTS[rnd(SHOP_EVENTS.length)];
   const pool = y < 3 ? EVENTS.baby : y < 13 ? EVENTS.child : EVENTS.adult;
   const list = (rnd(10) < 3 && y >= 3) ? EVENTS[season] : pool;
   return list[rnd(list.length)];
@@ -1501,7 +1506,7 @@ async function doAction(input){
   memoryTick();
   /* 공방은 버튼이 없다. 직접 찾아가야 열린다.
      찾아갔는지는 AI 서술자가 장면을 보고 정한다(shop). AI가 없을 때(규칙 진행)만 문장으로 어림한다 */
-  const atShop = n ? n.shop : visitsShop(input);
+  const atShop = n ? n.shop : (visitsShop(input) || SHOP_EVENTS.includes(ev));
   if(!S.dead && atShop) openShop();
 }
 /* AI 없이 진행할 때만 쓰는 대체 판단 */
@@ -2438,6 +2443,9 @@ async function flowNarrate(elapsed, big){
   applyNarr(fin, 0, elapsed);
   save(); setBusy(false);
   memoryTick();
+  /* 흘려보내다 공방에 들르게 된 경우 */
+  const atShop = n ? n.shop : !!(big && big.kind === "event" && SHOP_EVENTS.includes(big.text));
+  if(!S.dead && atShop) openShop();
 }
 
 /* ───────── 공방 창 ───────── */
