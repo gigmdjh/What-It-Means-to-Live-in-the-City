@@ -590,10 +590,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-0125"></script>
+<script src="parts.js?v=20261107-0130"></script>
 <script>
 "use strict";
-const BUILD = "20261107-0125";
+const BUILD = "20261107-0130";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1114,6 +1114,14 @@ function polliKey(){
 const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 function polliRedirect(){ return location.origin + location.pathname; }
 async function polliLogin(){
+  const app0 = POLLI_APP_KEY || CFG.polli.appKey;
+  /* 앱 키가 없으면 코드 방식(PKCE)을 쓸 수 없다 → 키가 주소 조각(#api_key=…)으로 바로 돌아오는 방식 */
+  if(!app0){
+    try{ save(); }catch(e){}
+    const q = new URLSearchParams({redirect_uri:polliRedirect(), scope:"usage", models:"text", budget:"10", expiry:"30"});
+    location.href = POLLI_AUTH + "?" + q.toString();
+    return;
+  }
   const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
   const state = b64url(crypto.getRandomValues(new Uint8Array(12)));
   const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
