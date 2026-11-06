@@ -125,6 +125,8 @@ body.in-game .game{flex:1;min-height:0;height:auto}
 .life-txt{display:grid;min-width:0;font-size:.82rem;color:var(--muted)}
 .life-txt b{color:var(--fg);font-size:.98rem}
 .life-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--accent)}
+.life-again{flex:none;width:58px;word-break:keep-all;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:.78rem;line-height:1.3;color:var(--fg);padding:4px}
+.life-again:hover{border-color:var(--accent)}
 .life-fav{flex:none;width:46px;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:1.2rem;color:var(--muted)}
 .life-fav.on{color:var(--accent);border-color:var(--accent)}
 .seedrow{display:flex;gap:8px}
@@ -175,7 +177,7 @@ body.flowing #log{scroll-behavior:auto}
 .opt:disabled{opacity:.45}
 .d.event{color:var(--warn);border-color:var(--line);border-color:color-mix(in srgb, var(--warn) 50%, var(--line))}
 .d.season{color:var(--sp)}
-.play{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.play{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:10px}
 #log{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:16px;min-height:0}
 .e-narr{font:400 1.04rem/1.95 var(--f-display);max-width:68ch}
 .e-narr p{margin:0 0 .7em}
@@ -203,10 +205,11 @@ body.flowing #log{scroll-behavior:auto}
 .e-death h3{margin:0;font:700 1.2rem var(--f-display);color:var(--bad)}
 
 .act{border-top:1px solid var(--line);padding:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
-.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
 .quick .btn{padding:4px 10px;font-size:.82rem}
-.inrow{display:flex;gap:8px;align-items:flex-end}
-.inrow textarea{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:none;height:64px}
+.inrow{display:flex;gap:8px;align-items:stretch;min-width:0;width:100%}
+.inrow .btn{flex:none;white-space:nowrap;padding-inline:16px}
+.inrow textarea{flex:1 1 0;min-width:0;width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:none;height:64px}
 
 /* 설정 */
 dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:0;width:min(560px, calc(100vw - 32px));max-height:calc(100dvh - 40px)}
@@ -322,6 +325,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <div class="seedrow"><input type="text" id="cSeed" maxlength="30" autocomplete="off"><button class="btn" type="button" id="cSeedDice" aria-label="무작위 시드">🎲</button></div>
     </div>
     <button class="btn primary" type="submit" id="btnBorn">태어나기</button>
+    <p class="note" id="reliveNote" hidden></p>
     <p class="note" id="createNote"></p>
   </form>
 </main>
@@ -404,6 +408,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <div class="row">
       <button class="btn primary" type="button" id="bioSave">이미지로 저장</button>
       <button class="btn" type="button" id="bioShare">공유</button>
+      <button class="btn" type="button" id="bioAgain">다시 살기</button>
       <button class="btn" type="button" id="bioFav" aria-pressed="false">☆ 즐겨찾기</button>
       <button class="btn" type="button" id="bioDel">삭제</button>
       <button class="btn" value="close">닫기</button>
@@ -1833,7 +1838,7 @@ async function endLife(){
   b = b || ruleBio();
   let sprite = "";
   try{ drawSprite($("#sSprite")); sprite = $("#sSprite").toDataURL("image/png"); }catch(e){}
-  const life = {id:"L" + Date.now(), name:S.name, gender:S.gender, district:S.district, origin:S.origin, seed:S.seed || "",
+  const life = {id:"L" + Date.now(), name:S.name, gender:S.gender, look:S.look || "", choice:S.choice || null, district:S.district, origin:S.origin, seed:S.seed || "",
     age:ageY(), ageM:ageM(), cause:S.dead, title:b.title, epitaph:b.epitaph, bio:b.bio,
     stats:STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}`).join(" · ") + ` · 평판 ${S.rep} · 소지금 ${fmt(S.ahn)}안`,
     family:familyText(), equip:equipText(), sprite, endedAt:Date.now(), fav:false};
@@ -1994,8 +1999,31 @@ function renderMenu(){
     const fav = el("button", "life-fav" + (l.fav ? " on" : ""), l.fav ? "★" : "☆"); fav.type = "button";
     fav.setAttribute("aria-label", l.fav ? "즐겨찾기 해제" : "즐겨찾기"); fav.setAttribute("aria-pressed", String(!!l.fav));
     fav.addEventListener("click", () => toggleFav(l.id));
-    row.append(open, fav); list.appendChild(row);
+    const again = el("button", "life-again", "다시 살기"); again.type = "button";
+    again.setAttribute("aria-label", `${l.name}의 시드로 다시 살기`);
+    again.addEventListener("click", () => relive(l.id));
+    row.append(open, again, fav); list.appendChild(row);
   }
+}
+/* 다시 살기: 같은 시드와 같은 출생 선택으로 생성 화면을 채운다 */
+function relive(id){
+  const l = loadLives().find(x => x.id === id); if(!l) return;
+  if($("#bioDlg").open) $("#bioDlg").close();
+  showCreate();
+  $("#cSeed").value = l.seed || randomSeed();
+  $("#cName").value = l.name || "";
+  $("#cLook").value = l.look || "";
+  const g = ["남성","여성"].includes(l.gender) ? l.gender : "기타";
+  document.querySelectorAll("input[name=gender]").forEach(r => { r.checked = r.value === g; r.dispatchEvent(new Event("change")); });
+  if(g === "기타") $("#cGenderOther").value = l.gender || "";
+  $("#cDistrict").value = l.choice ? l.choice.district : "random";
+  $("#cOrigin").value = l.choice ? l.choice.origin : "random";
+  $("#reliveNote").hidden = false; $("#reliveNote").textContent = `${l.name}의 시드(${l.seed || "없음"})와 같은 조건을 채웠습니다. 바꾸고 싶은 칸만 고쳐서 태어나세요.` +
+    (l.choice ? "" : " 이 기록은 구역 선택 방식이 남아 있지 않아 출생이 조금 다를 수 있습니다.");
+  const cur = store.get("dosi_save");
+  if(cur && !cur.archived) $("#reliveNote").textContent += ` 태어나면 진행 중인 ${cur.name}의 삶은 지워집니다.`;
+  $("#cName").focus();
+  window.scrollTo(0, 0);
 }
 function showMenu(){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
@@ -2041,9 +2069,11 @@ $("#btnNewLife").addEventListener("click", e => {
   }
   clearTimeout(newArmed); newArmed = null; b.classList.remove("danger");
   store.del("dosi_save"); S = null; showCreate();
+  $("#reliveNote").hidden = true; $("#cSeed").value = randomSeed();
 });
 $("#bioSave").addEventListener("click", saveBioImage);
 $("#bioShare").addEventListener("click", shareBio);
+$("#bioAgain").addEventListener("click", () => bioId && relive(bioId));
 $("#bioFav").addEventListener("click", () => bioId && toggleFav(bioId));
 let delArmed = null;
 $("#bioDel").addEventListener("click", e => {
@@ -2087,7 +2117,8 @@ async function createLife(){
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, days:0, location:"",
     hp:100, sp:100, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
     str:1 + rnd(3), def:1 + rnd(3), spd:1 + rnd(3), int:1 + rnd(3), log:[], dead:null,
-    family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng};
+    family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
+    choice:{district:$("#cDistrict").value, origin:$("#cOrigin").value}};
   S.doy0 = rnd(365);
   S.v = 2;
   const sur = surnameOf(name) || SURNAMES[rnd(SURNAMES.length)];
