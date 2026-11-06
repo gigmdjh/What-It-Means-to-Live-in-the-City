@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2430"></script>
+<script src="parts.js?v=20261106-2440"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2430";
+const BUILD = "20261106-2440";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -607,6 +607,7 @@ const NARR_RULES = `
 - 계절과 날씨를 장면에 자연스럽게 녹여라.
 - 구역은 날개 이름으로 부른다(예: 12구역은 'L사 구역', 23구역은 'W사 구역'). location도 "L사 구역 뒷골목"처럼 적어라.
 - [장비]의 무기·방어구·의체를 장면에 반영하라.
+- shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
 - 숫자는 변화량(증감)만 적는다: hp(체력), sp(정신력), en(기력), rep(평판)은 0~100 게이지에서의 증감. ahn은 소지금 증감(안). str, def, spd, int는 능력치 증감으로 대부분 0, 의미 있는 훈련·경험이면 +1, 큰 부상이면 -1. days는 행동에 걸린 경과 일수(정수, 몇 시간이면 0).
 - 값 판단 기준: 평범한 행동은 en -2~-8. 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 실패한 행동으로 이득을 주지 마라. 평판은 남들이 보거나 소문이 날 때만 움직인다. 아기·어린이는 스스로 돈을 벌기 어렵다.
@@ -614,14 +615,14 @@ const NARR_RULES = `
 - tag_add: 새로 생긴 중요한 사실을 "분류:내용" 태그로(예: "부상:왼팔 골절", "빚:쥐 패거리에 30만안", "소속:하나 협회 9급", "인연:옆집 할머니"). 여러 개면 쉼표로 구분, 없으면 "".
 - tag_remove: 더 이상 사실이 아닌 기존 태그(나은 부상, 갚은 빚 등)를 그대로 적는다. 없으면 "".
 - 가족은 [가족] 목록을 따르고 멋대로 바꾸지 마라. 이야기 속에서 결혼하면 spouse에 "이름/성별", 플레이어의 아이가 태어나면 child_born을 true, 가족이 죽으면 family_dead에 그 이름. 해당 없으면 ""와 false.
-반드시 JSON만 출력: {"narration":"서술","hp":0,"sp":0,"en":0,"rep":0,"ahn":0,"str":0,"def":0,"spd":0,"int":0,"days":0,"location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3"}`;
+반드시 JSON만 출력: {"narration":"서술","hp":0,"sp":0,"en":0,"rep":0,"ahn":0,"str":0,"def":0,"spd":0,"int":0,"days":0,"location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
 
 const SUM_RULES = `
 너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 이야기를 이어 갈 때 필요한 사실 위주로 한국어 2~3문장으로 요약하라(사람 이름, 관계, 사건, 약속, 빚, 부상, 장소). 꾸밈말 없이.
 반드시 JSON만 출력: {"summary":"요약"}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["str","def","spd","int"]},dc:{type:"integer"},why:{type:"string"},trivial:{type:"boolean"}},required:["text","stat","dc","why","trivial"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"integer"},sp:{type:"integer"},en:{type:"integer"},rep:{type:"integer"},ahn:{type:"integer"},str:{type:"integer"},def:{type:"integer"},spd:{type:"integer"},int:{type:"integer"},days:{type:"integer"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"}},required:["options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"integer"},sp:{type:"integer"},en:{type:"integer"},rep:{type:"integer"},ahn:{type:"integer"},str:{type:"integer"},def:{type:"integer"},spd:{type:"integer"},int:{type:"integer"},days:{type:"integer"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
 
 /* 계절 · 달력 */
@@ -1034,6 +1035,7 @@ function normalizeNarr(j, statCap){
   n.child_born = j.child_born === true || j.child_born === "true";
   n.family_dead = String(j.family_dead || "").slice(0, 30);
   n.options = parseOptions(j.options);
+  n.shop = j.shop === true || j.shop === "true";
   return n;
 }
 function parseOptions(o){
@@ -1497,9 +1499,12 @@ async function doAction(input){
   applyNarr(fin);
   save(); setBusy(false);
   memoryTick();
-  /* 공방은 버튼이 없다. 직접 찾아가야(“공방에 간다”, “무기 가게를 둘러본다” 등) 진열대가 열린다 */
-  if(!S.dead && visitsShop(input)) openShop();
+  /* 공방은 버튼이 없다. 직접 찾아가야 열린다.
+     찾아갔는지는 AI 서술자가 장면을 보고 정한다(shop). AI가 없을 때(규칙 진행)만 문장으로 어림한다 */
+  const atShop = n ? n.shop : visitsShop(input);
+  if(!S.dead && atShop) openShop();
 }
+/* AI 없이 진행할 때만 쓰는 대체 판단 */
 function visitsShop(t){
   const place = /(공방|대장간|무기\s?(점|가게|상점|상인)|장비\s?(점|가게|상점)|방어구\s?(점|가게|상점)|의체\s?(시술소|병원|가게|상점|공방|센터)|의수\s?(가게|공방)|의족\s?(가게|공방))/;
   const go = /(가|간다|갈|찾|들르|들러|들른|방문|구경|둘러|들어|향|사러|사려|사고|맞추|맞춘|주문|맡기|팔러|팔려|팔고|이식)/;
