@@ -567,10 +567,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261106-2550"></script>
+<script src="parts.js?v=20261106-2555"></script>
 <script>
 "use strict";
-const BUILD = "20261106-2550";
+const BUILD = "20261106-2555";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -981,7 +981,7 @@ async function runAI(build, maxTok, schema, quiet){
     const m = /"narration"\s*:\s*"([\s\S]*?)("\s*,\s*"|$)/.exec(txt);
     j = {narration: (m ? m[1] : txt.replace(/[{}]/g, "")).replace(/\\n/g, "\n").trim()};
   }
-  if(!j) throw new Error("AI 응답을 해석하지 못했습니다.");
+  if(!j) throw new Error((p === "webllm" ? "기기 AI" : PROV_KO[p] || "AI") + "의 응답이 형식에 맞지 않았습니다.");
   return j;
 }
 
