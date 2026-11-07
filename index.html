@@ -807,10 +807,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1553"></script>
+<script src="parts.js?v=20261107-1557"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1553";
+const BUILD = "20261107-1557";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -948,10 +948,11 @@ const inSyndicate = () => !!(S && S.tags && S.tags.some(t => /^조직:/.test(t) 
 const ORG_MULT = 1.6;
 function eventChance(y){
   let c;
-  if(y < 3) c = 0.04;
-  else if(y < 6) c = 0.08;
+  /* 5살 이하는 큰 사건이 드물다 */
+  if(y < 3) c = 0.01;
+  else if(y < 6) c = 0.025;
   else c = Math.min(0.5, 0.15 + (y - 6) * 0.025);
-  return inSyndicate() ? Math.min(0.75, c * ORG_MULT) : c;
+  return inSyndicate() && y >= 6 ? Math.min(0.75, c * ORG_MULT) : c;
 }
 /* 돌발 상황: "장면|선택지1/선택지2/선택지3". 언제·어디서·무엇을 하다가 무엇을 마주쳤는지 구체적으로 → 다음 행동을 고르기 쉽게.
    AI가 있으면 참고 예시로만 쓰고, AI가 없을 때는 이 장면을 그대로 쓴다 */
@@ -4490,7 +4491,7 @@ function cleanOutline(ctx, W, H, lineMask){
 const FLOW_DAYS = {1:2, 2:4, 4:8, 8:16, 16:32, 32:64};
 const SPEEDS = [1, 2, 4, 8, 16, 32];
 const flow = {on:false, speed:1, timer:null, startDays:0, smalls:[], ahn:0};
-function bigRate(y){ const r = y < 3 ? 0.3 : y < 6 ? 0.6 : Math.min(4, 1.2 + (y - 6) * 0.2); return inSyndicate() ? r * ORG_MULT : r; }
+function bigRate(y){ const r = y < 3 ? 0.08 : y < 6 ? 0.18 : Math.min(4, 1.2 + (y - 6) * 0.2); return inSyndicate() ? r * ORG_MULT : r; }
 const SMALL = {
   baby:[["엄마 품에서 처음으로 소리 내어 웃었다",{sp:3}],["밤새 열이 올랐다가 내렸다",{hp:-4}],["처음으로 혼자 뒤집기를 했다",{en:-2}],["이웃이 낡은 딸랑이를 주고 갔다",{sp:2}],["새벽 3시 13분, 창밖에서 비명이 들렸다",{sp:-3}],["젖니가 나느라 칭얼댔다",{en:-3}]],
   child:[["골목 아이들과 술래잡기를 했다",{sp:3, en:-3}],["넘어져 무릎이 까졌다",{hp:-3}],["간판 글자를 몇 개 더 읽게 됐다",{sp:1}],["빵집 아저씨가 남은 빵을 쥐여 줬다",{sp:2}],["어른들이 해결사 이야기를 하는 걸 엿들었다",{sp:1}],["부모님이 돈 문제로 다퉜다",{sp:-3}],["길에서 동전을 주웠다",{ahn:500}],["감기에 걸려 며칠 앓았다",{hp:-4, en:-5}],["밤에 청소부 소리를 듣고 이불 속에 숨었다",{sp:-2}]],
