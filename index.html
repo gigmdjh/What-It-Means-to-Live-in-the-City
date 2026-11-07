@@ -968,10 +968,10 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0035"></script>
+<script src="parts.js?v=20261108-0045"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0035";
+const BUILD = "20261108-0045";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2032,6 +2032,7 @@ let webllmWorker = null, webllmTrying = "", webllmCtx = 4096;
 /* 프롬프트를 얼마나 줄일지 (0 보통, 1·2 더 짧게). 기기 AI의 문맥 길이를 넘지 않게 runAI가 정한다 */
 let PROMPT_TIGHT = 0, webllmNoSchema = false;
 async function loadWebLLM(onProg){
+  if(NO_DEVICE_AI) throw new Error("폰에서는 기기 AI를 쓰지 않습니다");
   if(webllmEngine) return webllmEngine;
   if(webllmLoading) return webllmLoading;
   if(!navigator.gpu) throw new Error("이 브라우저는 WebGPU를 지원하지 않습니다. 최신 크롬·삼성 인터넷·엣지에서 시도하세요.");
@@ -2080,16 +2081,18 @@ async function loadWebLLM(onProg){
 /* API 키가 없으면 기기 AI를 쓸 계획인지 */
 /* AI(API·크롬 내장·기기 AI)를 쓰는 중이면 true → 잠깐 실패해도 '규칙 기반' 안내를 띄우지 않는다 */
 function aiOn(){ return (!!currentProv && currentProv !== "rules") || hasKey() || (CFG.provider !== "auto" && CFG.provider !== "rules" && CFG.provider !== "webllm"); }
+/* 폰·태블릿에서는 기기 AI(내려받는 로컬 모델·크롬 내장 AI)를 쓰지 않는다: 발열과 배터리 부담이 너무 크다 */
+const NO_DEVICE_AI = isMobile;
 function deviceAIPlanned(){
-  /* 메모리 2GB 이하 폰은 자동으로는 기기 AI를 켜지 않는다(직접 고르면 시도) */
-  const tiny = isMobile && (navigator.deviceMemory || 4) <= 2;
-  return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey() && !polliKey() && !tiny));
+  if(NO_DEVICE_AI) return false;
+  return !!navigator.gpu && !webllmFailed && (CFG.provider === "webllm" || (CFG.provider === "auto" && !hasKey() && !polliKey()));
 }
 function withTimeout(promise, ms, msg){
   return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
 }
 async function pickProvider(){
-  const p = CFG.provider;
+  let p = CFG.provider;
+  if(NO_DEVICE_AI && (p === "webllm" || p === "chrome")) p = "auto";
   if(p === "webllm") return webllmEngine ? "webllm" : "rules";
   if(p === "pollinations") return polliKey() ? "pollinations" : (webllmEngine ? "webllm" : "rules");
   if(p !== "auto") return p;
@@ -7105,6 +7108,12 @@ function showGame(){
   renderLog(); renderStatus(); checkAch();
 }
 function newLife(){ showCreate(); }
+/* 폰에서는 설정에서도 기기 AI를 고를 수 없게 한다 */
+if(NO_DEVICE_AI){
+  document.querySelectorAll('#optProvider option[value="webllm"], #optProvider option[value="chrome"]').forEach(o => o.remove());
+  if(CFG.provider === "webllm" || CFG.provider === "chrome"){ CFG.provider = "auto"; saveCfg(); }
+  document.querySelectorAll('section[data-prov="webllm"], section[data-prov="chrome"]').forEach(x => x.style.setProperty("display", "none", "important"));
+}
 $("#btnMenu").addEventListener("click", showMenu);
 $("#btnAch").addEventListener("click", () => {
   const box = $("#achList"), open = box.hidden;
