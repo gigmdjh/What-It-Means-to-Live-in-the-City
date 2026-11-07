@@ -454,7 +454,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <input type="text" id="cGenderOther" maxlength="20" placeholder="성별을 적어 주세요" hidden>
     </div>
     <div class="lookrow">
-      <label class="field"><span>외모</span><textarea id="cLook" maxlength="300" placeholder="예: 은발 포니테일, 붉은 눈, 안경, 검은 코트, 왼뺨의 흉터"></textarea></label>
+      <label class="field"><span>외모</span><textarea id="cLook" maxlength="300" placeholder="예: 은발 포니테일, 붉은 눈, 동그란 안경, 베이지 트렌치코트, 검은 치마, 왼뺨 십자 흉터, 빨간 리본"></textarea></label>
       <figure class="preview"><canvas class="sprite" id="cPreview" width="60" height="92" role="img" aria-label="외모 미리보기"></canvas><figcaption class="note">어른이 된 모습</figcaption></figure>
     </div>
     <div class="row">
@@ -668,8 +668,19 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
         <label class="field"><span>오른쪽 눈 색</span><select id="leEyeR"></select></label>
         <label class="field"><span>피부</span><select id="leSkin"><option value="">보통</option><option value="창백한 피부">밝은</option><option value="까무잡잡한 피부">까무잡잡한</option></select></label>
         <label class="field"><span>체격</span><select id="leBuild"><option value="보통 체격">보통</option><option value="마른 체격">마른</option><option value="덩치 큰 체격">덩치 큰</option></select></label>
-        <label class="field"><span>옷</span><select id="leCloth"><option value="셔츠">셔츠</option><option value="코트">코트</option><option value="후드티">후드티</option><option value="원피스">원피스</option></select></label>
+        <label class="field"><span>옷</span><select id="leCloth">
+          <optgroup label="평상복"><option>셔츠</option><option>블라우스</option><option>티셔츠</option><option>민소매</option><option>니트</option><option>후드티</option><option>트레이닝복</option></optgroup>
+          <optgroup label="겉옷"><option>재킷</option><option>가죽 재킷</option><option>코트</option><option>트렌치코트</option><option>망토</option><option>조끼</option></optgroup>
+          <optgroup label="차려입은"><option>정장</option><option>원피스</option><option>드레스</option><option>교복</option><option>제복</option></optgroup>
+          <optgroup label="일·직업"><option>작업복</option><option>흰 가운</option><option>간호복</option><option>사제복</option><option>로브</option></optgroup>
+        </select></label>
         <label class="field"><span>옷 색</span><select id="leClothC"></select></label>
+        <label class="field"><span>아래옷</span><select id="leBot"><option value="바지">바지</option><option value="청바지">청바지</option><option value="반바지">반바지</option><option value="치마">치마</option></select></label>
+        <label class="field"><span>아래옷 색</span><select id="leBotC"><option value="">자동</option></select></label>
+        <label class="field"><span>모자</span><select id="leHat"><option value="">없음</option><option>중절모</option><option>베레모</option><option>비니</option><option>캡</option><option>밀짚모자</option><option>왕관</option><option value="후드를 쓴">후드 쓰기</option></select></label>
+        <label class="field"><span>안경</span><select id="leGlass"><option value="">없음</option><option value="안경">네모 안경</option><option value="동그란 안경">동그란 안경</option><option value="반무테 안경">반무테</option><option value="금테 안경">금테</option><option value="모노클">외알 안경</option><option value="선글라스">선글라스</option><option value="고글">고글</option></select></label>
+        <label class="field"><span>흉터</span><select id="leScar"><option value="">없음</option><option value="왼쪽 눈 흉터">왼쪽 눈</option><option value="오른쪽 눈 흉터">오른쪽 눈</option><option value="왼뺨 흉터">왼뺨</option><option value="오른뺨 흉터">오른뺨</option><option value="왼뺨 십자 흉터">왼뺨 십자</option><option value="오른뺨 십자 흉터">오른뺨 십자</option><option value="오른쪽 볼에 긴 흉터">길게(오른쪽)</option><option value="왼쪽 볼에 긴 흉터">길게(왼쪽)</option><option value="이마 흉터">이마</option><option value="콧등 흉터">콧등</option><option value="입가 흉터">입가</option><option value="목의 흉터">목</option></select></label>
+        <label class="field"><span>소품 색</span><select id="leAccC"><option value="">자동</option></select></label>
       </div>
     </div>
     <div class="le-acc" id="leAcc"></div>
@@ -769,11 +780,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1422"></script>
+<script src="parts.js?v=20261107-1450"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-1422";
+const BUILD = "20261107-1450";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1375,7 +1386,11 @@ const LOOK_HAIR = ["검은","짙은 갈색","갈색","밤색","금발","잿빛",
 const LOOK_STYLE = {남성:["짧은 머리","덥수룩한 머리","단정한 머리","뒤로 넘긴 머리","짧은 곱슬머리"], 여성:["긴 머리","단발","묶은 머리","긴 웨이브 머리","땋은 머리"]};
 const LOOK_EYE = ["검은","갈색","짙은 갈색","회색","파란","초록","호박색"];
 const LOOK_BUILD = ["마른 체격","보통 체격","덩치 큰 체격","다부진 체격"];
-const LOOK_EXTRA = ["", "", "", "안경", "흉터", "주근깨", "수염", "피곤한 눈매", "날카로운 눈매"];
+const LOOK_EXTRA = ["", "", "", "안경", "흉터", "주근깨", "수염", "피곤한 눈매", "날카로운 눈매", "", "목걸이", "귀걸이", "동그란 안경", "오른뺨 흉터", "모자", "장갑"];
+/* 사람들의 옷차림(무작위). 도시답게 수수한 색이 많다 */
+const LOOK_CLOTH_C = ["검은", "회색", "남색", "갈색", "베이지", "흰", "짙은 초록", "와인색", "파란", "카키"];
+const LOOK_CLOTH = {남성:["셔츠", "티셔츠", "재킷", "코트", "후드티", "니트", "정장", "조끼", "가죽 재킷", "트렌치코트", "작업복", "트레이닝복"],
+  여성:["블라우스", "셔츠", "티셔츠", "니트", "코트", "원피스", "재킷", "후드티", "트렌치코트", "정장", "드레스", "조끼"]};
 function randLook(g, inherit){
   const hair = inherit && inherit.hair && rnd(3) ? inherit.hair : LOOK_HAIR[rnd(LOOK_HAIR.length)];
   const eye = inherit && inherit.eye && rnd(3) ? inherit.eye : LOOK_EYE[rnd(LOOK_EYE.length)];
@@ -1383,7 +1398,9 @@ function randLook(g, inherit){
   let ex = LOOK_EXTRA[rnd(LOOK_EXTRA.length)];
   if(ex === "수염" && g !== "남성") ex = "";
   const hairTxt = hair === "금발" || hair === "은발" ? `${hair} ${st[rnd(st.length)]}` : `${hair} ${st[rnd(st.length)]}`;
-  return [hairTxt, `${eye} 눈`, LOOK_BUILD[rnd(LOOK_BUILD.length)], ex].filter(Boolean).join(", ");
+  const cl = (LOOK_CLOTH[g] || LOOK_CLOTH.남성), cc = LOOK_CLOTH_C[rnd(LOOK_CLOTH_C.length)];
+  const cloth = `${cc} ${cl[rnd(cl.length)]}`, skirt = g === "여성" && rnd(4) === 0 && !/원피스|드레스/.test(cloth) ? `${LOOK_CLOTH_C[rnd(LOOK_CLOTH_C.length)]} 치마` : "";
+  return [hairTxt, `${eye} 눈`, LOOK_BUILD[rnd(LOOK_BUILD.length)], cloth, skirt, ex].filter(Boolean).join(", ");
 }
 function lookParts(look){
   const m = /^(\S+(?: \S+)?) (?:짧은|덥수룩한|단정한|뒤로|긴|단발|묶은|땋은)/.exec(look || ""), e = /([가-힣 ]+?) 눈/.exec(look || "");
@@ -3394,11 +3411,21 @@ function hanjaColor(t, tail){
   }
   return null;
 }
+/* 옷 종류: 낱말로 고른다 (긴 낱말·특별한 옷 먼저) */
+const CLOTH_TYPES = [
+  ["suit", /정장|수트|양복|턱시도/], ["school", /교복|세일러/], ["uniform", /제복|군복|경찰복|유니폼|근무복/], ["priest", /사제복|수녀복|신부복|성직자/],
+  ["labcoat", /흰 ?가운|의사 ?가운|백의|연구복|실험복/], ["nurse", /간호복/], ["overall", /작업복|점프 ?수트|멜빵|정비복/],
+  ["robe", /로브|기모노|도포|한복|가운|유카타/], ["cape", /망토|케이프|클로크/], ["trench", /트렌치/], ["leather", /가죽 ?(재킷|자켓|점퍼)|라이더/],
+  ["track", /트레이닝|츄리닝|운동복|저지|체육복/], ["vest", /조끼/], ["knit", /니트|스웨터|가디건/], ["hoodie", /후드티|후드|후디/],
+  ["jacket", /재킷|자켓|점퍼|블레이저|패딩/], ["coat", /코트|외투/], ["dress", /원피스|드레스/], ["tank", /민소매|나시|탱크 ?톱|슬리브리스/],
+  ["tee", /티셔츠|반팔|반소매/], ["blouse", /블라우스/], ["shirt", /셔츠|남방/]
+];
+function clothTypeOf(t){ for(const [k, re] of CLOTH_TYPES) if(re.test(t)) return k; return /앞치마|에이프런/.test(t) ? "apron" : "shirt"; }
 function lookTraitsOf(look, name, gender, seedKey, over){
   const t = " " + (look || "") + " ";
   const h = hashStr((name || "") + (seedKey || ""));
   const tr = {};
-  tr.hair = findColor(t, /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리|트윈테일|포니테일|양갈래|땋은)/) || hanjaColor(t, "발") || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
+  tr.hair = findColor(t.replace(/머리(띠|핀|끈|장식|띄)|헤어(핀|밴드)/g, "□□"), /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리|트윈테일|포니테일|양갈래|땋은)/) || hanjaColor(t, "발") || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
   tr.eye = findColor(t, /(눈동자|눈빛|홍채|눈(?!썹|매))/) || hanjaColor(t, "안") || ["#3a2c26", "#2a2f3c", "#4a3a2a"][(h >>> 3) % 3];
   /* 오드아이: "오드아이" 또는 "왼쪽 파란 눈, 오른쪽 붉은 눈" */
   /* 눈마다 색: "왼눈 빨간색", "왼쪽 눈은 파란색", "빨간 왼눈", "오른쪽 눈 금안" 등 (순서 상관없음, 한쪽만 적어도 됨).
@@ -3435,7 +3462,7 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   else tr.style = gender === "여성" ? "long" : gender === "남성" ? "short" : "bob";
   tr.bangs = !/이마를 드러|올백|앞머리 없|넘긴 머리|넘겨/.test(t);
   tr.sunglasses = /선글라스|색안경/.test(t);
-  tr.glasses = /안경/.test(t) && !tr.sunglasses;
+  tr.glasses = /안경|모노클/.test(t) && !tr.sunglasses;
   tr.eyepatch = /안대/.test(t);
   tr.scar = /흉터|상처|칼자국|베인 자국/.test(t);
   tr.mole = /눈물점|애교점|작은 점|검은 점|점이 있|밑의 점|밑 점|입가의 점|입가 점/.test(t);
@@ -3444,15 +3471,51 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   tr.beard = /턱수염|구레나룻|덥수룩한 수염/.test(t) || (/수염/.test(t) && !tr.mustache);
   tr.mask = /마스크|복면|입을 가린/.test(t);
   tr.hood = /후드를 (쓴|눌러)|후드 쓴|모자 달린/.test(t);
-  tr.hat = !tr.hood && /모자|비니|베레모|캡|중절모|페도라/.test(t);
-  tr.hatColor = findColor(t, /(모자|비니|베레모|캡|중절모|페도라)/) || "#2c2b33";
+  tr.hat = !tr.hood && /모자|비니|베레|캡|중절모|페도라|왕관|티아라/.test(t);
+  tr.hatColor = findColor(t, /(모자|비니|베레모|베레|캡|중절모|페도라)/) || "#2c2b33";
   tr.scarf = /목도리|스카프|머플러|목에 두른/.test(t);
   tr.scarfColor = findColor(t, /(목도리|스카프|머플러)/) || "#a33a32";
   tr.earring = /귀걸이|피어싱/.test(t);
   tr.bandage = /붕대|반창고|밴드/.test(t);
   tr.build = /마른|깡마른|가냘픈|왜소|호리호리/.test(t) ? "thin" : /덩치|뚱뚱|통통|근육|건장|거구|떡대|우람/.test(t) ? "big" : "mid";
-  tr.outfit = findColor(t, /(옷|코트|재킷|자켓|후드티|후드|셔츠|원피스|티셔츠|스웨터|니트|교복|드레스|외투|점퍼|조끼)/);
-  tr.otype = /원피스|드레스|치마|스커트/.test(t) ? "dress" : /후드티|후드/.test(t) ? "hoodie" : /코트|트렌치|외투|망토/.test(t) ? "coat" : "shirt";
+  tr.otype = clothTypeOf(t);
+  { const ct = CLOTH_TYPES.find(c => c[0] === tr.otype); tr.outfitMain = ct ? findColor(t, new RegExp("(" + ct[1].source + ")")) : null; }
+  tr.outfit = tr.outfitMain || findColor(t, /(옷|코트|재킷|자켓|후드티|후드|셔츠|원피스|티셔츠|반팔|스웨터|니트|교복|드레스|외투|점퍼|조끼|정장|수트|제복|군복|유니폼|작업복|점프수트|멜빵|블라우스|민소매|나시|탱크톱|망토|케이프|로브|기모노|가운|도포|한복|트레이닝|운동복|저지|앞치마|트렌치|가죽|턱시도|사제복|수녀복|간호복|의사 가운|백의|셔츠)/);
+  tr.pants = findColor(t, /(바지|치마|스커트|슬랙스|청바지|반바지|레깅스|하의|아래옷)/) || (/청바지|데님/.test(t) ? "#3d5a86" : null);
+  tr.btype = /반바지|핫팬츠|숏팬츠/.test(t) ? "shorts" : /치마|스커트/.test(t) && !/원피스|드레스/.test(t) ? "skirt" : "pants";
+  tr.inner = findColor(t, /(안에 입은|속옷|이너|안쪽 셔츠|받쳐 입은)/);
+  /* 흉터: 자리와 모양 */
+  tr.scars = [];
+  if(tr.scar){
+    const sc = t.match(/[^,.\n]*(흉터|상처|칼자국|베인 자국)[^,.\n]*/g) || [];
+    for(const ph of sc){
+      const side = /오른/.test(ph) ? "R" : /왼/.test(ph) ? "L" : "R";
+      const kind = /십자|X자|엑스/.test(ph) ? "cross" : /눈|눈가|눈썹/.test(ph) ? "eye" : /이마/.test(ph) ? "brow" : /콧등|코/.test(ph) ? "nose" : /입|입가|턱/.test(ph) ? "mouth" : /목/.test(ph) ? "neck" : /세로|긴/.test(ph) ? "long" : "cheek";
+      tr.scars.push({side, kind});
+    }
+    if(!tr.scars.length) tr.scars.push({side:"R", kind:"cheek"});
+  }
+  /* 소품 더 */
+  tr.glassType = /동그란 ?안경|둥근 ?안경|원형 ?안경/.test(t) ? "round" : /반무테|하프 ?림/.test(t) ? "half" : /외알 ?안경|모노클/.test(t) ? "mono" : "square";
+  tr.glassColor = /금테|금색 ?안경/.test(t) ? "#d2a943" : /검은 ?안경|뿔테|검정 ?안경/.test(t) ? "#26232c" : "#9aa0ac";
+  tr.hatType = /베레/.test(t) ? "beret" : /비니|털모자/.test(t) ? "beanie" : /캡|야구 ?모자/.test(t) ? "cap" : /밀짚/.test(t) ? "straw" : /왕관|티아라/.test(t) ? "crown" : "fedora";
+  tr.necklace = /목걸이|펜던트|로켓/.test(t);
+  tr.choker = /초커/.test(t);
+  tr.hairpin = /머리핀|헤어핀|실핀|머리 ?장식/.test(t);
+  tr.ribbon = /리본/.test(t);
+  tr.headband = /머리띠|헤어밴드/.test(t);
+  tr.tie = /넥타이|타이를/.test(t);
+  tr.bowtie = /나비넥타이|보타이/.test(t);
+  tr.gloves = /장갑/.test(t);
+  tr.gloveColor = findColor(t, /장갑/) || "#2b2930";
+  tr.headphones = /헤드폰|헤드셋/.test(t);
+  tr.goggles = /고글/.test(t);
+  tr.cheekband = /반창고/.test(t);
+  tr.headwrap = /머리에 붕대|이마에 붕대|붕대를 감은 머리/.test(t);
+  tr.accColor = findColor(t, /(리본|머리띠|머리핀|넥타이|목걸이|초커)/);
+  tr.belt = /벨트|허리띠/.test(t);
+  tr.apron = /앞치마|에이프런/.test(t);
+  tr.apronColor = findColor(t, /(앞치마|에이프런)/) || "#efede6";
   return tr;
 }
 function lookTraits(){ return lookTraitsOf(S.look, S.name, S.gender, String(S.district)); }
@@ -3875,8 +3938,10 @@ function drawSprite(cv, opt){
   let outfit = tr.outfit || (origin === "nest" ? "#45587a" : "#6a6152");
   if(baby) outfit = "#e8dcc0";
   if(armor) outfit = armor.look === "suit" ? "#26282f" : armor.look;
-  const pants = baby ? "#e8dcc0" : armor && armor.look === "suit" ? "#26282f" : "#4a4a55";
-  const dress = !armor && !baby && tr.otype === "dress", coat = !armor && !baby && tr.otype === "coat";
+  const OT = armor || baby ? "shirt" : (tr.otype || "shirt");
+  const BT = armor || baby ? "pants" : (tr.btype || "pants");
+  const pants = baby ? "#e8dcc0" : armor && armor.look === "suit" ? "#26282f" : tr.pants || (OT === "overall" || OT === "track" ? outfit : OT === "suit" || OT === "uniform" ? shade(outfit, 0.85) : OT === "school" ? "#2c3346" : "#4a4a55");
+  const dress = !armor && !baby && (OT === "dress" || OT === "nurse"), coat = !armor && !baby && ["coat", "trench", "labcoat", "cape", "priest"].includes(OT);
   const skinDefault = tr.skin === "#e9c6a8";
   const skinT = hexRGB(tr.skin), skinB = B.skin;
   const OUT = hexRGB(outfit), PANT = hexRGB(pants), SHOE = [43, 39, 48], METAL = [169, 179, 193], SOCK = [236, 232, 224];
@@ -3891,20 +3956,87 @@ function drawSprite(cv, opt){
   const TIE = [192, 57, 75];
   const legLen = Math.max(1, (B.h - 1) - B.crotch);
   const regAt = (x, y) => (x < 0 || y < 0 || x >= B.w || y >= B.h) ? 0 : Math.round(rg[(y * B.w + x) * 4] / 20);
+  /* 몸 부위 범위(한 번만 계산): 팔·몸통 */
+  if(!B._rb){ const r = {}; for(let y = 0; y < B.h; y++) for(let x = 0; x < B.w; x++){ const i = (y * B.w + x) * 4; if(!sd[i + 3]) continue; const g2 = Math.round(rg[i] / 20); const q = r[g2] || (r[g2] = [999, 999, -1, -1]); q[0] = Math.min(q[0], x); q[1] = Math.min(q[1], y); q[2] = Math.max(q[2], x); q[3] = Math.max(q[3], y); } B._rb = r; }
+  const RB = B._rb, armT = (RB[4] || [0, B.neck])[1], armB = Math.max(armT + 1, (RB[4] || [0, 0, 0, B.crotch])[3]);
+  const cxB = (B.headL + B.headR) / 2, torT = (RB[3] || [0, B.neck])[1], torB = Math.max(torT + 1, (RB[12] || [0, 0, 0, B.crotch])[3]);
+  const IN = hexRGB(tr.inner || (OT === "suit" || OT === "school" || OT === "vest" || OT === "overall" || OT === "apron" || OT === "labcoat" ? "#efede6" : OT === "leather" || OT === "jacket" ? "#3a3a44" : "#e8e4da"));
+  const TIEC = hexRGB(tr.accColor || "#a8302c");
+  const ACC = hexRGB(tr.accColor || (OT === "school" ? "#b8333f" : OT === "uniform" ? "#d2a943" : OT === "suit" ? "#8a2a2c" : "#c9a24a"));
+  const WHITE = [238, 236, 230], DARK = OUT.map(c => c * 0.55);
+  const longLeg = OT === "robe" || OT === "priest" ? 0.86 : OT === "trench" || OT === "labcoat" ? 0.62 : OT === "cape" ? 0.5 : OT === "coat" ? 0.42 : 0;
   /* 다리 영역(8·9)을 바지/치마/양말/의족으로 나눠 무엇을 칠할지 정한다 */
-  const legPaint = (region, y) => {
+  const legPaint = (region, x, y) => {
     const t = (y - B.crotch) / legLen;
     if(region === 9 && eq.leg) return METAL;
-    if(dress) return t < 0.38 ? OUT : t > 0.78 ? SOCK : null;
-    if(coat && t < 0.3) return OUT;
+    if(dress) return t < (OT === "nurse" ? 0.42 : 0.38) ? OUT : t > 0.78 ? SOCK : null;
+    if(longLeg && t < longLeg) return OT === "cape" ? shade3(OUT, 0.82) : OUT;
+    if(BT === "skirt") return t < 0.4 ? PANT : t > 0.8 ? SOCK : null;
+    if(BT === "shorts") return t < 0.32 ? PANT : null;
+    if(OT === "track" && (x === (RB[8] || [0])[0] || x === (RB[9] || [0, 0, 0])[2])) return WHITE;
     return PANT;
   };
-  const colorFor = (region, x, y) => {
-    if(region === 3 || region === 4) return OUT;
-    if(region === 5) return eq.arm ? METAL : OUT;
+  const shade3 = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
+  /* 몸통(3)·허리(12)·팔(4·5) 칠하기: 옷 종류마다 */
+  const torsoPaint = (x, y) => {
+    const ty = (y - torT) / (torB - torT), dx = x - cxB, ax = Math.abs(dx);
+    switch(OT){
+      case "suit": if(ty < 0.5 && ax <= (0.5 - ty) * 6 + 0.5){ if(ax < 1 && ty > 0.06) return ACC; return IN; } if(ax < 1 && ty > 0.5) return shade3(OUT, 0.7); return OUT;
+      case "jacket": case "leather": if(ax <= 1.5) return IN; if(OT === "leather" && ty < 0.2 && ax <= 4) return shade3(OUT, 1.25); return OUT;
+      case "trench": if(ty < 0.18 && ax <= 4) return shade3(OUT, 1.2); if(ty > 0.62 && ty < 0.72) return shade3(OUT, 0.6); if(ax < 1) return shade3(OUT, 0.75); return OUT;
+      case "labcoat": if(ax <= 1.5 && ty < 0.6) return [96, 120, 150]; if(ax < 1) return shade3(WHITE, 0.8); return WHITE;
+      case "vest": if(ty < 0.3 && ax <= (0.3 - ty) * 8 + 0.5) return IN; if(ax < 1 && ty > 0.3) return shade3(OUT, 0.7); return OUT;
+      case "school": if(ty < 0.18 && ax <= 2) return ACC; if(ty < 0.3 && ax >= 3) return OUT; if(ty < 0.34 && ax >= 3) return [238, 236, 230]; return IN;
+      case "uniform": if(ax < 1 && [0.22, 0.42, 0.62].some(v => Math.abs(ty - v) < 0.06)) return ACC; if(ty < 0.12 && ax >= 3 && ax <= 6) return shade3(OUT, 1.25); return OUT;
+      case "priest": if(ty < 0.1 && ax <= 2) return WHITE; if(ax < 1) return shade3(OUT, 1.3); return OUT;
+      case "overall": if(ty < 0.4 && ax > 4) return (ax <= 6 && ty < 0.4) ? OUT : IN; return OUT;
+      case "robe": if(ty > 0.68 && ty < 0.86) return ACC; if(Math.abs(dx - (ty * 7 - 3.5)) < 0.8 && ty < 0.68) return shade3(OUT, 0.6); return OUT;
+      case "cape": if(ty < 0.12 && ax <= 2) return ACC; return OUT;
+      case "knit": return (y % 2) ? shade3(OUT, 0.88) : OUT;
+      case "track": if(ax < 1 && ty < 0.6) return shade3(OUT, 0.6); return OUT;
+      case "hoodie": if(ty > 0.55 && ty < 0.8 && ax <= 4) return shade3(OUT, 0.8); if(ty < 0.08 && ax <= 3) return shade3(OUT, 0.7); return OUT;
+      case "blouse": if(ty < 0.14 && ax <= 3) return WHITE; return OUT;
+      case "nurse": if(ty < 0.12 && ax <= 2) return WHITE; return OUT;
+      default: return OUT;
+    }
+  };
+  const armPaint = (region, x, y) => {
+    const af = (y - armT) / (armB - armT);
+    const outer = region === 4 ? x === (RB[4] || [x])[0] : x === (RB[5] || [0, 0, x])[2];
+    switch(OT){
+      case "tank": return null;
+      case "tee": case "school": case "nurse": if(af > 0.42) return null; return OT === "school" ? IN : OUT;
+      case "vest": case "overall": return af > 0.85 && OT !== "overall" ? shade3(IN, 0.8) : IN;
+      case "labcoat": return af > 0.9 ? shade3(WHITE, 0.8) : WHITE;
+      case "track": return outer ? WHITE : OUT;
+      case "cape": return shade3(OUT, 0.82);
+      case "uniform": case "suit": case "trench": case "priest": return af > 0.9 ? (OT === "suit" ? IN : shade3(OUT, 0.7)) : OUT;
+      case "knit": return (y % 2) ? shade3(OUT, 0.88) : OUT;
+      default: return OUT;
+    }
+  };
+  const APR = hexRGB(tr.apronColor || "#efede6");
+  const apronAt = (region, x, y) => {
+    if(!(tr.apron || OT === "apron") || baby || armor) return null;
+    const ax = Math.abs(x - cxB);
+    if(region === 3){ const ty = (y - torT) / (torB - torT); if(ty > 0.2 && ax <= 5) return APR; if(ty > 0.18 && ty < 0.26 && ax <= 7) return shade3(APR, 0.85); }
+    if(region === 12 && ax <= 6) return APR;
+    if((region === 8 || region === 9) && (y - B.crotch) / legLen < 0.45 && ax <= 6) return APR;
+    return null;
+  };
+  const colorFor = (region, x, y) => { const ap = apronAt(region, x, y); if(ap) return ap; return colorFor0(region, x, y); };
+  const colorFor0 = (region, x, y) => {
+    if(region === 3) return torsoPaint(x, y);
+    if(region === 4) return armPaint(4, x, y);
+    if(region === 5) return eq.arm ? METAL : armPaint(5, x, y);
+    if((region === 6 || region === 7) && tr.gloves && !baby) return region === 7 && eq.arm ? METAL : hexRGB(tr.gloveColor);
     if(region === 7 && eq.arm) return METAL;
-    if(region === 12) return dress || coat ? OUT : PANT;
-    if(region === 8 || region === 9) return legPaint(region, y);
+    if(region === 12){
+      if(tr.belt || OT === "uniform" || OT === "trench"){ const top = (RB[12] || [0, 0])[1]; if(y === top + 1) return OT === "trench" ? shade3(OUT, 0.6) : [44, 38, 34]; }
+      if(OT === "robe") return ACC;
+      return dress || coat || OT === "overall" ? (OT === "labcoat" ? WHITE : OUT) : PANT;
+    }
+    if(region === 8 || region === 9) return legPaint(region, x, y);
     if(region === 10 || region === 11) return region === 11 && eq.leg ? METAL : baby ? null : SHOE;
     return null;
   };
@@ -3930,6 +4062,18 @@ function drawSprite(cv, opt){
     const j = ((y + oy) * W + (x + ox)) * 4;
     D[j] = Math.max(0, Math.min(255, r)); D[j + 1] = Math.max(0, Math.min(255, gg)); D[j + 2] = Math.max(0, Math.min(255, b)); D[j + 3] = 255;
     if(isLine && x + ox >= 0 && x + ox < W && y + oy >= 0 && y + oy < H) LINEMASK[(y + oy) * W + x + ox] = 1;
+  }
+  /* 망토: 어깨에서 아래로 퍼지는 천(몸 뒤, 빈 칸에만). 바깥 가장자리는 어둡게 */
+  if(OT === "cape" || OT === "priest"){
+    const L0 = ox + (RB[4] || [0])[0], R0 = ox + (RB[5] || [0, 0, B.w - 1])[2];
+    const yTop = oy + armT + 1, yBot = oy + B.crotch + Math.round(legLen * (OT === "cape" ? 0.6 : 0.88));
+    const CC = OT === "cape" ? OUT.map(c => c * 0.7) : OUT.map(c => c * 0.85), CE = CC.map(c => c * 0.45);
+    for(let Y = yTop; Y <= yBot && Y < H; Y++){
+      const grow = Math.floor((Y - yTop) / Math.max(1, yBot - yTop) * 3);
+      const a = L0 - grow, b2 = R0 + grow;
+      for(let X = a; X <= b2; X++){ if(X < 0 || X >= W) continue; const j = (Y * W + X) * 4; if(D[j + 3]) continue;
+        const edge = X === a || X === b2 || Y === yBot; const c = edge ? CE : CC; D[j] = c[0]; D[j + 1] = c[1]; D[j + 2] = c[2]; D[j + 3] = 255; LINEMASK[Y * W + X] = edge ? 1 : 0; }
+    }
   }
   const put = (X, Y, r, gg, b) => { if(X < 0 || Y < 0 || X >= W || Y >= H) return; const j = (Y * W + X) * 4; D[j] = r; D[j + 1] = gg; D[j + 2] = b; D[j + 3] = 255; };
   /* 눈 */
@@ -4040,20 +4184,67 @@ function drawSprite(cv, opt){
   const hcx = Math.round(ox + (B.headL + B.headR) / 2), headW = B.headR - B.headL, chin = oy + B.neck;
   const box = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
   const frame = (x, y, w, h, c) => { box(x, y, w, 1, c); box(x, y + h - 1, w, 1, c); box(x, y, 1, h, c); box(x + w - 1, y, 1, h, c); };
-  if(tr.glasses){ frame(ex0 - 1, ey0 - 1, emx - ex0, ey1 - ey0 + 2, "#9aa0ac"); frame(emx + 1, ey0 - 1, ex1 - emx, ey1 - ey0 + 2, "#9aa0ac"); }
+  if(tr.glasses){
+    const gc = tr.glassColor, lw = emx - ex0, rw = ex1 - emx, gh = ey1 - ey0 + 2;
+    const round = (x, y, w, h) => { box(x + 1, y, w - 2, 1, gc); box(x + 1, y + h - 1, w - 2, 1, gc); box(x, y + 1, 1, h - 2, gc); box(x + w - 1, y + 1, 1, h - 2, gc); };
+    if(tr.glassType === "round"){ round(ex0 - 1, ey0 - 1, lw, gh); round(emx + 1, ey0 - 1, rw, gh); box(emx - 1, ey0 + 1, 3, 1, gc); }
+    else if(tr.glassType === "half"){ box(ex0 - 1, ey0 - 1, lw, 1, gc); box(emx + 1, ey0 - 1, rw, 1, gc); box(ex0 - 1, ey0 - 1, 1, 3, gc); box(ex1, ey0 - 1, 1, 3, gc); box(emx - 1, ey0 - 1, 3, 1, gc); }
+    else if(tr.glassType === "mono"){ round(emx + 1, ey0 - 1, rw, gh); box(ex1, ey1 + 1, 1, 5, "#d2a943"); }
+    else { frame(ex0 - 1, ey0 - 1, lw, gh, gc); frame(emx + 1, ey0 - 1, rw, gh, gc); box(emx - 1, ey0, 3, 1, gc); }
+    if(tr.glassType !== "half"){ box(ex0, ey0, 1, 1, "rgba(255,255,255,.55)"); if(tr.glassType !== "mono") box(emx + 2, ey0, 1, 1, "rgba(255,255,255,.55)"); }
+  }
   if(tr.sunglasses){ box(ex0 - 1, ey0, emx - ex0, ey1 - ey0 + 1, "#121015"); box(emx + 1, ey0, ex1 - emx, ey1 - ey0 + 1, "#121015"); box(emx - 1, ey0, 3, 1, "#121015"); box(ex0, ey0, 2, 1, "#5a5670"); box(emx + 2, ey0, 2, 1, "#5a5670"); }
   if(tr.eyepatch){ box(emx + 1, ey0 - 1, ex1 - emx + 1, ey1 - ey0 + 3, "#1b1a20"); for(let x = ox + B.headL + 1; x < emx + 1; x++) box(x, ey0 - 3 + Math.round((x - ox - B.headL) / 10), 1, 1, "#1b1a20"); }
   if(tr.mask){ const mw = Math.round(headW * 0.56); box(emx - mw / 2, ey1 + 2, mw, chin - ey1 - 3, "#e6e6eb"); box(emx - mw / 2 + 1, ey1 + 4, mw - 2, 1, "#c6c6ce"); }
   const hairDark = shade(tr.hair, 0.6);
   if(tr.beard && stage === 2){ const bw2 = Math.round(headW * 0.32); box(emx - bw2 / 2, chin - 3, bw2, 2, hairDark); box(emx - bw2 / 2 + 1, chin - 1, bw2 - 2, 1, hairDark); }
   if(tr.mustache && stage === 2) box(emx - 3, ey1 + 4, 6, 1, hairDark);
-  if(tr.scar){ for(let k = 0; k < 4; k++) box(ex1 - 1 + k, ey1 + 4 - k, 1, 1, "#b5524a"); }
+  /* 흉터: 자리와 모양대로. 짙은 선 + 밝은 테두리 한 칸 */
+  if(tr.scar){
+    const skHex = (() => { const c = skinDefault ? skinB : skinT; return "#" + c.map(v => Math.round(v).toString(16).padStart(2, "0")).join(""); })();
+    const sc = "#a8473f", hi = shade(skHex, 1.12);
+    const line = pts => { for(const [x, y] of pts) box(x, y, 1, 1, sc); for(const [x, y] of pts.filter((_, i) => i % 2 === 0)) box(x + 1, y, 1, 1, hi); };
+    const eyeCL = Math.round((ex0 + emx) / 2), eyeCR = Math.round((emx + ex1) / 2);
+    for(const k of tr.scars || []){
+      const R = k.side === "R", ec = R ? eyeCR : eyeCL, fl = d => R ? d : -d;
+      if(k.kind === "eye") line([[ec + fl(1), ey0 - 4], [ec + fl(1), ey0 - 3], [ec, ey0 - 2], [ec, ey0 - 1], [ec, ey1], [ec - fl(1), ey1 + 1], [ec - fl(1), ey1 + 2]]);
+      else if(k.kind === "long") line([[ec + fl(2), ey0 - 3], [ec + fl(1), ey0 - 2], [ec + fl(1), ey0 - 1], [ec, ey1], [ec, ey1 + 1], [ec - fl(1), ey1 + 2], [ec - fl(1), ey1 + 3], [ec - fl(2), ey1 + 4]]);
+      else if(k.kind === "brow") line([[ec - 2, ey0 - 5], [ec - 1, ey0 - 5], [ec, ey0 - 6], [ec + 1, ey0 - 6], [ec + 2, ey0 - 7]]);
+      else if(k.kind === "nose") line([[emx - 2, ey0 + 3], [emx - 1, ey0 + 3], [emx, ey0 + 2], [emx + 1, ey0 + 2], [emx + 2, ey0 + 2]]);
+      else if(k.kind === "mouth") line([[emx + fl(3), ey1 + 2], [emx + fl(3), ey1 + 3], [emx + fl(4), ey1 + 4]]);
+      else if(k.kind === "neck") line([[hcx - 2, chin + 1], [hcx - 1, chin + 1], [hcx, chin + 2], [hcx + 1, chin + 2]]);
+      else if(k.kind === "cross"){ for(let d = 0; d < 3; d++){ box(ec - 1 + d, ey1 + 1 + d, 1, 1, sc); box(ec + 1 - d, ey1 + 1 + d, 1, 1, sc); } }
+      else line([[ec - fl(1), ey1 + 3], [ec, ey1 + 2], [ec + fl(1), ey1 + 1]]);
+    }
+  }
   if(tr.mole) box(ex1 - 2, ey1 + 3, 1, 1, "#3e2a20");
   if(tr.freckles) for(const [dx, dy] of [[1, 2], [3, 3], [2, 4]]){ box(ex0 + dx, ey1 + dy, 1, 1, "#b98c6c"); box(ex1 - dx - 1, ey1 + dy, 1, 1, "#b98c6c"); }
-  if(tr.bandage){ box(ex1 - 4, ey1 + 2, 5, 2, "#efe8d8"); box(ex1 - 2, ey1 + 2, 1, 2, "#d0c6ae"); }
-  if(tr.earring){ box(ox + B.headL + 1, ey1 + 2, 1, 2, "#e0bd55"); box(ox + B.headR - 1, ey1 + 2, 1, 2, "#e0bd55"); }
+  if(tr.bandage && !tr.headwrap && !tr.cheekband){ box(ex1 - 4, ey1 + 2, 5, 2, "#efe8d8"); box(ex1 - 2, ey1 + 2, 1, 2, "#d0c6ae"); }
+  if(tr.cheekband){ box(ex0 + 1, ey1 + 3, 5, 2, "#e8c49a"); box(ex0 + 3, ey1 + 3, 1, 2, "#c99d72"); }
+  if(tr.headwrap){ const hy = oy + B.eye[1] - 7; box(ox + B.headL + 2, hy, headW - 3, 3, "#efe8d8"); box(ox + B.headL + 2, hy + 2, headW - 3, 1, "#d0c6ae"); box(ox + B.headR - 4, hy + 3, 2, 3, "#efe8d8"); }
+  if(tr.earring){ const hoop = /링|후프/.test(lookTxt || ""), dang = /늘어|드롭|긴 귀걸이/.test(lookTxt || "");
+    for(const X of [ox + B.headL + 1, ox + B.headR - 1]){ if(hoop){ box(X - 1, ey1 + 3, 1, 2, "#e0bd55"); box(X, ey1 + 5, 1, 1, "#e0bd55"); box(X + 1, ey1 + 3, 1, 2, "#e0bd55"); } else { box(X, ey1 + 2, 1, dang ? 4 : 2, "#e0bd55"); if(dang) box(X, ey1 + 6, 1, 1, "#c0392b"); } } }
+  const ac = "#" + ACC.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+  if(tr.choker && !baby) box(hcx - Math.round(headW * 0.18), chin, Math.round(headW * 0.36), 1, "#1b1a20");
+  if(tr.necklace && !baby){ for(let d = -3; d <= 3; d++) box(hcx + d, chin + 1 + Math.round(Math.abs(d) < 2 ? 2 : (3 - Math.abs(d)) * 0.8 + 0.5), 1, 1, "#d8c27a"); box(hcx, chin + 4, 1, 2, tr.accColor || "#c0392b"); }
+  const tc = "#" + TIEC.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+  if(tr.tie && !tr.bowtie && !baby && OT !== "suit"){ const ac = tc; box(hcx - 1, chin + 1, 3, 1, ac); box(hcx, chin + 2, 1, 7, ac); box(hcx - 1, chin + 8, 3, 1, shade(ac, 0.8)); }
+  if(tr.bowtie && !baby){ const ac = tc; box(hcx - 3, chin + 1, 2, 3, ac); box(hcx + 2, chin + 1, 2, 3, ac); box(hcx - 1, chin + 2, 3, 1, shade(ac, 0.7)); }
+  if(tr.headphones){ const hy = oy + B.headTop + 1; box(ox + B.headL + 3, hy, headW - 5, 2, "#2b2930"); box(ox + B.headL, ey1 - 2, 3, 6, "#2b2930"); box(ox + B.headR - 2, ey1 - 2, 3, 6, "#2b2930"); box(ox + B.headL + 1, ey1 - 1, 1, 4, "#5a5670"); }
+  if(tr.goggles){ const gy = oy + B.eye[1] - 9; box(ox + B.headL + 2, gy + 1, headW - 3, 1, "#3a2f28"); box(emx - 8, gy, 6, 4, "#5a4636"); box(emx + 3, gy, 6, 4, "#5a4636"); box(emx - 7, gy + 1, 4, 2, "#8fd0d8"); box(emx + 4, gy + 1, 4, 2, "#8fd0d8"); }
+  if(tr.headband && !tr.hat && !tr.hood){ const hy = oy + B.headTop + 4; box(ox + B.headL + 3, hy, headW - 5, 2, ac); box(ox + B.headL + 4, hy, headW - 7, 1, shade(ac, 1.25)); }
+  if(tr.hairpin){ const X = ox + B.headR - 8, Y = oy + B.eye[1] - 8; box(X, Y, 4, 1, tr.accColor || "#e0bd55"); box(X + 1, Y + 2, 4, 1, tr.accColor || "#e0bd55"); }
+  if(tr.ribbon && !tr.hat && !tr.hood){ const X = ox + B.headR - 10, Y = oy + B.headTop + 2; box(X, Y, 3, 4, ac); box(X + 5, Y, 3, 4, ac); box(X + 3, Y + 1, 2, 2, shade(ac, 0.7)); box(X + 1, Y + 4, 1, 2, ac); box(X + 6, Y + 4, 1, 2, ac); }
   if(tr.scarf && !baby){ const sw = Math.round(headW * 0.5); box(hcx - sw / 2, chin, sw, 3, tr.scarfColor); box(hcx + 3, chin + 3, 3, 6, tr.scarfColor); box(hcx - sw / 2, chin + 2, sw, 1, shade(tr.scarfColor, 0.7)); }
-  if(tr.hat){ const hw2 = Math.round(headW * 0.86); box(hcx - hw2 / 2, oy + B.headTop - 2, hw2, 7, tr.hatColor); box(hcx - headW * 0.58, oy + B.headTop + 5, Math.round(headW * 1.16), 2, shade(tr.hatColor, 0.65)); box(hcx - hw2 / 2 + 2, oy + B.headTop - 1, 4, 1, shade(tr.hatColor, 1.3)); }
+  if(tr.hat){
+    const hc = tr.hatColor, top = oy + B.headTop;
+    if(tr.hatType === "beret"){ const bw = Math.round(headW * 0.9); box(hcx - bw / 2 - 2, top + 1, bw, 4, hc); box(hcx - bw / 2, top - 1, bw - 4, 2, hc); box(hcx - bw / 2 - 2, top + 4, bw, 1, shade(hc, 0.65)); box(hcx - 2, top - 2, 2, 1, shade(hc, 0.8)); }
+    else if(tr.hatType === "beanie"){ const bw = Math.round(headW * 0.92); box(hcx - bw / 2, top - 1, bw, 7, hc); box(hcx - bw / 2 + 1, top - 2, bw - 2, 1, hc); box(hcx - bw / 2, top + 4, bw, 2, shade(hc, 0.75)); for(let x = 0; x < bw; x += 2) box(hcx - bw / 2 + x, top + 4, 1, 2, shade(hc, 0.6)); }
+    else if(tr.hatType === "cap"){ const bw = Math.round(headW * 0.86); box(hcx - bw / 2, top - 1, bw, 6, hc); box(hcx - bw / 2 - 1, top + 5, Math.round(bw * 0.75), 2, shade(hc, 0.7)); box(hcx - 1, top - 2, 2, 1, shade(hc, 1.25)); }
+    else if(tr.hatType === "straw"){ const bw = Math.round(headW * 0.7); box(hcx - bw / 2, top - 1, bw, 6, "#d8b96a"); box(hcx - headW * 0.66, top + 5, Math.round(headW * 1.32), 2, "#c9a653"); box(hcx - bw / 2, top + 3, bw, 1, "#a8333f"); }
+    else if(tr.hatType === "crown"){ const cw = Math.round(headW * 0.5); box(hcx - cw / 2, top + 1, cw, 3, "#e0bd55"); for(let x = 0; x < cw; x += 3) box(hcx - cw / 2 + x, top - 1, 1, 2, "#e0bd55"); box(hcx - 1, top + 2, 2, 1, "#c0392b"); }
+    else { const hw2 = Math.round(headW * 0.86); box(hcx - hw2 / 2, top - 2, hw2, 7, hc); box(hcx - headW * 0.58, top + 5, Math.round(headW * 1.16), 2, shade(hc, 0.65)); box(hcx - hw2 / 2, top + 3, hw2, 1, shade(hc, 0.5)); box(hcx - hw2 / 2 + 2, top - 1, 4, 1, shade(hc, 1.3)); }
+  }
   if(tr.hood){ const hw2 = headW + 4; box(hcx - hw2 / 2, oy + B.headTop - 2, hw2, 5, outfit); box(hcx - hw2 / 2, oy + B.headTop + 3, 3, chin - oy - B.headTop - 3, outfit); box(hcx + hw2 / 2 - 3, oy + B.headTop + 3, 3, chin - oy - B.headTop - 3, shade(outfit, 0.75)); box(hcx - hw2 / 2 + 3, oy + B.headTop + 3, hw2 - 6, 1, shade(outfit, 0.7)); }
   if(armor && armor.look === "suit"){ box(hcx - 2, chin + 1, 5, 2, "#f2f0ea"); box(hcx, chin + 2, 1, 7, "#a8302c"); }
   if(eq.body) for(let yy = chin + 4; yy < oy + B.crotch - 3; yy += 3) box(hcx - 6, yy, 13, 1, "rgba(109,119,133,.85)");
@@ -4801,7 +4992,10 @@ async function loadSharedLooks(){
 }
 const customLookOf = n => n && (SHARED_LOOKS[n] || null);
 const LE_CLOTH_COLORS = ["검은", "흰", "회색", "빨간", "파란", "남색", "초록", "갈색", "베이지", "보라", "분홍", "노란"];
-const LE_ACC = [["안경", "안경"], ["선글라스", "선글라스"], ["안대", "안대"], ["흉터", "얼굴의 흉터"], ["마스크", "마스크"], ["모자", "검은 모자"], ["목도리", "빨간 목도리"], ["귀걸이", "귀걸이"], ["붕대", "붕대"], ["수염", "턱수염"], ["눈물점", "눈물점"], ["주근깨", "주근깨"]];
+const LE_ACC = [["안대", "안대"], ["마스크", "마스크"], ["목도리", "목도리"], ["넥타이", "넥타이"], ["나비넥타이", "나비넥타이"], ["리본", "리본"], ["머리띠", "머리띠"], ["머리핀", "머리핀"],
+  ["목걸이", "목걸이"], ["초커", "초커"], ["귀걸이", "귀걸이"], ["링 귀걸이", "링 귀걸이"], ["장갑", "장갑"], ["벨트", "벨트"], ["앞치마", "앞치마"], ["헤드폰", "헤드폰"],
+  ["반창고", "반창고"], ["얼굴 붕대", "붕대"], ["머리 붕대", "머리에 붕대"], ["턱수염", "턱수염"], ["콧수염", "콧수염"], ["눈물점", "눈물점"], ["주근깨", "주근깨"]];
+const LE_ACC_COLORS = ["빨간", "검은", "흰", "파란", "남색", "분홍", "보라", "초록", "노란", "금색", "은색", "갈색"];
 let leSeedN = 0;
 function leFill(){
   const opt = (sel, list) => { sel.replaceChildren(...list.map(v => { const o = document.createElement("option"); o.value = o.textContent = v; return o; })); };
@@ -4809,6 +5003,7 @@ function leFill(){
   opt($("#leEyeL"), EYE_COLORS.filter(c => c[1] !== "odd").map(c => c[0]));
   opt($("#leEyeR"), EYE_COLORS.filter(c => c[1] !== "odd").map(c => c[0]));
   opt($("#leClothC"), LE_CLOTH_COLORS);
+  for(const [id, list] of [["#leBotC", LE_CLOTH_COLORS], ["#leAccC", LE_ACC_COLORS]]){ const sel = $(id); while(sel.options.length > 1) sel.remove(1); for(const v of list){ const o = document.createElement("option"); o.value = o.textContent = v; sel.appendChild(o); } }
   $("#leAcc").replaceChildren(...LE_ACC.map(([k]) => { const l = document.createElement("label"); const c = document.createElement("input"); c.type = "checkbox"; c.value = k; l.append(c, k); return l; }));
 }
 function leLookText(){
@@ -4816,8 +5011,15 @@ function leLookText(){
   const hair = hs === "민머리" ? "민머리" : `${hc} ${hs}`;
   const l = $("#leEyeL").value, r = $("#leEyeR").value;
   const eyes = l === r ? `${l} 눈` : `왼쪽 눈 ${l}, 오른쪽 눈 ${r}`;
-  const acc = [...$("#leAcc").querySelectorAll("input:checked")].map(c => (LE_ACC.find(a => a[0] === c.value) || [])[1]).filter(Boolean);
-  return [hair, $("#leFringe").value, eyes, $("#leEyeS").value, $("#leSkin").value, $("#leBuild").value, `${$("#leClothC").value} ${$("#leCloth").value}`, ...acc, $("#leExtra").value.trim()].filter(Boolean).join(", ");
+  const ac = $("#leAccC").value;
+  /* 색이 붙는 소품은 소품 색을 앞에 붙인다 */
+  const colorable = /^(목도리|넥타이|나비넥타이|리본|머리띠|머리핀|목걸이|초커|장갑)$/;
+  const acc = [...$("#leAcc").querySelectorAll("input:checked")].map(c => { const a = (LE_ACC.find(x => x[0] === c.value) || [])[1]; return a && ac && colorable.test(a) ? `${ac} ${a}` : a; }).filter(Boolean);
+  const cl = $("#leCloth").value, onePiece = /원피스|드레스|간호복|사제복|로브|작업복|흰 가운/.test(cl);
+  const bot = onePiece ? "" : `${$("#leBotC").value ? $("#leBotC").value + " " : ""}${$("#leBot").value}`;
+  const top = cl === "흰 가운" ? "흰 가운" : `${$("#leClothC").value} ${cl}`;
+  const hat = $("#leHat").value, hatTxt = hat && hat !== "후드를 쓴" ? `${ac && hat !== "왕관" && hat !== "밀짚모자" ? ac + " " : ""}${hat}` : hat === "후드를 쓴" ? "후드를 쓴" : "";
+  return [hair, $("#leFringe").value, eyes, $("#leEyeS").value, $("#leSkin").value, $("#leBuild").value, top, bot === "바지" ? "" : bot, hatTxt, $("#leGlass").value, $("#leScar").value, ...acc, $("#leExtra").value.trim()].filter(Boolean).join(", ");
 }
 const leSeedStr = () => ($("#leName").value.trim() || "인물") + (leSeedN ? "#" + leSeedN : "");
 function leDraw(){
@@ -4827,7 +5029,7 @@ function leDraw(){
 }
 function leForm(){
   const f = {};
-  for(const id of ["leGender", "leAge", "leHairC", "leHairS", "leFringe", "leEyeS", "leEyeL", "leEyeR", "leSkin", "leBuild", "leCloth", "leClothC", "leExtra"]) f[id] = $("#" + id).value;
+  for(const id of ["leGender", "leAge", "leHairC", "leHairS", "leFringe", "leEyeS", "leEyeL", "leEyeR", "leSkin", "leBuild", "leCloth", "leClothC", "leBot", "leBotC", "leHat", "leGlass", "leScar", "leAccC", "leExtra"]) f[id] = $("#" + id).value;
   f.acc = [...$("#leAcc").querySelectorAll("input:checked")].map(c => c.value);
   return f;
 }
@@ -4894,7 +5096,8 @@ function leRenderRoster(){
 function leApplyForm(c){
   if(!c || !c.form){
     /* 처음 꾸미는 인물: 기본값으로 */
-    for(const id of ["leFringe", "leEyeS", "leSkin", "leExtra"]) $("#" + id).value = "";
+    for(const id of ["leFringe", "leEyeS", "leSkin", "leExtra", "leBotC", "leHat", "leGlass", "leScar", "leAccC"]) $("#" + id).value = "";
+    $("#leBot").value = "바지";
     $("#leAge").value = "28"; $("#leHairS").value = "긴 머리"; $("#leBuild").value = "보통 체격"; $("#leCloth").value = "셔츠";
     $("#leAcc").querySelectorAll("input").forEach(x => { x.checked = false; });
     leSeedN = 0; return;
