@@ -813,10 +813,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1750"></script>
+<script src="parts.js?v=20261107-1806"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1750";
+const BUILD = "20261107-1806";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -888,7 +888,7 @@ const NARR_RULES = `
 - 캐릭터 나이에 맞게 그려라(아기는 말을 못하고 몸을 마음대로 못 움직인다). 아기·어린이는 스스로 돈을 벌기 어렵다.
 - 시간은 흐른다: 시간이 지난 만큼 세상과 사람이 바뀐다. 음식은 먹거나 상하고, 포장지·쪽지 같은 자잘한 물건은 버려지거나 잃어버리고, 가벼운 상처는 아물고, 아이는 자라고, 사람들 형편도 달라진다. [시간 경과]가 있으면 [최근 상황]은 지난 일이다. 더는 맞지 않는 것은 다시 꺼내지 말고, 태그라면 tag_remove로 지워라.
 - [장비]의 무기·방어구·의체를 장면에 반영하라. [집안 형편]에 맞는 집과 살림으로 그려라.
-- [외모] 글 전체를 직접 읽고, 그 생김새·인상·차림이 이 도시에서 어떻게 보일지 판단해 사람들의 반응과 사건에 반영하라([외모에 더해진 것]도 함께). 주인공의 성별과 외모에 따라 다가오는 사람도 달라진다: 눈에 띄는 외모면 다른 성별이 더 관심을 보이고, 험한 인상이면 사람들이 꺼린다. [인연]에 '다가오는 사람'이 있으면 그 성별로 그려라. 18세 미만에게는 연애나 이성으로서의 관심을 그리지 말고 우정·친절로만 그려라. 외모 묘사를 장면에 끼워 넣지는 말고, 다른 사람이 외모에 반응할 때만 언급한다.
+- [외모] 글 전체를 직접 읽고, 그 생김새·인상·차림이 이 도시에서 어떻게 보일지 판단해 사람들의 반응과 사건에 반영하라([외모에 더해진 것]도 함께). 주인공의 외모에 따라 다가오는 사람도 달라진다: 눈에 띄는 외모면 어릴 때부터 아이들과 어른들이 더 좋아하고 잘 다가오며(순수한 호감·친절), 험한 인상이면 사람들이 꺼린다. [인연]에 '다가오는 사람'이 있으면 그 성별로 그려라. 15세까지는 우정과 순수한 호감으로만, 16~17세는 또래끼리의 풋풋한 설렘까지만(성적인 내용 금지) 그린다. 어른이 미성년(18세 미만)에게 연애·이성적인 관심을 보이는 장면은 절대 쓰지 마라. 18세부터는 이성으로서의 관심과 연애도 그릴 수 있다. 외모 묘사를 장면에 끼워 넣지는 말고, 다른 사람이 외모에 반응할 때만 언급한다.
 - 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않는다. 이미 지닌 인물(게부라 등)에게서 물려받거나 거래하거나 빼앗을 때만 tag_add에 "에고 무기:무기이름"을 적어라. 다른 방법으로는 절대 주지 마라.
 - 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀". 권속은 피를 마셔야 하고 물을 두려워한다.
 
@@ -1365,7 +1365,8 @@ const BONDS = {
     "형제처럼 지내던 동료가 결혼한다. 그런데 상대가 당신과 악연이 있는 조직 사람이라고 한다.|축하해 준다/걱정을 털어놓는다/결혼식에 가지 않는다"]
 };
 const isBond = ev => Object.values(BONDS).some(l => l.includes(ev));
-function bondChance(y){ return y < 3 ? 0 : y < 13 ? 0.65 : y < 20 ? 0.4 : 0.15; }
+/* 외모가 눈에 띄면 어릴 때부터 사람들이 더 다가온다(인연이 조금 잦아짐) */
+function bondChance(y){ const b = y < 3 ? 0 : y < 13 ? 0.65 : y < 20 ? 0.4 : 0.15; return Math.max(0, Math.min(0.85, b * (1 + looksScore() * 0.12))); }
 function pickEvent(y, season){
   if(rnd(1000) < famousChance(y) * 1000) return pickFamous(y);
   if(y >= 13 && y < 20 && !S.license && !apprenticeOf() && rnd(100) < 15) return APPRENTICE[rnd(APPRENTICE.length)];
@@ -2541,7 +2542,8 @@ function talkNode(t){
   row.append(pic, body);
   return row;
 }
-/* 누가 더 다가오나: 어릴 땐 같은 성별 친구가 조금 더, 자라면 외모가 눈에 띌수록 다른 성별이 더 */
+/* 누가 더 다가오나: 어릴 때도 외모가 눈에 띄면 더 다가오지만(순수한 호감) 성별은 같은 또래 친구 위주,
+   16세부터 외모가 눈에 띌수록 다른 성별이 더 */
 function looksScore(){
   const t = String(S.look || "") + " " + String(S.lookExtra || "");
   let sc = 0;
@@ -2554,7 +2556,7 @@ function approacherGender(){
   const y = ageY(), me = S.gender;
   const opp = me === "남성" ? "여성" : me === "여성" ? "남성" : (rndVis(2) ? "남성" : "여성");
   const same = me === "남성" || me === "여성" ? me : (opp === "남성" ? "여성" : "남성");
-  let pOpp = y < 10 ? 0.4 : y < 13 ? 0.5 : Math.max(0.25, Math.min(0.8, 0.5 + looksScore() * 0.1));
+  let pOpp = y < 10 ? 0.4 : y < 16 ? 0.5 : Math.max(0.25, Math.min(0.8, 0.5 + looksScore() * 0.1));
   return rand01() < pOpp ? opp : same;
 }
 /* AI가 주인공 대신 말을 지어낸 대사는 버린다:
@@ -5275,13 +5277,16 @@ document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click",
 
 /* ───────── 소리: 효과음과 배경음악(파일 없이 브라우저에서 합성) ───────── */
 const AUD = {ctx:null, master:null, bgm:null, sfx:null, noise:null, mode:"", timer:null, bar:0};
-function audioCfg(){ return Object.assign({bgmOn:true, sfxOn:true, bgmVol:35, sfxVol:60}, CFG.sound || {}); }
+function audioCfg(){ return Object.assign({bgmOn:true, sfxOn:true, bgmVol:60, sfxVol:80}, CFG.sound || {}); }
 function audioInit(){
   if(AUD.ctx) { if(AUD.ctx.state === "suspended") AUD.ctx.resume(); return; }
   const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
   try{
     AUD.ctx = new AC();
-    AUD.master = AUD.ctx.createGain(); AUD.master.connect(AUD.ctx.destination);
+    /* 전체를 크게 키우되, 갑자기 터지지 않게 압축기를 건다 */
+    const comp = AUD.ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.2;
+    comp.connect(AUD.ctx.destination);
+    AUD.master = AUD.ctx.createGain(); AUD.master.gain.value = 2.2; AUD.master.connect(comp);
     AUD.bgm = AUD.ctx.createGain(); AUD.bgm.connect(AUD.master);
     AUD.sfx = AUD.ctx.createGain(); AUD.sfx.connect(AUD.master);
     const len = AUD.ctx.sampleRate; const b = AUD.ctx.createBuffer(1, len, len); const d = b.getChannelData(0); for(let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; AUD.noise = b;
@@ -5291,8 +5296,8 @@ function audioInit(){
 function audioApply(){
   if(!AUD.ctx) return;
   const c = audioCfg(), t = AUD.ctx.currentTime;
-  AUD.bgm.gain.setTargetAtTime(c.bgmOn ? c.bgmVol / 100 * 0.5 : 0, t, 0.3);
-  AUD.sfx.gain.setTargetAtTime(c.sfxOn ? c.sfxVol / 100 : 0, t, 0.05);
+  AUD.bgm.gain.setTargetAtTime(c.bgmOn ? Math.pow(c.bgmVol / 100, 1.2) * 2.0 : 0, t, 0.3);
+  AUD.sfx.gain.setTargetAtTime(c.sfxOn ? Math.pow(c.sfxVol / 100, 1.2) * 2.8 : 0, t, 0.05);
 }
 /* 브라우저는 사용자가 한 번 누른 뒤에야 소리를 낼 수 있다 */
 ["pointerdown", "keydown"].forEach(ev => window.addEventListener(ev, () => { if(audioCfg().bgmOn || audioCfg().sfxOn) audioInit(); }, {passive:true}));
@@ -5318,15 +5323,15 @@ function sfx(kind, opt = {}){
   audioInit(); if(!AUD.ctx) return;
   const hit = opt.hit !== false, crit = !!opt.crit;
   switch(kind){
-    case "slash": noiseHit(0.22, {f0:6000, f1:900, q:2, vol:0.45}); if(hit) noiseHit(0.12, {f0:1800, f1:300, at:0.06, vol:0.3}); if(crit) tone(1400, 0.25, {type:"triangle", vol:0.12, at:0.05, slide:0.5}); break;
+    case "slash": noiseHit(0.22, {f0:6000, f1:900, q:1.2, vol:0.8}); if(hit) noiseHit(0.12, {f0:1800, f1:300, at:0.06, vol:0.3}); if(crit) tone(1400, 0.25, {type:"triangle", vol:0.12, at:0.05, slide:0.5}); break;
     case "pierce": tone(2200, 0.06, {type:"square", vol:0.08}); noiseHit(0.14, {f0:4000, f1:2500, q:6, vol:0.35, at:0.02}); if(hit) tone(160, 0.12, {vol:0.3, at:0.06, slide:0.6}); break;
     case "strike": tone(110, 0.22, {vol:0.6, slide:0.45}); noiseHit(0.12, {f0:900, f1:200, type:"lowpass", vol:0.4}); if(crit) tone(70, 0.4, {vol:0.5, at:0.03, slide:0.5}); break;
     case "evade": noiseHit(0.3, {f0:500, f1:2600, q:1.5, vol:0.25}); break;
     case "block": tone(620, 0.25, {type:"triangle", vol:0.2, slide:0.9}); tone(930, 0.18, {type:"sine", vol:0.1}); noiseHit(0.08, {f0:3000, f1:1500, vol:0.2}); break;
     case "miss": noiseHit(0.25, {f0:1200, f1:300, q:1, vol:0.15}); break;
-    case "hurt": tone(90, 0.35, {type:"sawtooth", vol:0.25, slide:0.5}); noiseHit(0.2, {f0:700, f1:120, type:"lowpass", vol:0.35}); break;
+    case "hurt": tone(90, 0.35, {type:"sawtooth", vol:0.45, slide:0.5}); tone(180, 0.2, {type:"square", vol:0.12, slide:0.5}); noiseHit(0.2, {f0:900, f1:150, type:"lowpass", vol:0.6}); break;
     case "blood": for(let i = 0; i < 3; i++) noiseHit(0.08, {f0:500, f1:150, type:"lowpass", vol:0.2, at:i * 0.07}); break;
-    case "dice": for(let i = 0; i < 5; i++) tone(900 + Math.random() * 900, 0.03, {type:"square", vol:0.05, at:i * 0.09}); tone(500, 0.08, {type:"triangle", vol:0.1, at:0.5}); break;
+    case "dice": for(let i = 0; i < 5; i++) tone(900 + Math.random() * 900, 0.035, {type:"square", vol:0.09, at:i * 0.09}); tone(500, 0.1, {type:"triangle", vol:0.2, at:0.5}); break;
     case "event": tone(523, 0.35, {type:"triangle", vol:0.18}); tone(392, 0.5, {type:"triangle", vol:0.16, at:0.18}); break;
     case "good": tone(660, 0.18, {type:"triangle", vol:0.12}); tone(990, 0.3, {type:"triangle", vol:0.1, at:0.1}); break;
     case "death": [392, 330, 262, 196].forEach((f, i) => tone(f, 0.9, {type:"triangle", vol:0.14, at:i * 0.45})); break;
