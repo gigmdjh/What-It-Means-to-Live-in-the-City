@@ -370,6 +370,36 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .hs-card.boost .hs-v{color:var(--accent)}
 .fam .f-cause{grid-column:2 / -1;margin-top:-6px;font-size:.75rem;color:var(--muted)}
 .fam.gone .f-name,.fam.gone .f-rel{color:var(--muted);opacity:.75;text-decoration:none}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.fx-item{position:absolute;inset:0;display:grid;place-items:center}
+.fx-svg{position:absolute;left:50%;top:42%;width:min(80vw,420px);height:min(60vw,320px);transform:translate(-50%,-50%);overflow:visible}
+.fx-glow{filter:drop-shadow(0 0 4px rgba(255,255,255,.8)) drop-shadow(0 0 10px rgba(255,220,150,.5))}
+.fx-draw{stroke-dasharray:120;stroke-dashoffset:120;animation:fxDraw .18s ease-out forwards,fxFade .35s .25s forwards}
+.fx-draw.d2{animation-delay:.12s,.37s}
+.fx-thrust{stroke-dasharray:70;stroke-dashoffset:70;animation:fxDraw .14s ease-in forwards,fxFade .3s .3s forwards}
+.fx-pop{transform-origin:60px 50px;transform:scale(0);animation:fxPop .35s .12s ease-out forwards}
+.fx-burst{transform-origin:50px 50px;transform:scale(.3);opacity:1;animation:fxBurst .38s ease-out forwards}
+.fx-ring{transform-origin:50px 50px;transform:scale(.4);animation:fxRing .45s ease-out forwards}
+.fx-shield{transform-origin:50px 50px;transform:scale(.7);opacity:0;animation:fxShield .55s ease-out forwards}
+.fx-whoosh{stroke-dasharray:20 80;stroke-dashoffset:40;opacity:.9;animation:fxWhoosh .4s ease-out forwards}
+.fx-whoosh.w1{animation-delay:.05s}.fx-whoosh.w2{animation-delay:.1s}
+.fx-word{position:absolute;top:58%;left:50%;transform:translateX(-50%);font:700 1rem var(--f-mono);color:#c9ccd6;text-shadow:0 0 6px #000;animation:fxWord .8s ease-out forwards}
+.fx-word.crit{color:#ffd36a;font-size:1.25rem}
+.fx-vignette{position:absolute;inset:0;box-shadow:inset 0 0 70px 24px rgba(200,20,30,var(--a,.5));animation:fxFade .9s ease-out forwards}
+.fx-blood{position:absolute;inset:0}
+.fx-drop{position:absolute;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 35% 35%,#d0262f,#7a0a10 70%);opacity:0;animation:fxDrop 1.1s ease-out forwards}
+.fx-shake{animation:fxShake .34s linear}
+@keyframes fxDraw{to{stroke-dashoffset:0}}
+@keyframes fxFade{to{opacity:0}}
+@keyframes fxPop{60%{transform:scale(1.6);opacity:1}100%{transform:scale(2.2);opacity:0}}
+@keyframes fxBurst{50%{transform:scale(1.1);opacity:.95}100%{transform:scale(1.5);opacity:0}}
+@keyframes fxRing{100%{transform:scale(1.9);opacity:0}}
+@keyframes fxShield{30%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1.2)}}
+@keyframes fxWhoosh{to{stroke-dashoffset:-60;opacity:0}}
+@keyframes fxWord{0%{opacity:0;transform:translate(-50%,6px)}20%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-10px)}}
+@keyframes fxDrop{0%{opacity:0;transform:translate(0,0) scale(.3)}15%{opacity:1;transform:translate(calc(var(--dx)*.3),calc(var(--dy)*.1)) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.9)}}
+@keyframes fxShake{0%,100%{transform:translate(0,0)}20%{transform:translate(calc(var(--shake)*-1),calc(var(--shake)*.5))}40%{transform:translate(var(--shake),calc(var(--shake)*-.4))}60%{transform:translate(calc(var(--shake)*-.6),calc(var(--shake)*.3))}80%{transform:translate(calc(var(--shake)*.4),0)}}
+@media (prefers-reduced-motion: reduce){.fx-drop,.fx-burst,.fx-ring,.fx-pop{animation-duration:.01s}}
 </style>
 </head>
 <body>
@@ -562,6 +592,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 
 <!-- 설정 -->
 <!-- 첫 방문 로그인 창 -->
+<div id="fx" aria-hidden="true"></div>
 <dialog id="loginDlg">
   <div class="dlg">
     <h2>AI로 플레이하기</h2>
@@ -653,10 +684,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1245"></script>
+<script src="parts.js?v=20261107-1300"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1245";
+const BUILD = "20261107-1300";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2701,43 +2732,126 @@ window.addEventListener("pagehide", save);
 function setBusy(b){ busy = b; renderStatus(); }
 
 /* ───────── 턴 진행 ───────── */
-async function doAction(input){
+/* ───────── 전투 연출 ─────────
+   행동 글에서 공격 종류를 읽어 판정 카드마다 순서대로 화면에 연출한다(타격·베기·관통·회피).
+   맞으면 화면이 흔들리고 붉은 테두리, 크게 다치거나 피가 나면 피가 튄다. */
+function attackKind(t){
+  t = String(t || "");
+  if(/(피한|피하|회피|구른|굴러|몸을 숙|비켜|물러|흘려|빠져나|막아|막는다|방어|막기)/.test(t)) return /(막|방어)/.test(t) ? "block" : "evade";
+  if(/(찌르|찌른|꿰뚫|관통|쏜다|쏘|사격|총|저격|화살|창으로|송곳|찔러)/.test(t)) return "pierce";
+  if(/(베|벤다|베어|가른|가르|참격|칼|검|도|낫|도끼|휘둘)/.test(t)) return "slash";
+  if(/(때리|때린|주먹|발차|걷어차|후려|내려찍|박치기|가격|망치|둔기|몽둥이|쇠파이프|팔꿈|무릎|타격|치다|친다|밀쳐|밀친|공격)/.test(t)) return "strike";
+  return null;
+}
+const FX_SVG = (inner, cls) => `<svg class="${cls}" viewBox="0 0 100 100" preserveAspectRatio="none">${inner}</svg>`;
+function fxAdd(html, ms){
+  const box = document.getElementById("fx"); if(!box) return;
+  const d = document.createElement("div"); d.className = "fx-item"; d.innerHTML = html;
+  box.appendChild(d); setTimeout(() => d.remove(), ms);
+}
+function fxShake(power){
+  if(reduceMotion) return;
+  const g = document.getElementById("game") || document.body;
+  g.style.setProperty("--shake", (power || 1) * 6 + "px");
+  g.classList.remove("fx-shake"); void g.offsetWidth; g.classList.add("fx-shake");
+  setTimeout(() => g.classList.remove("fx-shake"), 360);
+}
+function fxStrike(kind, hit, crit){
+  const col = hit ? (crit ? "#ffd36a" : "#ffffff") : "#8b8f9c";
+  if(kind === "slash"){
+    const a = `<path class="fx-draw" d="M12 82 L88 18" stroke="${col}" stroke-width="${crit ? 2.6 : 1.8}" fill="none" stroke-linecap="round"/>`;
+    const b = crit ? `<path class="fx-draw d2" d="M14 20 L86 84" stroke="${col}" stroke-width="2.2" fill="none" stroke-linecap="round"/>` : "";
+    fxAdd(FX_SVG(a + b, "fx-svg fx-glow"), 650);
+  }else if(kind === "pierce"){
+    fxAdd(FX_SVG(`<path class="fx-thrust" d="M-10 50 L58 50" stroke="${col}" stroke-width="${crit ? 2.4 : 1.6}" fill="none" stroke-linecap="round"/><circle class="fx-pop" cx="60" cy="50" r="5" fill="${col}"/>`, "fx-svg fx-glow"), 650);
+  }else if(kind === "strike"){
+    const pts = [];
+    for(let i = 0; i < 16; i++){ const r = i % 2 ? 7 : 18, a = i / 16 * Math.PI * 2; pts.push(`${50 + Math.cos(a) * r},${50 + Math.sin(a) * r * 0.62}`); }
+    fxAdd(FX_SVG(`<polygon class="fx-burst" points="${pts.join(" ")}" fill="${col}"/><ellipse class="fx-ring" cx="50" cy="50" rx="20" ry="12.4" stroke="${col}" stroke-width="1" fill="none"/>`, "fx-svg fx-glow"), 600);
+    if(hit) fxShake(crit ? 1.4 : 0.8);
+  }else if(kind === "evade" || kind === "block"){
+    if(kind === "block") fxAdd(FX_SVG(`<path class="fx-shield" d="M50 28 Q66 34 66 48 Q66 64 50 72 Q34 64 34 48 Q34 34 50 28 Z" stroke="${col}" stroke-width="1.6" fill="${hit ? "rgba(255,255,255,.12)" : "none"}"/>`, "fx-svg fx-glow"), 650);
+    else fxAdd(FX_SVG([38, 50, 62].map((y, i) => `<path class="fx-whoosh w${i}" d="M20 ${y} L80 ${y}" stroke="${col}" stroke-width="1" fill="none" stroke-linecap="round"/>`).join(""), "fx-svg"), 650);
+  }
+  if(!hit) fxAdd(`<div class="fx-word">${kind === "evade" ? "놓쳤다" : kind === "block" ? "막지 못했다" : "빗나감"}</div>`, 800);
+  else if(crit) fxAdd(`<div class="fx-word crit">${kind === "evade" ? "완벽한 회피" : kind === "block" ? "완벽한 방어" : "치명타"}</div>`, 800);
+}
+function fxHurt(level){
+  fxShake(0.6 + level);
+  fxAdd(`<div class="fx-vignette" style="--a:${Math.min(0.75, 0.3 + level * 0.45)}"></div>`, 900);
+}
+function fxBlood(level){
+  let h = "";
+  const n = Math.round(8 + level * 14);
+  for(let i = 0; i < n; i++){
+    const x = 25 + Math.random() * 50, y = 25 + Math.random() * 45, sz = 4 + Math.random() * (10 + level * 10);
+    const dx = (Math.random() - 0.5) * 120, dy = Math.random() * 60 + 10;
+    h += `<i class="fx-drop" style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;--dx:${dx}px;--dy:${dy}px;animation-delay:${Math.random() * 90}ms"></i>`;
+  }
+  fxAdd(`<div class="fx-blood">${h}</div>`, 1300);
+}
+/* 결과 서술을 보고: 다쳤으면 흔들림·붉은 테두리, 피가 나면 피 튐 */
+function fxAfter(n){
+  if(!n) return;
+  const bleed = /(피가 (튄|흐|솟|번지|난다|흘)|피를 (흘|뿜|토)|출혈|피투성|피범벅|베였|찔렸|선혈)/.test(n.narration || "");
+  if(n.hp < 0) fxHurt(Math.min(1, -n.hp / 20));
+  if(bleed || n.hp <= -8) setTimeout(() => fxBlood(Math.min(1, Math.max(0.3, -n.hp / 20))), 120);
+}
+
+/* 돌발 상황에 대응하지 않고 재생을 누르면: '아무것도 하지 않음'으로 판정해 결과를 서술한 뒤 재생 */
+const PASSIVE_INPUT = "아무 반응도 하지 않고 그냥 넘긴다";
+async function doAction(input, opt = {}){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(busy || S.dead) return;
   resolvePendingChild(); resolvePendingNames();
+  const passive = !!opt.passive;
+  S.awaitEvent = false;
   setBusy(true);
   S.turn++;
-  log({t:"me", text:input});
+  log({t:"me", text:passive ? "(아무것도 하지 않고 넘긴다)" : input});
   let aiOK = true, actions = null;
-  let done = thinking("난이도를 가늠하는 중…");
-  try{
-    actions = normalizeActions(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + JUDGE_RULES, user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input}), 500, JUDGE_SCHEMA));
-  }catch(e){ aiOK = false; log({t:"sys", text:"AI 판정 실패: " + e.message + (aiOn() ? " 이번 행동은 간이 판정으로 처리합니다." : " 규칙 기반으로 판정합니다.")}); }
+  let done = thinking(passive ? "그냥 넘긴 결과를 따져 보는 중…" : "난이도를 가늠하는 중…");
+  if(passive){
+    /* 아무것도 하지 않음: 주사위 없이, 상황이 저절로 흘러가는 대로 */
+    actions = [{text:"아무것도 하지 않는다", stat:"int", dc:0, why:"대응하지 않음", trivial:true}];
+  }else{
+    try{
+      actions = normalizeActions(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + JUDGE_RULES, user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input}), 500, JUDGE_SCHEMA));
+    }catch(e){ aiOK = false; log({t:"sys", text:"AI 판정 실패: " + e.message + (aiOn() ? " 이번 행동은 간이 판정으로 처리합니다." : " 규칙 기반으로 판정합니다.")}); }
+  }
   done();
   if(!actions) actions = ruleJudge(input);
   const results = actions.map(a => Object.assign({}, a, rollCheck(a)));
-  for(const r of results){ log({t:"roll", data:r}); await sleep(reduceMotion ? 0 : 650); }
+  if(passive) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
+  else for(const r of results){
+    log({t:"roll", data:r});
+    const kind = r.auto ? null : attackKind(r.text + " " + (results.length === 1 ? input : ""));
+    if(kind) setTimeout(() => fxStrike(kind, r.cls === "ok" || r.cls === "crit", r.cls === "crit"), reduceMotion ? 0 : 420);
+    await sleep(reduceMotion ? 0 : (kind ? 900 : 650));
+  }
 
   let n = null, ev = null;
   if(aiOK){
     done = thinking("결과를 서술하는 중…");
     try{
-      ev = rollEvent(0);
-      const rl = results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
+      ev = passive ? null : rollEvent(0);
+      const rl = passive ? "- 플레이어는 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 상황이 어떻게 흘러가는지(좋든 나쁘든 그럴 법한 결과) 서술하고, 그 일이 일단락된 상태로 끝내라." : results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
       n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
-        user: plainContext() + "\n\n주인공이 하려는 것: " + input + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + plainEvent(ev)}
+        user: plainContext() + (passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라." : "\n\n주인공이 하려는 것: " + input + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + plainEvent(ev))}
         : {sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
         user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + eventLine(ev)}, 700, NARR_SCHEMA, false, done.live), 3);
       if(n && n.plain){ tierEffects(n, input, results); if(!n.options.length) n.options = ruleOptions(); n.shop = visitsShop(input) || SHOP_EVENTS.includes(ev); n.tag_add = plainStatusFromText(n.narration); }
     }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
     done();
   }
-  if(!aiOK) ev = rollEvent(0);
-  const fin = guardNarr(n || ruleEvent(ruleNarrate(input, results), ev), results);
+  if(!aiOK && !passive) ev = rollEvent(0);
+  const fin = guardNarr(n || (passive ? passiveNarr() : ruleEvent(ruleNarrate(input, results), ev)), results);
   fin.event = !!ev;
+  S.awaitEvent = !!ev;
   if(!(fin.days > 0)) advanceMins(timeWordMins(fin.time, input));
   else S.mins = 8 * 60 + rnd(10 * 60);
   applyNarr(fin);
+  fxAfter(fin);
   checkMilestones(input, results);
   applyMerit(input, results, fin);
   save(); setBusy(false);
@@ -2819,7 +2933,10 @@ async function birth(){
   }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message + (aiOn() ? "" : " 규칙 기반으로 진행합니다.")}); }
   done();
   applyNarr(n || ruleBirth(), 0);
+  S.awaitEvent = false;
   save(); setBusy(false);
+  /* 태어나는 장면 뒤에는 자동으로 재생 */
+  if(!S.dead) setTimeout(() => { if(!flow.on && !busy && !S.dead) startFlow(); }, 1200);
 }
 
 /* ───────── 지역: 구역 번호 = 날개 알파벳 순서 (12구역 = L사) ───────── */
@@ -3691,8 +3808,18 @@ function checkBig(){
   if(rand01() < bigRate(y) / 365) return {kind:"event", text:pickEvent(y, seasonOf(S.days))};
   return null;
 }
-function startFlow(){
+function passiveNarr(){
+  const n = blankNarr("당신은 아무것도 하지 않는다. 상황은 당신을 비켜 가고, 잠시 뒤 골목은 다시 조용해진다.");
+  n.sp = -2; n.options = ruleOptions();
+  return n;
+}
+async function startFlow(){
   if(busy || S.dead || flow.on) return;
+  /* 돌발 상황에 아직 대응하지 않았으면, 아무것도 안 한 것으로 결과를 먼저 서술 */
+  if(S.awaitEvent){
+    await doAction(PASSIVE_INPUT, {passive:true});
+    if(S.dead || busy) return;
+  }
   resolvePendingChild();
   Object.assign(flow, {on:true, startDays:S.days, smalls:[], ahn:0, ticks:0, dirty:false, acc:0, last:performance.now()});
   updateFlowUI();
@@ -3783,8 +3910,10 @@ async function flowNarrate(elapsed, big){
     if(!fin.options.length) fin.options = ruleOptions();
   }
   fin.event = !!(big && big.kind === "event");
+  S.awaitEvent = fin.event;
   fin.child_born = false;
   applyNarr(fin, 0, elapsed);
+  fxAfter(fin);
   save(); setBusy(false);
   memoryTick();
   /* 흘려보내다 공방에 들르게 된 경우 */
