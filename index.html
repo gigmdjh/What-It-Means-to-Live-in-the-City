@@ -44,6 +44,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 body.in-game{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+/* 키보드가 올라오면 보이는 화면 높이에 맞춘다(폰) */
+body.in-game.typing{height:var(--vvh, 100dvh)}
 body.in-game .top{flex:none}
 body.in-game .game{flex:1;min-height:0;height:auto}
 
@@ -254,6 +256,29 @@ body.editor-mode #lookEd, body.editor-mode #lookEd .dlg{overflow:visible}
 .le-cur{margin:4px 0 8px}
 .le-savebar{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--panel);padding:8px 0;border-top:1px solid var(--line);margin-top:8px}.le-savebar .note{margin-right:auto}
 .le-gh summary{cursor:pointer;margin:6px 0}
+/* 키가 작은 화면(폰): 상태창을 납작하게 → 대화 내역이 더 넓게 */
+@media (max-width: 860px) and (max-height: 820px){
+  .hud{gap:5px!important;padding:7px 10px!important}
+  .hud-stats{margin-top:2px!important;gap:4px!important}
+  .hs-card{flex-direction:row!important;justify-content:center;align-items:baseline!important;gap:5px!important;padding:3px 4px!important}
+  .hs-v{font-size:.88rem!important}
+  .hs-b{display:none!important}
+  .hud .yearbar{margin:0}
+  .act{padding-top:6px}
+  .quick{margin-bottom:4px}
+}
+/* 글을 칠 때(폰): 상태창은 이름·나이와 체력·기력·정신력만, 대화 내역을 넓게 */
+@media (max-width: 860px){
+  body.typing .top{display:none}
+  body.typing .game{gap:4px;padding-block:4px}
+  body.typing .hud{gap:4px!important;padding:6px 10px!important}
+  body.typing .hud .yearbar, body.typing .hud-career, body.typing .hud-stats, body.typing .hud-bot, body.typing #btnStatus, body.typing .hud-top .sprite{display:none!important}
+  body.typing .hud-g{grid-template-columns:repeat(3, minmax(0,1fr))!important;gap:6px!important}
+  body.typing .hud-g > :nth-child(n+4){display:none}
+  body.typing .hud-g .track{height:4px}
+  body.typing .quick{display:none}
+  body.typing #log{padding:10px 14px!important;gap:12px!important}
+}
 dialog::backdrop{background:rgb(0 0 0 / .6)}
 .dlg{display:grid;gap:16px;padding:22px;overflow:auto}
 .dlg h2{margin:0;font:700 1.2rem var(--f-display)}
@@ -782,10 +807,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1542"></script>
+<script src="parts.js?v=20261107-1553"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1542";
+const BUILD = "20261107-1553";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -835,7 +860,7 @@ const NARR_RULES = `
 - [외모] 글 전체를 직접 읽고, 그 사람의 생김새·인상·차림이 이 도시에서 어떻게 보일지 스스로 판단해 사람들의 반응과 사건에 반영하라(나이에 맞게, [외모에 더해진 것]도 함께). 다만 외모 묘사(머리색·속눈썹 등)를 장면에 끼워 넣지는 마라. 다른 사람이 외모에 반응할 때만 언급한다.
 - shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 돌발 상황(심부름, 장인의 손짓, 피신 등)으로 공방 안에 들어오게 된 경우도 true. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
 - family_dead: 가족이 죽으면 "이름/사인"(예: "임장철/공장 사고"). 인연 맺은 사람(가족 아님)이 죽으면 tag_add에 "사망:이름/사인".
-- talk: 장면에서 다른 인물(가족·이웃·의뢰인 등)이 플레이어에게 말하면, 그 말과 행동을 talk에 1~3개 넣어라: [{"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이, 그 인물다운 말투)","act":"말하면서 하는 짧은 행동","look":"처음 나오는 인물만 짧은 외모(머리색·머리 모양·눈색·체격·옷), 가족이나 이미 나온 인물은 \"\"","gender":"남성/여성"}]. 가족은 [가족]의 이름과 외모를 그대로 쓴다. 대사는 narration에 다시 쓰지 말고, 말하는 사람이 없으면 [].
+- talk: 장면에서 다른 인물(가족·이웃·의뢰인 등)이 플레이어에게 말하면, 그 말과 행동을 talk에 1~3개 넣어라: [{"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이, 그 인물다운 말투)","act":"말하면서 하는 짧은 행동","look":"처음 나오는 인물만 짧은 외모(머리색·머리 모양·눈색·체격·옷), 가족이나 이미 나온 인물은 \"\"","gender":"남성/여성"}]. 가족은 [가족]의 이름과 외모를 그대로 쓴다. 대사는 narration에 다시 쓰지 말고, 말하는 사람이 없으면 []. talk에는 주인공(플레이어)을 절대 넣지 마라: 주인공을 '낯선 아이'·'소년' 같은 다른 호칭으로 바꿔 부르며 주인공의 말이나 대답을 쓰는 것도 금지. 주인공의 말은 플레이어가 입력한 것뿐이다.
 - 플레이어가 누군가에게 말을 걸면 그 상대가 반드시 talk로 대답하게 하라.
 - 대사는 실제 사람이 하는 말처럼 짧은 구어체 1~2문장. 상황 설명조·문어체·과장된 말 금지. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
@@ -867,6 +892,7 @@ const NARR_RULES = `
 const NARR_RULES_LOCAL = `
 너는 텍스트 RPG 서술자다. 판정 결과를 바꾸지 말고 그대로 그린다(대성공은 기대 이상, 대실패는 대가).
 플레이어가 입력하지 않은 행동·말·생각·감정을 플레이어가 한 것처럼 지어내지 마라(플레이어의 대사도 쓰지 마라). 서술은 플레이어가 입력한 행동, 그 결과, 주변의 반응만.
+주인공을 '낯선 아이'·'소년' 같은 다른 사람인 것처럼 바꿔 불러 그 입으로 말하게 하지 마라. 말하는 사람은 언제나 주인공이 아닌 다른 인물이다.
 대사는 실제 사람이 하는 말처럼 짧은 구어체 1~2문장. 상황 설명조·문어체·과장된 말 금지. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
 쉽고 분명하게: 비유·시적 표현·말줄임·줄표(—)를 쓰지 말고, 한 문장에 한 가지 일만. 누가·어디서·무엇을 했는지 순서대로. 설명 없는 기이한 현상(움직이는 물체, 정체 모를 손 등)을 지어내지 말고, 이상한 일이 생기면 그게 무엇인지 바로 밝혀라. 마지막 문장은 '지금 무엇이 문제인지'를 한 줄로 분명히(예: "문밖에서 누군가 문을 억지로 열려고 한다.").
 한국어, '당신' 2인칭, 현재형, 짧게 1~2문단(모두 3~5문장). 나이에 맞게. 플레이어 대신 결정하지 말고, 반응해야 할 상황으로 끝낸다.
@@ -2009,7 +2035,7 @@ function repairJSON(t){
    그래서 기기 AI에게는 장면 글과 선택지만 받고, 수치는 주사위 결과로 게임이 정한다. */
 const NARR_PLAIN = `너는 소설가다. 아래 상황을 이어서, 한국어로 짧은 장면을 쓴다.
 규칙: '당신'으로 부르는 2인칭 현재형, 짧게 1~2문단, 모두 합쳐 3~5문장. 꾸밈 묘사는 줄이고 일어난 일과 지금 상황만. 주인공의 나이에 맞게. 주인공 대신 결정하지 말고, 주인공이 무언가 반응해야 하는 순간에서 끝낸다.
-누군가 말을 하면 그 말은 따로 한 줄에 「이름: "대사"」로 적는다(가족은 주어진 이름 그대로). 대사는 실제 사람이 하는 말처럼 짧은 구어체 1~2문장. 상황 설명조·문어체·과장된 말 금지. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
+누군가 말을 하면 그 말은 따로 한 줄에 「이름: "대사"」로 적는다(가족은 주어진 이름 그대로). 이 줄은 주인공이 아닌 다른 사람의 말만 적는다(주인공을 '낯선 아이' 같은 호칭으로 바꿔 쓰지 마라). 대사는 실제 사람이 하는 말처럼 짧은 구어체 1~2문장. 상황 설명조·문어체·과장된 말 금지. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
 플레이어가 입력하지 않은 행동·말·생각·감정을 플레이어가 한 것처럼 지어내지 마라(플레이어의 대사도 쓰지 마라). 서술은 플레이어가 입력한 행동, 그 결과, 주변의 반응만.
 글 맨 끝에 한 줄로 "선택지: 행동1 / 행동2 / 행동3" 을 적는다(각 12자 이내).
 설명, 제목, 영어, 숫자 목록은 쓰지 않는다.
@@ -2448,6 +2474,26 @@ function talkNode(t){
   row.append(pic, body);
   return row;
 }
+/* AI가 주인공 대신 말을 지어낸 대사는 버린다:
+   주인공 이름·'당신'·'주인공'으로 말하거나, 주인공을 '낯선 아이'처럼 다른 호칭으로 부르며 플레이어가 방금 한 말을 되풀이·대신 답한 경우 */
+function bigrams(t){ const s0 = String(t || "").replace(/[\s"'“”‘’.,!?…~·]/g, ""); const b = new Set(); for(let i = 0; i < s0.length - 1; i++) b.add(s0.slice(i, i + 2)); return b; }
+function isPlayerTalk(t){
+  const who = String(t.who || "").trim();
+  if(!who) return true;
+  if(S && S.name && (who === S.name || who.includes(S.name) || S.name.includes(who) && who.length >= 2)) return true;
+  if(/^(당신|나|저|주인공|플레이어|본인|너)$|당신|주인공|플레이어/.test(who)) return true;
+  /* 플레이어가 방금 한 말과 거의 같은 대사 */
+  const me = (S.log.filter(e => e.t === "me").slice(-1)[0] || {}).text || "";
+  let sim = 0;
+  if(me){ const a = bigrams(me), b = bigrams(t.say); if(b.size >= 3){ let k = 0; for(const x of b) if(a.has(x)) k++; sim = k / b.size; if(sim >= 0.6) return true; } }
+  /* 다른 사람이 '나는 (주인공 이름)'이라고 자기소개하면 주인공을 사칭한 것 */
+  if(S && S.name && new RegExp("(나는|난|내 이름은|저는|전)\\s*" + S.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(t.say)) return true;
+  /* 주인공과 같은 처지를 가리키는 호칭(아이인데 '낯선 아이' 등)이 플레이어의 말에 바로 답하는 경우 */
+  const y = ageY(), kid = y < 13, teen = y >= 13 && y < 20;
+  const selfLike = kid ? /^(낯선 |그 |웬 |작은 )?(아이|꼬마|어린애|애|소년|소녀|아기)$/ : teen ? /^(낯선 |그 |웬 )?(소년|소녀|학생|청소년|아이)$/ : null;
+  if(selfLike && selfLike.test(who) && (sim >= 0.35 || (S.name && t.say.includes(S.name)))) return true;
+  return false;
+}
 /* 말하는 사람을 기억해 두고(외모·성별) 그림에 쓴다. 가족이면 가족 정보를 쓴다 */
 function registerSpeaker(t){
   const fam = S.family.find(f => f.name && (f.name === t.who || t.who.includes(f.name) || (f.rel && t.who === f.rel) || (t.who === "엄마" && f.rel === "어머니") || (t.who === "아빠" && f.rel === "아버지")));
@@ -2553,7 +2599,7 @@ function applyNarr(n, forcedDays, shownDays){
   if(days > 0 || shownDays > 0) deltas.push({k:"경과", v:days || shownDays, days:true});
   if(n.event) deltas.push({k:"돌발", v:0, event:true});
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
-  const talk = (n.talk || []).map(t => registerSpeaker(t));
+  const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
   applyDays(days);
   applyFamily(n);
@@ -5087,7 +5133,20 @@ $("#btnSpeed").addEventListener("click", () => {
 /* 기본은 늘 1배속으로 시작 (바꾼 배속은 그 판에서만) */
 flow.speed = 1;
 updateFlowUI();
-$("#actInput").addEventListener("focus", () => { if(flow.on) stopFlow(null); });
+$("#actInput").addEventListener("focus", () => { if(flow.on) stopFlow(null); setTyping(true); });
+$("#actInput").addEventListener("blur", () => setTimeout(() => { if(document.activeElement !== $("#actInput")) setTyping(false); }, 150));
+/* 글 칠 때 모드: 상태창을 줄이고, 키보드 위 화면 높이에 맞추고, 대화 내역은 맨 아래로 */
+function setTyping(on){
+  document.body.classList.toggle("typing", !!on);
+  fitViewport();
+  if(on) setTimeout(() => { const lg = $("#log"); if(lg) lg.scrollTop = lg.scrollHeight; }, 60);
+}
+function fitViewport(){
+  const vv = window.visualViewport;
+  if(vv) document.body.style.setProperty("--vvh", Math.round(vv.height) + "px");
+  if(document.body.classList.contains("typing")) window.scrollTo(0, 0);
+}
+if(window.visualViewport){ visualViewport.addEventListener("resize", () => { fitViewport(); if(document.body.classList.contains("typing")){ const lg = $("#log"); if(lg) lg.scrollTop = lg.scrollHeight; } }); }
 
 document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { shopTab = b.dataset.tab; renderShop(); }));
 
