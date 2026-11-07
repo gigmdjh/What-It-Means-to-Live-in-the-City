@@ -471,6 +471,7 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 /* 업적 */
 .achs{display:grid;gap:8px;margin-top:18px}
 .achs h3{margin:0}
+#btnAch{justify-self:start}
 .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .ach{display:flex;flex-direction:column;gap:1px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);min-width:0}
 .ach b{font-size:.86rem}
@@ -609,8 +610,8 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
     </div>
   </form>
   <section class="achs">
-    <h3 class="label">업적 <span class="note" id="achCount"></span></h3>
-    <div class="ach-grid" id="achList"></div>
+    <button class="btn" type="button" id="btnAch" aria-expanded="false" aria-controls="achList">🏆 업적 보기 <span class="note" id="achCount"></span></button>
+    <div class="ach-grid" id="achList" hidden></div>
   </section>
   <section class="lives">
     <h3 class="label">지나간 삶</h3>
@@ -933,11 +934,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2040"></script>
+<script src="parts.js?v=20261107-2050"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-2040";
+const BUILD = "20261107-2050";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3062,9 +3063,8 @@ function distortionCheck(){
       requestName("ego");
     }else log({t:"narr", text:`에고 「${S.ego}」가 다시 당신을 붙잡는다. 이번에도 당신은 당신으로 남았다.`, options:ruleOptions()});
   }else{
-    whisperStorm();
-    /* 높은 확률로 뒤틀린 채 삶이 이어진다. 드물게는 자신을 완전히 잃는다 */
-    if(rand01() < 0.85) becomeDistorted();
+    /* 높은 확률로 뒤틀린 채 삶이 이어진다(이때만 속삭임이 화면을 덮는다). 드물게는 자신을 완전히 잃는다 */
+    if(rand01() < 0.85){ whisperStorm(); becomeDistorted(); }
     else {
       S.dead = "끝내 감정에 삼켜져 뒤틀림이 되었다. 사람이었던 무언가가 골목을 떠돈다.";
       log({t:"death", text:S.dead});
@@ -6099,6 +6099,11 @@ function showGame(){
 }
 function newLife(){ showCreate(); }
 $("#btnMenu").addEventListener("click", showMenu);
+$("#btnAch").addEventListener("click", () => {
+  const box = $("#achList"), open = box.hidden;
+  box.hidden = !open; $("#btnAch").setAttribute("aria-expanded", String(open));
+  $("#btnAch").firstChild.textContent = open ? "🏆 업적 닫기 " : "🏆 업적 보기 ";
+});
 $("#btnContinue").addEventListener("click", continueLife);
 /* 상태창 '상세' 열기/닫기 (폰에서는 상세 창이 화면을 덮는다) */
 $("#btnStatus").addEventListener("click", () => { renderStatus(); document.body.classList.add("show-status"); $("#btnCloseStatus").focus(); });
