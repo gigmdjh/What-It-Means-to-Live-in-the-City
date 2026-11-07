@@ -1005,10 +1005,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0240"></script>
+<script src="parts.js?v=20261108-0250"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0240";
+const BUILD = "20261108-0250";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3113,6 +3113,31 @@ function trimPeople(){
   const keep = n => S.tags.some(t => t.startsWith("인연:" + n)) || S.family.some(f => f.name === n);
   keys.filter(k => !keep(k)).sort((a, b) => (S.npcs[a].last || S.npcs[a].at || 0) - (S.npcs[b].last || S.npcs[b].at || 0)).slice(0, keys.length - 120).forEach(k => delete S.npcs[k]);
 }
+/* 대화 카드에 나오는 말은 서술에서 뺀다(같은 말이 두 번 나오지 않게) */
+function dedupeTalk(text, talk){
+  let t = String(text || "");
+  const says = talk.map(x => String(x.say || "")).filter(x => x.length >= 2);
+  if(!says.length) return t;
+  const sim = (a, b) => { const A = bigrams(a), B = bigrams(b); if(!A.size || !B.size) return 0; let k = 0; for(const x of A) if(B.has(x)) k++; return k / Math.min(A.size, B.size); };
+  /* 따옴표 안의 말이 카드의 말과 비슷하면, 그 말이 든 문장을 통째로 뺀다 */
+  const parts = t.split(/((?<=[.!?。…”"])\s+)/);
+  const keep = sn => {
+    const qs = sn.match(/["“'‘「『]([^"”'’」』]{2,})["”'’」』]/g) || [];
+    for(const q of qs){ const inner = q.slice(1, -1); if(says.some(sy => sim(inner, sy) >= 0.6)) return false; }
+    /* 따옴표 없이 대사를 그대로 옮겨 적은 경우 */
+    for(const sy of says) if(sy.length >= 6 && sn.replace(/\s/g, "").includes(sy.replace(/[\s.!?]/g, ""))) return false;
+    return true;
+  };
+  let out = "";
+  for(let i = 0; i < parts.length; i += 2){
+    const sn = parts[i], sep = parts[i + 1] || "";
+    if(keep(sn)) out += sn + sep;
+    else if(/\n/.test(sep) && out && !/\n$/.test(out)) out = out.replace(/[ \t]+$/, "") + sep;   /* 문단 나눔은 남긴다 */
+  }
+  out = out.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  /* 지우고 나니 너무 짧아지면 원래 글을 그대로 둔다 */
+  return out.replace(/\s/g, "").length >= 20 ? out : t;
+}
 /* 말하는 사람을 기억해 두고(외모·성별) 그림에 쓴다. 가족이면 가족 정보를 쓴다 */
 function registerSpeaker(t){
   const fam = S.family.find(f => f.name && (f.name === t.who || t.who.includes(f.name) || (f.rel && t.who === f.rel) || (t.who === "엄마" && f.rel === "어머니") || (t.who === "아빠" && f.rel === "아버지")));
@@ -3309,6 +3334,7 @@ function applyNarr(n, forcedDays, shownDays){
   for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
   for(const pr of String(n.npcOutfit || "").split(/\s*;\s*/)){ const [w, o] = pr.split("/"); if(w && o) setOutfit(w.trim(), o.trim()); }
   const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
+  if(talk.length) n.narration = dedupeTalk(n.narration, talk);
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
   applyDays(days);
   applyFamily(n);
