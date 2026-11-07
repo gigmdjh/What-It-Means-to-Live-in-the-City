@@ -1006,11 +1006,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0345"></script>
+<script src="parts.js?v=20261108-0350"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-0345";
+const BUILD = "20261108-0350";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2634,7 +2634,7 @@ function stateSummary(local){
   if(S.warp) lines.push(warpState());
   if(!isKindred() && ageY() >= 50) lines.push(`[노화] 이 도시의 평균 수명은 60세 남짓이다. 주인공은 ${ageY()}세로 ${ageY() >= (S.lifespan || 60) ? "기력이 많이 쇠했다" : "조금씩 몸이 예전 같지 않다"}.`);
   if(S.ended && S.ended.length) lines.push("[이미 끝난 일] (아래 위험·사건은 이미 끝났다. 새 이유 없이 다시 일으키거나 되풀이하지 마라) " + S.ended.slice(-5).map(e => `${agoText(S.days - e.d)}: ${e.t}`).join(" / "));
-  { const lv = S.tags.find(t => /^(연인|풋사랑|좋아함):/.test(t)); if(lv) lines.push(`[마음] ${lv.split(":")[0]}: ${lv.split(":")[1]}${lv.startsWith("풋사랑") || lv.startsWith("좋아함") ? " (미성년이므로 순수하고 풋풋한 마음까지만, 성적인 내용 없이)" : ""}`); }
+  { const lv = S.tags.find(t => /^(연인|풋사랑|좋아함):/.test(t)); if(lv){ const who = lv.split(":")[1], ta = romanceAge(who); const minor = ageY() < 18 || (ta != null && ta < 18); lines.push(`[마음] ${lv.split(":")[0]}: ${who}${minor ? " (둘 다 십대다. 함께 걷고 이야기하고 손을 잡는 풋풋한 사이까지만, 성적인 내용은 절대 쓰지 마라)" : ""}`); } }
   if(S.lm) lines.push(lmState());
   if(S.claw) lines.push(clawState());
   if(S.shin) lines.push(shinState());
@@ -4568,7 +4568,7 @@ function lmPromote(){
 
 /* ───────── 고백 · 연인 · 결혼 ─────────
    호감이 높을수록 고백을 받아 준다. 호감 40이면 상대가 먼저 고백하기도 하고, 이쪽이 고백하면 거의 받아 준다. 결혼은 호감 70부터.
-   나이 규칙: 15세까지는 '좋아하는 마음'만, 16~17세는 또래(16~17세)끼리의 풋풋한 사이까지만, 연인·결혼은 둘 다 18세 이상일 때만.
+   나이 규칙: 15세까지는 '좋아하는 마음'만, 16~17세는 또래(16~17세)끼리 풋풋한 연인까지(성적인 내용 없이), 결혼과 어른의 연애는 둘 다 18세 이상일 때만.
    어른과 미성년 사이의 연애는 어떤 경우에도 성립하지 않는다. */
 const CONFESS_RE = /(고백|사귀자|사귀어 ?(줘|줄래|보자)|좋아한다고 (말|고백)|사랑한다고 (말|고백)|연인이 되|만나 보자|만나볼래|내 마음을 (전|고백))/;
 const PROPOSE_RE = /(청혼|프러포즈|결혼하자|결혼해 ?(줘|줄래|주)|결혼할래|평생 함께하자)/;
@@ -4613,7 +4613,7 @@ function romanceLine(R){
   if(R.why === "age") return `\n\n[고백 결과: 성립하지 않음] ${R.who}은(는) 주인공의 마음을 연애로 받아들이지 않는다(나이 차이나 관계 때문에 그럴 수 없는 사이다). 다정하지만 분명하게 선을 긋게 하라. 연애·이성적인 장면으로 그리지 마라.`;
   if(R.why === "notlover") return `\n\n[청혼 결과: 거절] ${R.who}은(는) 아직 그럴 사이가 아니라며 당황한다.`;
   if(R.kind === "propose") return R.ok ? `\n\n[청혼 결과: 받아들임] ${R.who}이(가) 청혼을 받아들인다. 두 사람은 결혼하기로 한다. spouse에 "${R.who}/${(S.npcs[R.who] || {}).gender || ""}"를 적어라.` : `\n\n[청혼 결과: 거절] ${R.who}은(는) 아직 결혼할 마음의 준비가 되지 않았다고 한다. 관계는 이어진다.`;
-  const word = R.lv === "like" ? "서로 좋아하는 마음을 확인한다(어린아이다운 순수한 마음, 연애나 스킨십 없이)" : R.lv === "young" ? "풋풋한 사이가 된다(또래끼리의 설렘까지만, 성적인 내용 없이)" : "연인이 된다";
+  const word = R.lv === "like" ? "서로 좋아하는 마음을 확인한다(어린아이다운 순수한 마음, 연애나 스킨십 없이)" : R.lv === "young" ? "연인이 된다(16~17세 또래끼리의 풋풋한 연애: 함께 걷고 이야기하고 손을 잡는 정도까지만, 성적인 내용은 절대 없이)" : "연인이 된다";
   return R.ok ? `\n\n[고백 결과: 받아들임] ${R.who}이(가) 고백을 받아 준다. 두 사람은 ${word}.` : `\n\n[고백 결과: 거절] ${R.who}은(는) 고백을 거절한다. 상처 주지 않으려 애쓰지만 분명하게.`;
 }
 function romanceApply(R){
@@ -4627,11 +4627,11 @@ function romanceApply(R){
     return;
   }
   if(R.ok){
-    const tag = R.lv === "lover" ? "연인" : R.lv === "young" ? "풋사랑" : "좋아함";
+    const tag = R.lv === "like" ? "좋아함" : "연인";
     S.tags = S.tags.filter(t => !/^(연인|풋사랑|좋아함):/.test(t)); S.tags.push(`${tag}:${R.who}`);
-    if(R.lv === "lover") S.lover = {name:R.who, at:S.days};
+    if(R.lv !== "like") S.lover = {name:R.who, at:S.days, young:R.lv === "young"};
     r.aff = clamp(r.aff + 8, -100, 100); bump("confessOk");
-    log({t:"sys", text:`♥ ${R.who}와(과) ${tag === "연인" ? "연인이 되었다" : tag === "풋사랑" ? "풋풋한 사이가 되었다" : "서로 좋아하는 마음을 확인했다"}.`});
+    log({t:"sys", text:`♥ ${R.who}와(과) ${tag === "연인" ? "연인이 되었다" : "서로 좋아하는 마음을 확인했다"}.`});
     try{ sfx("good"); }catch(e){}
   }else { r.aff = clamp(r.aff - 6, -100, 100); S.sp = gclamp("sp", S.sp - 5); bump("confessNo"); log({t:"sys", text:`💔 ${R.who}에게 거절당했다.`}); }
 }
