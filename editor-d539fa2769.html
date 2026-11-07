@@ -1003,11 +1003,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0155"></script>
+<script src="parts.js?v=20261108-0205"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-0155";
+const BUILD = "20261108-0205";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1104,6 +1104,7 @@ const NARR_RULES = `
 - 같은 인물이라도 전에 한 말을 되풀이하지 마라. 지금 상황과 주인공이 방금 한 말에 맞는 새 말을 하게 하라.
 - 대사는 실제 사람이 하는 말처럼 짧은 구어체 1~2문장. 상황 설명조·문어체·과장된 말 금지. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
 - 가족은 [가족] 목록의 이름·외모·일·성격을 그대로 쓰고 멋대로 바꾸지 마라. 부모는 그 일과 성격에 맞게 말하고 행동한다.
+- [가족 성격]과 [아는 사람]의 #성격 태그는 그 인물이 어떤 사람인지 알려 주는 것이다. 말투·선택·주인공을 대하는 태도에 녹여라. 태그 낱말을 그대로 서술하거나 "그는 다정한 사람이다"처럼 설명하지 말고, 행동으로 보여 줘라.
 
 [7. 수치 칸] 숫자가 아니라 말로 적는다(정확한 수치는 게임이 정한다).
 - hp(체력), sp(정신력), en(기력), rep(평판): "없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복".
@@ -2619,6 +2620,7 @@ function stateSummary(local){
   lines.push(`[장비] ${equipText()}`);
   if((S.inv || []).length) lines.push(`[가방] ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")} (갈아 낄 수 있는 무기·방어구)`);
   lines.push(`[가족] ${familyText()}`);
+  { const fp = S.family.filter(f => f.alive).map(f => { if(!f.persona) f.persona = rollPersona(); return `${f.name}: #${f.persona.join(" #")}`; }); if(fp.length) lines.push(`[가족 성격] ${fp.join(" / ")}`); }
   const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => t.slice(3));
   if(bonds.length) lines.push(`[인연] ${bonds.slice(-8).join(", ")} (이 사람들이 가끔 다시 등장하면 좋다)`);
   const known = Object.entries(S.npcs || {}).filter(([n]) => !S.family.some(f => f.name === n)).slice(-6);
@@ -2640,7 +2642,7 @@ function stateSummary(local){
   if(ltm.length) lines.push("[장기 기억]\n" + ltm.map(m => "- " + m).join("\n"));
   const stm = T >= 3 ? [] : S.stm.slice(local ? -1 : -3);
   if(stm.length) lines.push("[단기 기억]\n" + stm.map(m => "- " + m).join("\n"));
-  if(!local || T < 2){ const kp = knownPeopleText(local ? 3 : 8); if(kp) lines.push("[아는 사람] (이름이 같으면 같은 사람이다. 성별·나이·직업·외모를 그대로 지키고, 호감도에 맞는 태도로 대하게 하라. 능력치는 성인 평균 30 기준이다. 관계와 마지막 일을 이어서 그려라) " + kp); }
+  if(!local || T < 2){ const kp = knownPeopleText(local ? 3 : 8); if(kp) lines.push("[아는 사람] (이름이 같으면 같은 사람이다. 성별·나이·직업·외모를 그대로 지키고, #성격 태그대로 말하고 행동하게 하되 태그를 대사나 서술에 그대로 옮겨 적지는 마라. , 호감도에 맞는 태도로 대하게 하라. 능력치는 성인 평균 30 기준이다. 관계와 마지막 일을 이어서 그려라) " + kp); }
   if(!local && (S.chron || []).length) lines.push("[인생 연표] " + S.chron.slice(-14).map(c => `${Math.floor(c.d / 365)}세 ${c.t}`).join(" / "));
   const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -10);
   const cut = local ? [400, 260, 160, 120][T] : 900;
@@ -2858,6 +2860,7 @@ function makeBirthInfo0(){
     if(f.rel !== "아버지" && f.rel !== "어머니") continue;
     const jobs = PARENT_JOBS[o][w]; f.job = jobs[rnd(jobs.length)];
     f.trait = PARENT_TRAITS[rnd(PARENT_TRAITS.length)];
+    f.persona = rollPersona();
   }
   /* 최근 다른 삶의 출생에서 쓴 장면은 되도록 피한다 */
   const recent = store.get("dosi_birth_recent") || [];
@@ -3043,6 +3046,23 @@ function guessJob(name, look, age){
   if(age != null && age >= 70) return "은퇴한 노인";
   return NPC_JOBS[rnd(NPC_JOBS.length)];
 }
+/* AI만 읽는 성격 태그: 서로 반대되는 것끼리 묶어, 묶음 다섯 개에서 하나씩 고른다(모순 없이 5개) */
+const PERSONA = [
+  ["다정함", "냉정함", "잔인함"], ["겁이 많음", "대담함", "무모함"], ["욕심이 많음", "검소함", "돈을 밝힘"], ["의리가 있음", "배신을 쉽게 함"],
+  ["거짓말을 잘함", "정직함", "과장이 심함"], ["수다스러움", "과묵함"], ["의심이 많음", "남을 잘 믿음"], ["성급함", "신중함", "느긋함"],
+  ["허세가 있음", "겸손함", "자존심이 강함", "비굴함"], ["질투가 많음", "너그러움"], ["동정심이 많음", "남의 불행에 무관심"], ["게으름", "부지런함", "일중독"],
+  ["유머러스함", "진지함", "냉소적"], ["계산적", "충동적", "즉흥적"], ["고집이 셈", "남의 말을 잘 들음"], ["예민함", "무던함"],
+  ["낙천적", "비관적"], ["호기심이 많음", "변화를 싫어함"], ["예의 바름", "무례함"], ["술을 좋아함", "도박을 좋아함", "단것을 좋아함", "담배를 달고 삶"],
+  ["아이를 좋아함", "동물을 좋아함", "식물을 가꿈", "음악을 좋아함", "책을 좋아함"], ["원한을 오래 품음", "쉽게 용서함", "복수심이 강함"], ["권력을 동경함", "윗사람을 싫어함"],
+  ["규칙을 중시함", "규칙을 비웃음"], ["외로움을 탐", "사교적", "내성적"], ["미신을 믿음", "합리적임"], ["책임감이 강함", "무책임함"],
+  ["감정을 숨김", "감정이 얼굴에 다 드러남"], ["뒷말을 좋아함", "비밀을 잘 지킴"], ["허영심이 많음", "소박함"], ["자기희생적", "이기적"],
+  ["남을 잘 돌봄", "남에게 관심 없음"], ["싸움을 좋아함", "폭력을 싫어함"], ["과거를 숨김", "옛날이야기를 자주 함"], ["가족을 아낌", "가족과 연을 끊음"],
+  ["도시를 떠나고 싶어함", "둥지를 동경함", "뒷골목을 사랑함"], ["약속을 꼭 지킴", "약속을 쉽게 잊음"], ["돈 계산이 정확함", "돈 관리를 못함"]];
+function rollPersona(){
+  const groups = PERSONA.map((g, i) => i), out = [];
+  while(out.length < 5 && groups.length){ const gi = groups.splice(rnd(groups.length), 1)[0], g = PERSONA[gi]; out.push(g[rnd(g.length)]); }
+  return out;
+}
 const npcAge = r => r && r.born != null ? Math.max(0, Math.floor((S.days - r.born) / 365)) : (r && r.age) || 0;
 /* 사람 기록 가져오기(없으면 만든다). 예전 저장본(나이·만난 날)도 태어난 날로 바꿔 둔다 */
 function personOf(name, hint){
@@ -3057,6 +3077,7 @@ function personOf(name, hint){
   if(r){
     if(r.aff == null) r.aff = 0;
     if(!r.job) r.job = guessJob(name, r.look, npcAge(r));
+    if(!r.persona) r.persona = rollPersona();
     if(!r.stats) r.stats = rollPersonStats(npcAge(r), name + " " + r.job, r.look);
   }
   return r;
@@ -3319,7 +3340,7 @@ function knownPeopleText(n){
   return ps.map(([name, p]) => {
     const bond = (S.tags || []).find(t => t.startsWith("인연:" + name)); const rel = bond ? bond.split("/")[1] || "아는 사이" : "";
     const r = S.npcs && S.npcs[name];
-    const info = r ? `${r.gender || "?"}, ${npcAge(r)}세, ${r.job || "직업 모름"}, 호감 ${r.aff > 0 ? "+" : ""}${r.aff || 0}(${affWord(r.aff || 0)}), 외모 ${String(r.look || "").slice(0, 50)}${r.stats ? `, 힘${r.stats.str} 방어${r.stats.def} 속도${r.stats.spd} 지력${r.stats.int}` : ""}` : "";
+    const info = r ? `${r.gender || "?"}, ${npcAge(r)}세, ${r.job || "직업 모름"}, 성격 #${(r.persona || []).join(" #")}, 호감 ${r.aff > 0 ? "+" : ""}${r.aff || 0}(${affWord(r.aff || 0)}), 외모 ${String(r.look || "").slice(0, 50)}${r.stats ? `, 힘${r.stats.str} 방어${r.stats.def} 속도${r.stats.spd} 지력${r.stats.int}` : ""}` : "";
     return `${name}${rel ? "(" + rel + ")" : ""}[${info}]: ${p.n}번 만남, 마지막 ${agoText(S.days - (p.last || S.days))}${p.say ? `, 전에 한 말 "${p.say}"(같은 말을 되풀이하지 말 것)` : ""}`; }).join(" / ");
 }
 async function memoryTick(){
