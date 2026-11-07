@@ -368,6 +368,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .hs-v{font:600 1.05rem var(--f-mono);line-height:1.2}
 .hs-b{font:400 .66rem var(--f-mono);color:var(--muted)}
 .hs-card.boost .hs-v{color:var(--accent)}
+.fam .f-cause{grid-column:2 / -1;margin-top:-6px;font-size:.75rem;color:var(--muted)}
+.fam.gone .f-name,.fam.gone .f-rel{color:var(--muted);opacity:.75;text-decoration:none}
 </style>
 </head>
 <body>
@@ -481,6 +483,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <div class="card">
       <div class="label">가족</div>
       <div class="family" id="sFamily"></div>
+    </div>
+    <div class="card">
+      <div class="label">인연</div>
+      <div class="family" id="sBonds"></div>
     </div>
     <div class="card">
       <div class="label">기록</div>
@@ -647,10 +653,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1240"></script>
+<script src="parts.js?v=20261107-1245"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1240";
+const BUILD = "20261107-1245";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -694,6 +700,7 @@ const NARR_RULES = `
 - [장비]의 무기·방어구·의체를 장면에 반영하라.
 - [외모] 글 전체를 직접 읽고, 그 사람의 생김새·인상·차림이 이 도시에서 어떻게 보일지 스스로 판단해 사람들의 반응과 사건에 반영하라(나이에 맞게, [외모에 더해진 것]도 함께). 다만 외모 묘사(머리색·속눈썹 등)를 장면에 끼워 넣지는 마라. 다른 사람이 외모에 반응할 때만 언급한다.
 - shop: 이 장면이 플레이어가 공방·무기점·방어구점·의체 시술소 안에 들어가 물건을 직접 고를 수 있는 상태로 끝나면 true. 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질처럼 사러 간 게 아니면 false. 돌발 상황(심부름, 장인의 손짓, 피신 등)으로 공방 안에 들어오게 된 경우도 true. 아기·어린아이가 혼자 갈 수 없는 상황도 false.
+- family_dead: 가족이 죽으면 "이름/사인"(예: "임장철/공장 사고"). 인연 맺은 사람(가족 아님)이 죽으면 tag_add에 "사망:이름/사인".
 - talk: 장면에서 다른 인물(가족·이웃·의뢰인 등)이 플레이어에게 말하면, 그 말과 행동을 talk에 1~3개 넣어라: [{"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이, 그 인물다운 말투)","act":"말하면서 하는 짧은 행동","look":"처음 나오는 인물만 짧은 외모(머리색·머리 모양·눈색·체격·옷), 가족이나 이미 나온 인물은 \"\"","gender":"남성/여성"}]. 가족은 [가족]의 이름과 외모를 그대로 쓴다. 대사는 narration에 다시 쓰지 말고, 말하는 사람이 없으면 [].
 - 플레이어가 누군가에게 말을 걸면 그 상대가 반드시 talk로 대답하게 하라.
 - options: 지금 상황에서 플레이어가 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다"
@@ -1765,7 +1772,7 @@ const originKo = o => o === "nest" ? "둥지" : "뒷골목";
 function famAge(f){ return Math.floor((S.days - f.born) / 365); }
 function familyText(){
   if(!S.family.length) return "없음";
-  return S.family.map(f => `${f.rel} ${f.name || "(이름 미정)"}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망"}${f.look ? ", 외모: " + f.look : ""})`).join(", ");
+  return S.family.map(f => `${f.rel} ${f.name || "(이름 미정)"}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망: " + (f.cause || "사인 모름")}${f.look ? ", 외모: " + f.look : ""})`).join(", ");
 }
 
 /* 외모 글을 게임이 읽은 결과를 AI가 상황에 쓰기 좋게 정리 (지금 나이·장비·의체 반영) */
@@ -2020,8 +2027,9 @@ function applyFamily(n){
     }
   }
   if(n.family_dead){
-    const f = S.family.find(f => f.alive && (f.name === n.family_dead || n.family_dead.includes(f.name) || f.name.includes(n.family_dead)));
-    if(f){ f.alive = false; log({t:"sys", text:`${f.rel} ${f.name}이(가) 세상을 떠났다.`}); }
+    const [who, cause] = String(n.family_dead).split("/").map(x => (x || "").trim());
+    const f = S.family.find(f => f.alive && f.name && (f.name === who || who.includes(f.name) || f.name.includes(who)));
+    if(f){ f.alive = false; f.cause = cause ? (/(사망|숨|떠남|처리)$/.test(cause) ? cause : cause + "로 사망") : "사망"; f.diedAt = S.days; log({t:"sys", text:`${f.rel} ${f.name}이(가) 세상을 떠났다. (${f.cause})`}); }
   }
   if(n.child_born && ageY() >= 16 && !S.pendingChild){
     const id = "c" + Date.now();
@@ -2598,8 +2606,22 @@ function renderStatus(){
   for(const f of S.family){
     const row = el("div", "fam" + (f.alive ? "" : " gone"));
     const rel = f.rel === "자녀" ? (f.gender === "남성" ? "아들" : "딸") : f.rel;
-    row.append(el("span", "f-rel", rel), el("span", "f-name", f.name || "이름 미정"), el("span", "f-age", f.alive ? `${Math.max(0, famAge(f))}세` : "故"));
+    row.append(el("span", "f-rel", rel), el("span", "f-name", (f.name || "이름 미정") + (f.alive ? "" : " (사망)")), el("span", "f-age", f.alive ? `${Math.max(0, famAge(f))}세` : "故"));
+    if(!f.alive) row.appendChild(el("span", "f-cause", f.cause || "사망"));
+    if(f.look) row.title = f.look;
     fam.appendChild(row);
+  }
+  /* 인연: 친해진 사람들. 죽은 사람은 회색 */
+  const bd = $("#sBonds"); bd.replaceChildren();
+  const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => { const [nm, rel] = t.slice(3).split("/"); return {nm:(nm || "").trim(), rel:(rel || "").trim()}; });
+  if(!bonds.length) bd.appendChild(el("div", "note", "아직 없음"));
+  for(const b of bonds){
+    const dead = S.tags.find(t => new RegExp("^사망:" + b.nm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(/|$)").test(t)) || (S.npcs && S.npcs[b.nm] && S.npcs[b.nm].dead);
+    const row = el("div", "fam" + (dead ? " gone" : ""));
+    row.append(el("span", "f-rel", b.rel || "인연"), el("span", "f-name", b.nm + (dead ? " (사망)" : "")), el("span", "f-age", ""));
+    if(dead && typeof dead === "string" && dead.includes("/")) row.appendChild(el("span", "f-cause", dead.split("/")[1]));
+    const np = S.npcs && S.npcs[b.nm]; if(np && np.look) row.title = np.look;
+    bd.appendChild(row);
   }
   const tg = $("#sTags"); tg.replaceChildren();
   if(!S.tags.length) tg.appendChild(el("div", "note", "아직 없음"));
@@ -3381,6 +3403,8 @@ function drawSprite(cv, opt){
   const OUT = hexRGB(outfit), PANT = hexRGB(pants), SHOE = [43, 39, 48], METAL = [169, 179, 193], SOCK = [236, 232, 224];
   const ox = Math.round((W - B.w) / 2), oy = H - B.h - 1;
   const img = ctx.createImageData(W, H), D = img.data;
+  /* 몸·옷의 외곽선 픽셀 표시(후처리에서 그 바깥에 외곽선을 또 두르지 않게) */
+  const LINEMASK = new Uint8Array(W * H);
   const sd = B.px.d, rg = B.rg.d;
   const hairOn = !(tr.style === "bald" || baby) && !tr.hood;
   let hairC = hexRGB(tr.hair); if(y0 >= 60) hairC = [207, 207, 214];
@@ -3426,6 +3450,7 @@ function drawSprite(cv, opt){
     }
     const j = ((y + oy) * W + (x + ox)) * 4;
     D[j] = Math.max(0, Math.min(255, r)); D[j + 1] = Math.max(0, Math.min(255, gg)); D[j + 2] = Math.max(0, Math.min(255, b)); D[j + 3] = 255;
+    if(isLine && x + ox >= 0 && x + ox < W && y + oy >= 0 && y + oy < H) LINEMASK[(y + oy) * W + x + ox] = 1;
   }
   const put = (X, Y, r, gg, b) => { if(X < 0 || Y < 0 || X >= W || Y >= H) return; const j = (Y * W + X) * 4; D[j] = r; D[j + 1] = gg; D[j + 2] = b; D[j + 3] = 255; };
   /* 눈 */
@@ -3568,10 +3593,10 @@ function drawSprite(cv, opt){
     else if(L === "gauntlet"){ box(ox, hy - 2, 5, 4, "#c9a24a"); box(ox + B.w - 5, hy - 2, 5, 4, "#c9a24a"); }
     else if(L === "gun"){ box(hx - 1, hy - 1, 7, 2, "#2b2b31"); box(hx - 1, hy + 1, 2, 3, "#2b2b31"); }
   }
-  cleanOutline(ctx, W, H);
+  cleanOutline(ctx, W, H, LINEMASK);
 }
 /* 외곽선 후처리: 외톨이 점 지우기 · 바늘구멍 메우기 · 밝은 가장자리 바깥에 1칸 외곽선 */
-function cleanOutline(ctx, W, H){
+function cleanOutline(ctx, W, H, lineMask){
   const im = ctx.getImageData(0, 0, W, H), d = im.data;
   const A = (x, y) => x >= 0 && y >= 0 && x < W && y < H && d[(y * W + x) * 4 + 3] > 0;
   const LINE = [30, 20, 26];
@@ -3590,6 +3615,8 @@ function cleanOutline(ctx, W, H){
     if(A(x, y)) continue;
     for(const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){
       const X = x + dx, Y = y + dy; if(!A(X, Y)) continue;
+      /* 이미 외곽선인 픽셀(밝은 옷의 외곽선 포함) 바깥에는 두르지 않는다 */
+      if(lineMask && lineMask[Y * W + X]) continue;
       const j = (Y * W + X) * 4; if(lumOf(d[j], d[j + 1], d[j + 2]) > 72){ add.push([x, y]); break; }
     }
   }
@@ -3730,7 +3757,7 @@ async function flowNarrate(elapsed, big){
     S.pendingChild = id;
     hint = "\n\n[사건] 방금 플레이어의 아이가 태어났다(이미 처리됨, child_born은 false). 출산 장면으로 끝내라.";
   }else if(big && big.kind === "death"){
-    big.f.alive = false;
+    big.f.alive = false; big.f.cause = big.f.cause || (famAge(big.f) >= 75 ? "노환으로 사망" : "병으로 사망"); big.f.diedAt = S.days;
     log({t:"sys", text:`${big.f.rel} ${big.f.name}이(가) 세상을 떠났다.`});
     hint = `\n\n[사건] 방금 ${big.f.rel} ${big.f.name}이(가) 세상을 떠났다(이미 처리됨, family_dead는 ""). 그 소식을 듣거나 마주하는 장면으로 끝내라.`;
   }else if(big) hint = eventLine(big.text);
@@ -4199,9 +4226,12 @@ async function createLife(){
   S.v = 4;
   const fam = familyOf(name), famCul = fam.sur ? fam.c : pickCulture();
   S.fam = {cul:famCul.id, sur:fam.sur || surOf(famCul, famCul.sur[rnd(famCul.sur.length)], "남성")};
+  /* 한쪽 부모가 없는 집: 없는 쪽도 가족에 남기고 사인을 적는다 */
   const single = origin === "back" && rnd(4) === 0;
-  if(!single) S.family.push({rel:"아버지", name:nameIn(famCul, "남성", S.fam.sur), gender:"남성", born:-365 * (26 + rnd(14)), alive:true});
-  S.family.push({rel:"어머니", name:nameIn(rnd(3) ? famCul : pickCulture(), "여성"), gender:"여성", born:-365 * (22 + rnd(14)), alive:true});
+  const absent = single ? (rnd(4) === 0 ? "어머니" : "아버지") : "";
+  const ABSENT_CAUSE = ["공장 사고로 사망", "뒷골목의 밤에 사라져 사망 처리", "해결사 일을 하다 사망", "병으로 사망", "쥐 패거리와 얽혀 사망", "빚 문제로 실종 뒤 사망 처리"];
+  S.family.push({rel:"아버지", name:nameIn(famCul, "남성", S.fam.sur), gender:"남성", born:-365 * (26 + rnd(14)), alive:absent !== "아버지", ...(absent === "아버지" ? {cause:ABSENT_CAUSE[rnd(ABSENT_CAUSE.length)], diedAt:-rnd(300)} : {})});
+  S.family.push({rel:"어머니", name:nameIn(rnd(3) ? famCul : pickCulture(), "여성"), gender:"여성", born:-365 * (22 + rnd(14)), alive:absent !== "어머니", ...(absent === "어머니" ? {cause:ABSENT_CAUSE[rnd(ABSENT_CAUSE.length)], diedAt:-rnd(300)} : {})});
   for(const f of S.family) f.look = randLook(f.gender);
   showGame();
   log({t:"sys", text:`시드 ${seed} · ${corpOf(S.district)} 구역 ${originKo(origin)}. 출생 능력치: ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${S[k]}`).join(", ")});
