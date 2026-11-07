@@ -473,6 +473,15 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .serumbar .track{height:6px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
 .serumbar .fill{height:100%;transition:width .3s}
 .serumbar .ser:nth-child(1) .g-top span:first-child{color:#6aa6ec}.serumbar .ser:nth-child(2) .g-top span:first-child{color:#eb9d55}.serumbar .ser:nth-child(3) .g-top span:first-child{color:#74c47e}
+.item.custom{display:grid;gap:8px}
+.co-row{display:grid;grid-template-columns:4em minmax(0,1fr);gap:8px;align-items:center}
+.co-row select,.co-row input[type=text]{min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+.co-row input[type=color]{width:56px;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:2px}
+.co-k{font-size:.8rem;color:var(--muted)}
+.co-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.co-stat{display:grid;gap:2px;font-size:.74rem;color:var(--muted)}
+.co-stat input{min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:var(--f-mono)}
+.item-meta.bad{color:var(--bad)}
 .presbar{margin:-2px 0 8px;padding:6px 10px;border:1px dashed #b9a679;border-radius:6px;background:rgba(240,230,200,.06);font:500 .78rem/1.4 var(--f-display);color:#e6d7b0}
 .presbar.done{opacity:.5;text-decoration:line-through}
 /* 업적 */
@@ -780,7 +789,7 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
     <p class="note" id="shopMoney"></p>
     <section><h3>착용 중</h3><div id="shopEquip"></div></section>
     <div class="speed tabs" role="group" aria-label="분류">
-      <button type="button" data-tab="weapon" aria-pressed="true">무기</button><button type="button" data-tab="armor" aria-pressed="false">방어구</button><button type="button" data-tab="aug" aria-pressed="false">의체</button>
+      <button type="button" data-tab="weapon" aria-pressed="true">무기</button><button type="button" data-tab="armor" aria-pressed="false">방어구</button><button type="button" data-tab="aug" aria-pressed="false">의체</button><button type="button" data-tab="custom" aria-pressed="false">주문 제작</button>
     </div>
     <div class="items" id="shopList"></div>
     <p class="note">총기는 머리의 규제 탓에 매우 비싸다. 공방 이름은 위키 기준, 가격과 성능은 게임용 설정.</p>
@@ -960,11 +969,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2355"></script>
+<script src="parts.js?v=20261108-0025"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-2355";
+const BUILD = "20261108-0025";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1517,9 +1526,9 @@ const OFFICE_NAMES = ["골목등 사무소","청어 사무소","녹슨 열쇠 �
 const isApprenticeEv = ev => APPRENTICE.includes(ev);
 const apprenticeOf = () => (S.tags.find(t => /^견습:/.test(t)) || "").replace(/^견습:/, "").trim();
 const isScout = ev => Object.values(SCOUTS).some(l => l.includes(ev));
-/* 나이에 기대되는 능력치(성인 평균 18)에 비해 얼마나 강한가 */
+/* 나이에 기대되는 능력치(성인 평균 30)에 비해 얼마나 강한가 */
 function prodigyRatio(){
-  const y = ageY(), expect = Math.max(3, 3 + 0.75 * Math.min(y, 20));
+  const y = ageY(), expect = Math.max(3, 2 + 1.4 * Math.min(y, 20));
   const avg = STAT_KEYS.reduce((a, k) => a + eff(k), 0) / STAT_KEYS.length;
   return avg / expect;
 }
@@ -2374,7 +2383,7 @@ function tierEffects(n, input, results){
     if(!r.auto) n.en -= 4;
     if(r.tier === "대실패"){ n.hp -= 12; n.sp -= 6; }
     else if(r.tier === "실패"){ n.hp -= 2; n.sp -= 3; }
-    if(r.tier === "대성공" && !r.auto && rnd(2) === 0) n[r.stat] += 1;
+    if(r.tier === "대성공" && !r.auto && rnd(2) === 0) n[r.stat] += 2;
   }
   if(/잠|잔다|자고|쉬/.test(input)){ n.en += Math.round(40 * regenFactor()); n.hp += 10; n.sp += 5; }
   if(/먹|식사|밥/.test(input)){ n.en += 10; }
@@ -2452,7 +2461,8 @@ let busy = false;
 const ageY = () => Math.floor(S.days / 365);
 const ageM = () => Math.floor((S.days % 365) / 30.42);
 function stage(y){ if(y < 2) return "영아"; if(y < 7) return "유아"; if(y < 13) return "아동"; if(y < 20) return "청소년"; if(y < 60) return "성인"; return "노년"; }
-const bonus = v => Math.floor(v / 2);
+/* 판정 보너스: 능력치 5마다 +1 (성인 평균 30이면 +6) */
+const bonus = v => Math.floor(v / 5);
 const originKo = o => o === "nest" ? "둥지" : "뒷골목";
 
 function famAge(f){ return Math.floor((S.days - f.born) / 365); }
@@ -2482,8 +2492,8 @@ function gearLook(){
   return out.join(", ");
 }
 
-const STAT_AVG = 18;
-const statRel = v => v >= 45 ? "특색급" : v >= 36 ? "이름난 해결사급" : v >= 27 ? "단련된 해결사급" : v >= STAT_AVG + 3 ? "평균보다 높음" : v >= STAT_AVG - 2 ? "성인 평균" : v >= 6 ? "평균보다 낮음" : "아이 수준";
+const STAT_AVG = 30;
+const statRel = v => v >= 75 ? "특색급" : v >= 60 ? "이름난 해결사급" : v >= 45 ? "단련된 해결사급" : v >= STAT_AVG + 3 ? "평균보다 높음" : v >= STAT_AVG - 2 ? "성인 평균" : v >= 6 ? "평균보다 낮음" : "아이 수준";
 const isKindred = () => !!(S && S.tags && S.tags.some(t => /^혈귀:권속/.test(t)));
 function identityText(){
   const out = [];
@@ -2648,7 +2658,7 @@ function normalizeNarr(j, statCap){
   if(typeof j.npc_outfit === "string" && j.npc_outfit.trim() && !/^(없음)$/.test(j.npc_outfit.trim())) n.npcOutfit = j.npc_outfit.trim().slice(0, 200);
   for(const k of GAUGE_KEYS) n[k] = num(wordAmount(j[k], k === "rep" ? "rep" : "gauge"), -60, 60);
   if(j.blood != null){ const lv = wordLevel(j.blood); n.blood = Math.sign(lv) * [0, 25, 35, 60, 80][Math.min(4, Math.abs(lv))]; }
-  for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")), -statCap, statCap);
+  for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")) * 2, -statCap * 2, statCap * 2);
   n.ahn = num(wordAmount(j.ahn, "ahn"), -1e10, 1e10);
   n.days = num(wordDays(j.days), 0, 3650);
   n.time = j.time == null ? "" : String(j.time);
@@ -2704,7 +2714,7 @@ function ruleNarrate(input, results){
   for(const r of results){
     if(!r.auto) n.en -= 4;
     if(r.tier === "대실패"){ n.hp -= 12; n.sp -= 6; }
-    if(r.tier === "대성공" && !r.auto && rnd(2) === 0) n[r.stat] += 1;
+    if(r.tier === "대성공" && !r.auto && rnd(2) === 0) n[r.stat] += 2;
   }
   if(/잠|잔다|자고|쉬/.test(input)){ n.en += Math.round(40 * regenFactor()); n.hp += 10; n.sp += 5; }
   n.options = ruleOptions();
@@ -2995,7 +3005,7 @@ function applyDays(n){
     const grown = [];
     for(const k of STAT_KEYS){
       let g = 0;
-      if(y <= 20) g = [0,1,1,1][rnd(4)];
+      if(y <= 20) g = [1,1,1,2,2][rnd(5)];
       else if(y <= 30 && rnd(5) === 0) g = 1;
       else if(y >= 60 && (k === "str" || k === "spd") && rnd(10) < 3 && !isKindred()) g = -1;
       if(g){ S[k] = Math.max(0, S[k] + g); grown.push(`${STAT_KO[k]} ${g > 0 ? "+" : ""}${g}`); }
@@ -3146,8 +3156,8 @@ function distortionCheck(){
   if(win){
     S.sp = 0;
     if(!S.ego){
-      for(const k of ["str", "def"]) S[k] += 2;
-      log({t:"narr", text:"당신은 그 목소리를 밀어내지 않고, 끝까지 들은 뒤 대답한다. 무너지던 감정이 한 점으로 모여 형태를 갖춘다. 당신의 에고(E.G.O)가 발현했다.", deltas:[{k:"힘", v:2}, {k:"방어력", v:2}], options:[]});
+      for(const k of ["str", "def"]) S[k] += 4;
+      log({t:"narr", text:"당신은 그 목소리를 밀어내지 않고, 끝까지 들은 뒤 대답한다. 무너지던 감정이 한 점으로 모여 형태를 갖춘다. 당신의 에고(E.G.O)가 발현했다.", deltas:[{k:"힘", v:4}, {k:"방어력", v:4}], options:[]});
       requestName("ego");
     }else log({t:"narr", text:`에고 「${S.ego}」가 다시 당신을 붙잡는다. 이번에도 당신은 당신으로 남았다.`, options:ruleOptions()});
   }else{
@@ -3259,7 +3269,7 @@ function checkMilestones(input, results){
   syncCareers();
   /* 특색: 1급 해결사 + 평판 90 이상 */
   /* 특색: 1급 중에서도 충분히 강할 때 협회가 부여한다 */
-  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 80 && S.license === 1 && ["str", "def", "spd"].reduce((a, k) => a + eff(k), 0) / 3 >= 42){
+  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 80 && S.license === 1 && ["str", "def", "spd"].reduce((a, k) => a + eff(k), 0) / 3 >= 70){
     log({t:"narr", text:"하나 협회 본부에서 사람이 찾아왔다. 정중하지만 무게 있는 목소리로 말한다. \"당신의 실력은 이제 등급으로 잴 수 없습니다. 협회는 당신에게 특색을 부여하기로 했습니다.\"", deltas:[], options:[]});
     requestName("color");
   }
@@ -4020,11 +4030,11 @@ function becomeDistorted(){
   S.distorted = {at:S.days, age:ageY(), path:null};
   S.distortPending = true;
   S.sp = -30;
-  for(const k of ["str", "def", "spd"]) S[k] += 3;
+  for(const k of ["str", "def", "spd"]) S[k] += 6;
   if(!S.tags.some(t => /^뒤틀림:/.test(t))) S.tags.push("뒤틀림:뒤틀린 채 살아감");
   if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); try{ updateFlowUI(); }catch(e){} }
   log({t:"narr", text:"속삭임이 머릿속을 가득 채운다. 끝까지 붙들고 있던 무언가가 툭 끊어진다.\n\n살갗 아래에서 뼈가 비틀리고, 감정이 형태가 되어 몸 밖으로 비어져 나온다. 거울에 비친 것은 더 이상 사람의 얼굴이 아니다. 그런데도, 당신은 아직 생각할 수 있다. 목소리는 여전히 귓가에서 속삭인다.",
-    deltas:[{k:"힘", v:3}, {k:"방어력", v:3}, {k:"속도", v:3}, {k:"돌발", v:0, event:true}], options:["속삭임을 따른다", "나 나름대로 살아간다"]});
+    deltas:[{k:"힘", v:6}, {k:"방어력", v:6}, {k:"속도", v:6}, {k:"돌발", v:0, event:true}], options:["속삭임을 따른다", "나 나름대로 살아간다"]});
   log({t:"sys", text:"뒤틀렸다. 뒤틀린 채로 삶이 이어진다. 이제 아무도 당신을 알아보지 못하고, 곳곳에서 당신을 노린다."});
   chron("뒤틀림이 되었다");
   S.awaitEvent = true; S.urgent = false;
@@ -4037,8 +4047,8 @@ function resolveDistortChoice(input){
   S.distorted.path = follow ? "follow" : "self";
   log({t:"me", text:input});
   if(follow){
-    S.str += 2; S.spd += 2;
-    log({t:"narr", text:"당신은 속삭임에 몸을 맡긴다. 하고 싶은 대로, 느끼는 대로. 망설임이 사라진 몸은 놀라울 만큼 가볍다. 그 대신 무엇을 원하는지는 점점 목소리가 정해 준다.", deltas:[{k:"힘", v:2}, {k:"속도", v:2}], options:["거리로 나간다", "배고픔을 채운다", "목소리에게 묻는다"]});
+    S.str += 4; S.spd += 4;
+    log({t:"narr", text:"당신은 속삭임에 몸을 맡긴다. 하고 싶은 대로, 느끼는 대로. 망설임이 사라진 몸은 놀라울 만큼 가볍다. 그 대신 무엇을 원하는지는 점점 목소리가 정해 준다.", deltas:[{k:"힘", v:4}, {k:"속도", v:4}], options:["거리로 나간다", "배고픔을 채운다", "목소리에게 묻는다"]});
   }else{
     S.int += 1;
     log({t:"narr", text:"당신은 속삭임을 등 뒤로 밀어낸다. 들리지 않는 척, 아직 사람인 척. 괴물의 몸으로, 그래도 당신의 방식대로 살아가 보기로 한다.", deltas:[{k:"지력", v:1}], options:["몸을 숨길 곳을 찾는다", "집으로 돌아가 본다", "거리를 살핀다"]});
@@ -4165,13 +4175,13 @@ function lmPromote(){
   if(L.rank === 1){
     log({t:"narr", text:"폐장 음악이 울리기 전, 라만차의 혈귀들이 당신을 둘러싼다. 누군가 당신의 손등에 자기 피 한 방울을 떨어뜨린다. \"이제 손님이 아니야. 우리 가족이지.\" 퍼레이드의 북소리가 당신의 이름을 부르듯 울린다.", deltas:[], options:ruleOptions()});
   }else if(L.rank === 2){
-    S.str += 2; S.def += 2;
-    log({t:"narr", text:"당신에게 라만차랜드의 한 구역이 맡겨졌다. 손님을 맞는 일도, 굳힌 피로 무너진 담을 다시 세우는 일도 이제 당신 몫이다. 관리인의 붉은 휘장이 어깨에 걸린다.", deltas:[{k:"힘", v:2}, {k:"방어력", v:2}], options:ruleOptions()});
+    S.str += 4; S.def += 4;
+    log({t:"narr", text:"당신에게 라만차랜드의 한 구역이 맡겨졌다. 손님을 맞는 일도, 굳힌 피로 무너진 담을 다시 세우는 일도 이제 당신 몫이다. 관리인의 붉은 휘장이 어깨에 걸린다.", deltas:[{k:"힘", v:4}, {k:"방어력", v:4}], options:ruleOptions()});
   }else{
     L.family = `${S.name} 가문`; L.elderAt = S.days;
-    for(const k of ["str", "def", "spd"]) S[k] += 4;
+    for(const k of ["str", "def", "spd"]) S[k] += 8;
     S.blood = 100; S.rep = gclamp("rep", S.rep + 20);
-    log({t:"narr", text:`관람차 꼭대기, 도시의 불빛이 발아래 깔린다. 라만차의 혈귀들이 무릎을 꿇는다. 이제 당신은 누군가의 권속이 아니라, 권속을 이끄는 쪽이다. 「${L.family}」의 장로로서, 당신의 피가 새 가문의 첫 피가 된다.`, deltas:[{k:"힘", v:4}, {k:"방어력", v:4}, {k:"속도", v:4}, {k:"평판", v:20}], options:ruleOptions()});
+    log({t:"narr", text:`관람차 꼭대기, 도시의 불빛이 발아래 깔린다. 라만차의 혈귀들이 무릎을 꿇는다. 이제 당신은 누군가의 권속이 아니라, 권속을 이끄는 쪽이다. 「${L.family}」의 장로로서, 당신의 피가 새 가문의 첫 피가 된다.`, deltas:[{k:"힘", v:8}, {k:"방어력", v:8}, {k:"속도", v:8}, {k:"평판", v:20}], options:ruleOptions()});
   }
   log({t:"sys", text:`라만차랜드 지위가 올랐다: ${LM_RANKS[L.rank]}`});
   chron(`라만차랜드의 ${LM_RANKS[L.rank]}이 되었다`);
@@ -4469,7 +4479,7 @@ async function clawStart(){
   for(const f of S.family) if(f.diedAt != null && f.diedAt < 0) f.diedAt = S.days - 2000;
   S.claw = {W:100, R:100, K:100, since:S.days};
   S.origin = "nest";
-  S.str = 30 + rnd(7); S.def = 28 + rnd(7); S.spd = 30 + rnd(7); S.int = 22 + rnd(5);
+  S.str = 52 + rnd(9); S.def = 48 + rnd(9); S.spd = 52 + rnd(9); S.int = 38 + rnd(7);
   S.rep = 60; S.ahn = 50000000 + rnd(50) * 1000000;
   S.tags.push("소속:머리의 발톱", "출신:C사 구역 둥지");
   S.location = "C사 구역 둥지 머리의 시설";
@@ -4618,7 +4628,7 @@ const ACHS = [
   ["rich", "부자", "1억 안을 모았다", () => S.ahn >= 100000000, "r", "돈과 평판"],
   ["tycoon", "거부", "10억 안을 모았다", () => S.ahn >= 1000000000, "e", "돈과 평판"],
   ["rep", "이름난 사람", "평판 80 이상", () => S.rep >= 80, "r", "돈과 평판"],
-  ["strong", "단련된 몸", "힘이 20을 넘었다", () => eff("str") >= 20, "r", "능력"],
+  ["strong", "단련된 몸", "힘이 40을 넘었다", () => eff("str") >= 40, "r", "능력"],
   ["abno", "환상체 목격", "환상체와 마주쳤다", () => (S.abnos || []).length >= 1, "u", "만남"],
   ["abno5", "환상체 수집가", "환상체 다섯과 마주쳤다", () => (S.abnos || []).length >= 5, "e", "만남"],
   ["famous", "전설과의 만남", "원작 인물을 만났다", () => (S.met || []).length >= 1, "u", "만남"],
@@ -4668,12 +4678,12 @@ const ACHS = [
   ["rep50", "알려진 사람", "평판 50 이상", () => S.rep >= 50, "u", "돈과 평판"],
   ["rep100", "도시의 이름", "평판 100", () => S.rep >= 100, "e", "돈과 평판"],
   /* 능력 */
-  ["str40", "괴력", "힘이 40을 넘었다", () => eff("str") >= 40, "e", "능력"],
-  ["def20", "철벽", "방어력이 20을 넘었다", () => eff("def") >= 20, "r", "능력"],
-  ["spd20", "질풍", "속도가 20을 넘었다", () => eff("spd") >= 20, "r", "능력"],
-  ["int20", "명석", "지력이 20을 넘었다", () => eff("int") >= 20, "r", "능력"],
-  ["all15", "만능", "모든 능력치가 15를 넘었다", () => STAT_KEYS.every(k => eff(k) >= 15), "e", "능력"],
-  ["all30", "완성된 사람", "모든 능력치가 30을 넘었다", () => STAT_KEYS.every(k => eff(k) >= 30), "l", "능력"],
+  ["str40", "괴력", "힘이 70을 넘었다", () => eff("str") >= 70, "e", "능력"],
+  ["def20", "철벽", "방어력이 45를 넘었다", () => eff("def") >= 45, "r", "능력"],
+  ["spd20", "질풍", "속도가 45를 넘었다", () => eff("spd") >= 45, "r", "능력"],
+  ["int20", "명석", "지력이 45를 넘었다", () => eff("int") >= 45, "r", "능력"],
+  ["all15", "만능", "모든 능력치가 35를 넘었다", () => STAT_KEYS.every(k => eff(k) >= 35), "e", "능력"],
+  ["all30", "완성된 사람", "모든 능력치가 60을 넘었다", () => STAT_KEYS.every(k => eff(k) >= 60), "l", "능력"],
   /* 장비 */
   ["weapon", "첫 무기", "무기를 손에 넣었다", () => !!(S.equip && S.equip.weapon), "c", "장비"],
   ["armor", "몸을 지키는 것", "방어구를 갖췄다", () => !!(S.equip && S.equip.armor), "c", "장비"],
@@ -4706,7 +4716,7 @@ const ACHS = [
   ["kinDrink20", "익숙한 맛", "피를 스무 번 마셨다", () => cnt("bloodDrink") >= 20, "r", "혈귀"],
   ["kinDrink100", "갈증의 노예", "피를 백 번 마셨다", () => cnt("bloodDrink") >= 100, "e", "혈귀"],
   ["kinStarve30", "긴 굶주림", "피 없이 한 달을 버텼다", () => cnt("starveDays") >= 30, "e", "혈귀"],
-  ["kinStrong", "피의 힘", "혈귀의 힘으로 힘이 60을 넘었다", () => isKindred() && eff("str") >= 60, "e", "혈귀"],
+  ["kinStrong", "피의 힘", "혈귀의 힘으로 힘이 150을 넘었다", () => isKindred() && eff("str") >= 150, "e", "혈귀"],
   ["kinAge60", "변치 않는 얼굴", "혈귀로 예순 살을 넘겼다", () => isKindred() && ageY() >= 60, "r", "혈귀"],
   ["kinAge150", "늙지 않는 자", "혈귀로 백오십 살을 넘겼다", () => isKindred() && ageY() >= 150, "l", "혈귀"],
   ["kinLicense", "혈귀 해결사", "혈귀이면서 해결사 자격을 땄다", () => isKindred() && !!S.license, "r", "혈귀"],
@@ -4798,16 +4808,19 @@ const ACHS = [
   ["oldAge", "노년", "몸이 예전 같지 않다는 걸 느꼈다", () => !!S.oldWarn, "u", "삶"],
   ["ahn10b", "도시를 살 돈", "백억 안을 모았다", () => S.ahn >= 10000000000, "l", "돈과 평판"],
   ["nobody", "이름 없는 사람", "마흔이 되도록 평판이 바닥이었다", () => ageY() >= 40 && S.rep <= 5, "u", "돈과 평판"],
+  ["custom1", "나만의 장비", "공방에 맞춤 장비를 주문했다", () => cnt("customOrder") >= 1, "u", "장비"],
+  ["custom5", "단골 의뢰인", "맞춤 장비를 다섯 번 주문했다", () => cnt("customOrder") >= 5, "r", "장비"],
+  ["customLegend", "전설의 장인에게", "전설의 장인에게 장비를 맡겼다", () => (S.custom || []).some(it => /전설의 장인/.test(it.shop)), "e", "장비"],
   ["firstBuy", "첫 구매", "공방에서 물건을 샀다", () => cnt("buy") >= 1, "c", "장비"],
   ["bigSpender", "큰손", "공방에서 열 번 샀다", () => cnt("buy") >= 10, "r", "장비"],
   ["luxury", "명품 장비", "2천만 안이 넘는 장비를 샀다", () => cnt("bigBuy") >= 1, "r", "장비"],
   ["fullGear", "완전 무장", "무기·방어구·의체를 모두 갖췄다", () => !!(S.equip && S.equip.weapon && S.equip.armor && ["arm", "leg", "eye", "body"].some(k => S.equip[k])), "r", "장비"],
   ["inv10", "창고", "장비를 열 개 넘게 모았다", () => (S.inv || []).length >= 10, "e", "장비"],
   ["fashion", "옷장", "옷을 열 번 갈아입었다", () => cnt("outfit") >= 10, "u", "장비"],
-  ["str80", "괴물 같은 힘", "힘이 80을 넘었다", () => eff("str") >= 80, "l", "능력"],
-  ["def40", "철갑", "방어력이 40을 넘었다", () => eff("def") >= 40, "e", "능력"],
-  ["spd40", "번개", "속도가 40을 넘었다", () => eff("spd") >= 40, "e", "능력"],
-  ["int40", "천재", "지력이 40을 넘었다", () => eff("int") >= 40, "e", "능력"],
+  ["str80", "괴물 같은 힘", "힘이 120을 넘었다", () => eff("str") >= 120, "l", "능력"],
+  ["def40", "철갑", "방어력이 70을 넘었다", () => eff("def") >= 70, "e", "능력"],
+  ["spd40", "번개", "속도가 70을 넘었다", () => eff("spd") >= 70, "e", "능력"],
+  ["int40", "천재", "지력이 70을 넘었다", () => eff("int") >= 70, "e", "능력"],
   ["youngParent", "젊은 부모", "스물두 살이 되기 전에 아이를 얻었다", () => S.family.some(f => f.rel === "자녀" && f.born < 22 * 365), "u", "가족과 사람"],
   ["lateChild", "늦둥이", "마흔다섯이 넘어 아이를 얻었다", () => S.family.some(f => f.rel === "자녀" && f.born >= 45 * 365), "r", "가족과 사람"],
   ["widow", "홀로 남은 반려", "배우자를 먼저 떠나보냈다", () => S.family.some(f => f.rel === "배우자" && f.alive === false), "r", "가족과 사람"],
@@ -5193,11 +5206,45 @@ const ITEMS = [
   {id:"rapier", slot:"weapon", name:"결투용 레이피어", shop:"생크 협회 납품 공방", fx:{str:3, spd:3}, price:18000000, age:18, look:"rapier"},
   {id:"scythe", slot:"weapon", name:"큰 낫", shop:"이름난 공방", fx:{str:7, spd:-1}, price:40000000, age:20, look:"scythe"},
   {id:"musket", slot:"weapon", name:"총검 달린 머스킷 (탄환 별도)", shop:"지하 공방", fx:{str:7, def:1}, price:55000000, age:20, look:"musket"},
+  /* ── 무기 추가 ── */
+  {id:"brick", slot:"weapon", name:"묵직한 벽돌", shop:"고물상", fx:{str:1}, price:3000, age:8, look:"bat"},
+  {id:"chain", slot:"weapon", name:"녹슨 쇠사슬", shop:"고물상", fx:{str:2, spd:-1}, price:15000, age:12, look:"pipe"},
+  {id:"crowbar", slot:"weapon", name:"빠루", shop:"고물상", fx:{str:2}, price:25000, age:12, look:"pipe"},
+  {id:"cleaver", slot:"weapon", name:"고기 써는 칼", shop:"맛의 거리 정육점", fx:{str:2, spd:1}, price:120000, age:14, look:"axe"},
+  {id:"tonfa", slot:"weapon", name:"방범 톤파", shop:"츠바이 협회 납품처", fx:{str:1, def:2}, price:600000, age:16, look:"bat"},
+  {id:"dagger", slot:"weapon", name:"쌍단검", shop:"시 협회 납품 공방", fx:{str:2, spd:3}, price:3500000, age:18, look:"knife"},
+  {id:"katana", slot:"weapon", name:"흑운도", shop:"흑운회 대장간", fx:{str:4, spd:2}, price:12000000, age:18, look:"blade"},
+  {id:"zweih", slot:"weapon", name:"츠바이 방패검", shop:"츠바이 협회 납품처", fx:{str:3, def:3}, price:15000000, age:18, look:"sword"},
+  {id:"liublade", slot:"weapon", name:"리우 화염검", shop:"리우 협회 납품 공방", fx:{str:6, spd:1}, price:26000000, age:20, look:"hotsword"},
+  {id:"cinq", slot:"weapon", name:"결투 세검", shop:"생크 협회 납품 공방", fx:{str:4, spd:4}, price:32000000, age:20, look:"rapier"},
+  {id:"halberd", slot:"weapon", name:"미늘창", shop:"올드 보이즈 공방", fx:{str:6, def:1, spd:-1}, price:20000000, age:20, look:"spear"},
+  {id:"warhammer", slot:"weapon", name:"분쇄 망치", shop:"올드 보이즈 공방", fx:{str:8, spd:-2}, price:24000000, age:20, look:"hammer"},
+  {id:"crystal", slot:"weapon", name:"수정 장검", shop:"크리스탈 아틀리에", fx:{str:6, int:2}, price:38000000, age:20, look:"sword"},
+  {id:"rosespanner", slot:"weapon", name:"장미스패너 전동 렌치", shop:"장미스패너 공방", fx:{str:7, def:1}, price:42000000, age:20, look:"hammer"},
+  {id:"ranga", slot:"weapon", name:"랑가 톱날 단검", shop:"랑가 공방", fx:{str:5, spd:3}, price:30000000, age:20, look:"knife"},
+  {id:"shotgun", slot:"weapon", name:"단발 산탄총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:7}, price:52000000, age:20, look:"gun"},
+  {id:"dualpistol", slot:"weapon", name:"쌍권총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:6, spd:3}, price:70000000, age:20, look:"gun"},
+  {id:"durandal", slot:"weapon", name:"이름 없는 명검", shop:"전설의 공방", fx:{str:10, spd:2}, price:150000000, age:25, look:"greatsword"},
+  {id:"bigscythe", slot:"weapon", name:"처형자의 낫", shop:"휠스 인더스트리", fx:{str:10, spd:-1}, price:90000000, age:25, look:"scythe"},
+  {id:"gauntlet2", slot:"weapon", name:"충격 너클", shop:"알라스 공방", fx:{str:5, spd:2}, price:16000000, age:18, look:"gauntlet"},
   {id:"coat", slot:"armor", name:"두꺼운 외투", shop:"뒷골목 옷가게", fx:{def:1}, price:120000, age:0, look:"#5b6b4e"},
   {id:"vest", slot:"armor", name:"방검 조끼", shop:"뒷골목 잡화점", fx:{def:2}, price:700000, age:12, look:"#3d4048"},
   {id:"suit", slot:"armor", name:"사무소 제식 정장", shop:"해결사 사무소 납품처", fx:{def:3}, price:3000000, age:18, look:"suit"},
   {id:"fcoat", slot:"armor", name:"강화 섬유 코트", shop:"리플릿 공방", fx:{def:4, spd:1}, price:9000000, age:18, look:"#7a3b34"},
   {id:"hcoat", slot:"armor", name:"고급 방호 코트", shop:"이름난 공방", fx:{def:6}, price:25000000, age:18, look:"#e3dccb"},
+  /* ── 방어구 추가 ── */
+  {id:"hoodie", slot:"armor", name:"두꺼운 후드티", shop:"뒷골목 옷가게", fx:{def:1, spd:1}, price:80000, age:0, look:"#4a4f5e"},
+  {id:"leather", slot:"armor", name:"가죽 재킷", shop:"뒷골목 옷가게", fx:{def:2}, price:450000, age:14, look:"#3a2a22"},
+  {id:"padded", slot:"armor", name:"솜 누빔 조끼", shop:"뒷골목 잡화점", fx:{def:2, spd:-1}, price:300000, age:10, look:"#7a6a52"},
+  {id:"raincoat", slot:"armor", name:"방수 우비", shop:"25구역 잡화점", fx:{def:1}, price:150000, age:0, look:"#c9a33a"},
+  {id:"zweiarmor", slot:"armor", name:"츠바이 제식 갑옷", shop:"츠바이 협회 납품처", fx:{def:6, spd:-1}, price:16000000, age:20, look:"#2f4a7a"},
+  {id:"shiarmor", slot:"armor", name:"시 협회 은밀복", shop:"시 협회 납품 공방", fx:{def:3, spd:3}, price:18000000, age:20, look:"#1b1c22"},
+  {id:"liucoat", slot:"armor", name:"리우 방화 코트", shop:"리우 협회 납품 공방", fx:{def:5, int:1}, price:21000000, age:20, look:"#b8452f"},
+  {id:"cinqsuit", slot:"armor", name:"결투복", shop:"생크 협회 납품 공방", fx:{def:4, spd:2}, price:19000000, age:20, look:"#e8e2d0"},
+  {id:"oldboys", slot:"armor", name:"올드 보이즈 작업복", shop:"올드 보이즈 공방", fx:{def:5}, price:12000000, age:18, look:"#5b5348"},
+  {id:"crystalcoat", slot:"armor", name:"수정 섬유 망토", shop:"크리스탈 아틀리에", fx:{def:6, int:2}, price:40000000, age:20, look:"#a9c8e0"},
+  {id:"plate", slot:"armor", name:"중장갑 흉갑", shop:"휠스 인더스트리", fx:{def:9, spd:-2}, price:55000000, age:22, look:"#6d727b"},
+  {id:"colorcoat", slot:"armor", name:"특색의 코트를 본뜬 맞춤 코트", shop:"이름난 공방", fx:{def:8, spd:1}, price:120000000, age:25, look:"#3b2a4a"},
   {id:"uarm", slot:"arm", name:"보급형 의수", shop:"유니온 공방", fx:{str:2}, price:2500000, age:16, union:true},
   {id:"karm", slot:"arm", name:"냉각 의수", shop:"코오리 공방", fx:{str:3, def:1}, price:14000000, age:18},
   {id:"sarm", slot:"arm", name:"N7 전투 의수", shop:"슈바르츠 인더스트리", fx:{str:5}, price:30000000, age:18},
@@ -5205,6 +5252,24 @@ const ITEMS = [
   {id:"sleg", slot:"leg", name:"고속 의족", shop:"슈바르츠 인더스트리", fx:{spd:4}, price:22000000, age:18},
   {id:"ueye", slot:"eye", name:"의안", shop:"유니온 공방", fx:{int:2}, price:4000000, age:16, union:true},
   {id:"seye", slot:"eye", name:"분석 의안", shop:"슈바르츠 인더스트리", fx:{int:4}, price:18000000, age:18},
+  /* ── 의체 추가 ── */
+  {id:"barm", slot:"arm", name:"중고 의수", shop:"뒷골목 시술소", fx:{str:1}, price:900000, age:16, union:true},
+  {id:"parm", slot:"arm", name:"유압 의수", shop:"코오리 공방", fx:{str:4, spd:-1}, price:9000000, age:18},
+  {id:"blarm", slot:"arm", name:"칼날 내장 의수", shop:"랑가 공방", fx:{str:4, spd:1}, price:20000000, age:20},
+  {id:"garm", slot:"arm", name:"그래플 의수", shop:"슈바르츠 인더스트리", fx:{str:3, spd:2}, price:24000000, age:20},
+  {id:"tarm", slot:"arm", name:"티타늄 전투 의수", shop:"이름난 공방", fx:{str:7, def:1}, price:60000000, age:22},
+  {id:"bleg", slot:"leg", name:"중고 의족", shop:"뒷골목 시술소", fx:{spd:1}, price:1000000, age:16, union:true},
+  {id:"jleg", slot:"leg", name:"도약 의족", shop:"코오리 공방", fx:{spd:3, def:1}, price:12000000, age:18},
+  {id:"kleg", slot:"leg", name:"충격 흡수 의족", shop:"올드 보이즈 공방", fx:{spd:2, def:2}, price:15000000, age:18},
+  {id:"rleg", slot:"leg", name:"R사 돌격 의족", shop:"R사 납품처", fx:{spd:6}, price:48000000, age:22},
+  {id:"beye", slot:"eye", name:"중고 의안", shop:"뒷골목 시술소", fx:{int:1}, price:1200000, age:16, union:true},
+  {id:"neye", slot:"eye", name:"야간 투시 의안", shop:"세븐 협회 납품처", fx:{int:2, spd:1}, price:9000000, age:18},
+  {id:"teye", slot:"eye", name:"조준 보조 의안", shop:"아틀리에 로직", fx:{int:3, str:1}, price:16000000, age:20},
+  {id:"aeye", slot:"eye", name:"전술 분석 의안", shop:"이름난 공방", fx:{int:6}, price:45000000, age:22},
+  {id:"bbody", slot:"body", name:"중고 피하 장갑", shop:"뒷골목 시술소", fx:{def:1}, price:1500000, age:16, union:true},
+  {id:"mbody", slot:"body", name:"근섬유 강화 시술", shop:"슈바르츠 인더스트리", fx:{str:2, def:2}, price:20000000, age:20},
+  {id:"cbody", slot:"body", name:"인공 심폐 장치", shop:"K사 계열 병원", fx:{def:2, spd:2}, price:28000000, age:20},
+  {id:"hbody", slot:"body", name:"전신 장갑 골격", shop:"휠스 인더스트리", fx:{def:7, spd:-1}, price:70000000, age:22},
   {id:"ubody", slot:"body", name:"피하 장갑판", shop:"유니온 공방", fx:{def:3}, price:6000000, age:16, union:true}
 ];
 /* 추출 E.G.O 무기: 상점에 없고, 지닌 인물에게서 얻으면 인벤토리에 들어온다 */
@@ -5216,6 +5281,8 @@ for(const st of STARS){
   const h = hashStr(st);
   ITEMS.push({id:"star:" + st, slot:"weapon", name:`${st}의 별벼림 칼`, shop:"소지 · 별의 자리", fx:{str:6 + (h % 4), spd:1 + ((h >> 3) % 3)}, price:0, age:0, look:["sword", "blade", "greatsword"][h % 3], hidden:true, star:st});
 }
+/* 능력치 규모(성인 평균 30)에 맞춰 장비 효과도 두 배로 */
+for(const it of ITEMS) if(it.fx) for(const k in it.fx) it.fx[k] *= 2;
 const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
@@ -6539,7 +6606,8 @@ function renderShop(){
   }
   if(!any) now.appendChild(el("div", "note", "착용한 장비가 없습니다."));
   const list = $("#shopList"); list.replaceChildren();
-  const items = ITEMS.filter(i => !i.hidden && (shopTab === "aug" ? isAug(i) : i.slot === shopTab));
+  if(shopTab === "custom"){ renderCustomOrder(list); return; }
+  const items = ITEMS.filter(i => !i.hidden && (shopTab === "aug" ? isAug(i) : i.slot === shopTab)).sort((a, b) => a.price - b.price);
   for(const it of items){
     const c = el("div", "item");
     const top = el("div", "item-top");
@@ -6555,6 +6623,95 @@ function renderShop(){
     c.appendChild(b);
     list.appendChild(c);
   }
+}
+/* ───────── 주문 제작: 이름·모양·능력치를 골라 맞춤 장비를 만든다 ───────── */
+const CUSTOM_TIERS = [
+  {ko:"보통 공방", pts:6, price:3000000, age:16, days:3},
+  {ko:"이름난 공방", pts:12, price:15000000, age:18, days:7},
+  {ko:"명장의 공방", pts:20, price:50000000, age:20, days:14},
+  {ko:"전설의 장인", pts:30, price:150000000, age:22, days:30}];
+const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷"};
+const CUSTOM_SLOTS = {weapon:"무기", armor:"방어구", arm:"의수", leg:"의족", eye:"의안", body:"신체 장갑"};
+let customDraft = {slot:"weapon", tier:0, name:"", look:"sword", color:"#4a4f5e", fx:{str:6, def:0, spd:0, int:0}};
+/* 저장본에 있는 주문 장비를 장비 목록에 등록한다 */
+function registerCustom(){
+  for(const it of (S && S.custom) || []) if(!ITEMS.some(i => i.id === it.id)) ITEMS.push(Object.assign({}, it, {hidden:true}));
+}
+function renderCustomOrder(list){
+  const D = customDraft, T = CUSTOM_TIERS[D.tier];
+  const used = STAT_KEYS.reduce((a, k) => a + (D.fx[k] || 0), 0);
+  const box = el("div", "item custom");
+  box.appendChild(el("div", "item-meta", "원하는 이름과 모양, 능력치를 정해 공방에 맡긴다. 공방의 솜씨에 따라 쓸 수 있는 능력치 점수와 값, 걸리는 날이 다르다."));
+  /* 종류 */
+  const r1 = el("div", "co-row"); r1.appendChild(el("span", "co-k", "종류"));
+  const sl = document.createElement("select"); for(const [k, v] of Object.entries(CUSTOM_SLOTS)){ const o = document.createElement("option"); o.value = k; o.textContent = v; sl.appendChild(o); }
+  sl.value = D.slot; sl.addEventListener("change", () => { D.slot = sl.value; renderShop(); }); r1.appendChild(sl); box.appendChild(r1);
+  /* 공방 등급 */
+  const r2 = el("div", "co-row"); r2.appendChild(el("span", "co-k", "공방"));
+  const ts = document.createElement("select"); CUSTOM_TIERS.forEach((t, i) => { const o = document.createElement("option"); o.value = i; o.textContent = `${t.ko} · ${t.pts}점 · ${fmt(t.price)}안 · ${t.days}일`; ts.appendChild(o); });
+  ts.value = D.tier; ts.addEventListener("change", () => { D.tier = +ts.value; renderShop(); }); r2.appendChild(ts); box.appendChild(r2);
+  /* 이름 */
+  const r3 = el("div", "co-row"); r3.appendChild(el("span", "co-k", "이름"));
+  const nm = document.createElement("input"); nm.type = "text"; nm.maxLength = 20; nm.placeholder = "예: 붉은 달의 칼"; nm.value = D.name;
+  nm.addEventListener("input", () => { D.name = nm.value; }); r3.appendChild(nm); box.appendChild(r3);
+  /* 모양 / 색 */
+  if(D.slot === "weapon"){
+    const r4 = el("div", "co-row"); r4.appendChild(el("span", "co-k", "모양"));
+    const ls = document.createElement("select"); for(const [k, v] of Object.entries(CUSTOM_LOOKS)){ const o = document.createElement("option"); o.value = k; o.textContent = v; ls.appendChild(o); }
+    ls.value = D.look; ls.addEventListener("change", () => { D.look = ls.value; }); r4.appendChild(ls); box.appendChild(r4);
+  }else if(D.slot === "armor"){
+    const r4 = el("div", "co-row"); r4.appendChild(el("span", "co-k", "색"));
+    const cp = document.createElement("input"); cp.type = "color"; cp.value = D.color; cp.addEventListener("input", () => { D.color = cp.value; }); r4.appendChild(cp); box.appendChild(r4);
+  }
+  /* 능력치 배분 */
+  const r5 = el("div", "co-stats");
+  for(const k of STAT_KEYS){
+    const c = el("label", "co-stat"); c.appendChild(el("span", null, STAT_KO[k]));
+    const n = document.createElement("input"); n.type = "number"; n.min = 0; n.max = T.pts; n.step = 1; n.value = D.fx[k] || 0;
+    n.addEventListener("change", () => { D.fx[k] = Math.max(0, Math.min(T.pts, Math.round(+n.value || 0))); renderShop(); });
+    c.appendChild(n); r5.appendChild(c);
+  }
+  box.appendChild(r5);
+  const left = T.pts - used;
+  box.appendChild(el("div", "item-meta" + (left < 0 ? " bad" : ""), `점수 ${used} / ${T.pts}${left < 0 ? " · 점수를 넘었다" : left > 0 ? ` · ${left}점 남음` : ""}`));
+  if(D.slot !== "weapon" && D.slot !== "armor") box.appendChild(el("div", "item-meta", "의체는 이식 수술이 필요하다: 체력 −15, 정신력 −10, 회복 7일"));
+  const why = ageY() < T.age ? `${T.age}세부터` : S.ahn < T.price ? "돈이 모자람" : left < 0 ? "점수 초과" : used === 0 ? "능력치를 정하세요" : "";
+  const b = el("button", "btn" + (why ? "" : " primary"), why || `${fmt(T.price)}안에 주문하기`); b.type = "button";
+  b.disabled = !!why || busy || !!S.dead;
+  b.addEventListener("click", () => orderCustom());
+  box.appendChild(b);
+  list.appendChild(box);
+  /* 지금까지 주문한 것 */
+  if((S.custom || []).length){
+    list.appendChild(el("div", "item-meta", "주문했던 장비: " + S.custom.map(it => `${it.name}(${CUSTOM_SLOTS[it.slot]}, ${fxText(it.fx)})`).join(", ")));
+  }
+}
+function orderCustom(){
+  const D = customDraft, T = CUSTOM_TIERS[D.tier];
+  const used = STAT_KEYS.reduce((a, k) => a + (D.fx[k] || 0), 0);
+  if(busy || S.dead || S.ahn < T.price || ageY() < T.age || used > T.pts || !used) return;
+  const fx = {}; for(const k of STAT_KEYS) if(D.fx[k]) fx[k] = D.fx[k];
+  const name = (D.name || "").trim().slice(0, 20) || `맞춤 ${CUSTOM_SLOTS[D.slot]}`;
+  const it = {id:"custom:" + Date.now().toString(36), slot:D.slot, name, shop:`주문 제작 · ${T.ko}`, fx, price:T.price, age:0, custom:true};
+  if(D.slot === "weapon") it.look = D.look;
+  if(D.slot === "armor") it.look = D.color;
+  S.custom = S.custom || []; S.custom.push(it);
+  registerCustom();
+  S.ahn -= T.price; bump("buy"); bump("customOrder"); if(T.price >= 20000000) bump("bigBuy");
+  applyDays(T.days);
+  const old = S.equip[D.slot] && itemById(S.equip[D.slot]);
+  if(isAug(it)){
+    if(old){ const back = Math.round(old.price * 0.3); S.ahn += back; applyTags("", "의체:" + old.name); }
+    S.equip[D.slot] = it.id; applyTags("의체:" + it.name, "");
+    S.hp = clamp(S.hp - 15, 0, 100); S.sp = gclamp("sp", S.sp - 10); applyDays(7);
+    log({t:"sys", text:`주문한 ${it.name}이(가) ${T.days}일 만에 완성되어 이식 수술을 받았다. ${fxText(it.fx)} · 체력 −15, 정신력 −10`});
+    checkDeath();
+  }else{
+    if(old){ S.inv = S.inv || []; S.inv.push(old.id); }
+    S.equip[D.slot] = it.id;
+    log({t:"sys", text:`주문한 ${it.name}이(가) ${T.days}일 만에 완성되었다. ${fxText(it.fx)}${old ? ` · 쓰던 ${old.name}은(는) 인벤토리에 넣었다` : ""}`});
+  }
+  sfx("good"); checkAch(); save(); renderStatus(); renderShop();
 }
 function sellItem(slot){
   const it = itemById(S.equip[slot]); if(!it) return;
@@ -6866,7 +7023,7 @@ function renderMenu(){
     /* 죽었지만 전기가 아직 안 남은 삶은 마저 정리한다 */
     $("#btnContinue").textContent = cur.dead ? "마지막을 마저 보기" : "이어서 살기";
     $("#contInfo").textContent = `${y}세 · ${corpOf(cur.district)} 구역 · ` + (cur.savedAt ? "자동 저장 " + new Date(cur.savedAt).toLocaleString("ko-KR", {month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit"}) : "자동 저장됨");
-    try{ const keep = S; S = cur; if(!S.equip) S.equip = {}; if(S.doy0 == null) S.doy0 = 0; drawSprite($("#contSprite")); S = keep; }catch(e){}
+    try{ const keep = S; S = cur; if(!S.equip) S.equip = {}; if(S.doy0 == null) S.doy0 = 0; registerCustom(); drawSprite($("#contSprite")); S = keep; }catch(e){}
   }
   $("#btnBorn").textContent = "태어나기"; $("#btnBorn").classList.remove("danger"); bornArmed = false;
   if(!$("#cSeed").value) $("#cSeed").value = randomSeed();
@@ -6928,6 +7085,7 @@ async function continueLife(){
   if(S.doy0 == null) S.doy0 = rnd(365);
   if(!S.equip) S.equip = {};
   if(!S.inv) S.inv = [];
+  registerCustom();
   /* 예전 저장본: 태그로만 있던 추출 E.G.O 무기를 가방으로 */
   for(const t of S.tags || []) if(t.startsWith("에고 무기:")){ const id = "ego:" + t.slice(6).trim(); if(itemById(id) && S.equip.weapon !== id && !S.inv.includes(id)) S.inv.push(id); }
   if(S.rng == null) S.rng = hashStr(String(Date.now()));
@@ -7048,7 +7206,7 @@ async function createLife(){
   const bornStar = rand01() < 0.01 ? STARS[rnd(STARS.length)] : null;
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, lifespan, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
-    str:2 + rnd(3), def:2 + rnd(3), spd:2 + rnd(3), int:2 + rnd(3), log:[], dead:null,
+    str:1 + rnd(2), def:1 + rnd(2), spd:1 + rnd(2), int:1 + rnd(2), log:[], dead:null,
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
     choice:{district:$("#cDistrict").value}, hairColor:swVal("hairc"), eyeColor:swVal("eyec")};
   S.doy0 = rnd(365);
