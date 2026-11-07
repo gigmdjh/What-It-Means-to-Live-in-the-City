@@ -454,6 +454,20 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
 .warpbar .wcar.done{background:#5fa0ff}
 .warpbar .wcar.now{background:#cfe2ff;animation:wblink 1s ease-in-out infinite}
 @keyframes wblink{50%{opacity:.45}}
+/* 뒤틀림: 붉은 배경에 검은 연기, 속삭임 */
+body.distort{--bg:rgba(48,6,8,.5);--panel:rgba(34,6,8,.72);--panel-2:rgba(58,10,14,.76);--line:#6e1c22;background:#2a0406}
+body.distort::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,#9a1019 0,#4a050a 55%,#160102 100%)}
+#smoke{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+#smoke i{position:absolute;bottom:-30vh;width:46vmax;height:46vmax;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.85),rgba(0,0,0,0) 65%);filter:blur(18px);animation:smokeUp var(--t,22s) linear infinite;animation-delay:var(--d,0s)}
+@keyframes smokeUp{0%{transform:translate(0,0) scale(.7);opacity:0}15%{opacity:.9}100%{transform:translate(var(--x,0),-140vh) scale(1.4);opacity:0}}
+body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b0141c)}
+#whispers{position:fixed;inset:0;z-index:55;pointer-events:none;overflow:hidden}
+.whisper{position:absolute;font:italic 400 clamp(.9rem,3.6vw,1.3rem)/1.4 var(--f-display);color:#ffd9dc;text-shadow:0 0 10px #ff2b3a,0 0 2px #000;opacity:0;max-width:64vw;animation:whisperFloat var(--t,7s) ease-in-out forwards}
+@keyframes whisperFloat{0%{opacity:0;transform:translateY(8px);filter:blur(3px)}20%{opacity:var(--o,.45);filter:blur(0)}80%{opacity:var(--o,.45)}100%{opacity:0;transform:translateY(-18px);filter:blur(4px)}}
+.whisper-storm{position:fixed;inset:0;z-index:70;pointer-events:none;background:radial-gradient(ellipse at center,rgba(90,0,8,.82),rgba(10,0,0,.96));animation:stormIn 4.2s ease-in-out forwards}
+.whisper-storm .whisper{--o:.95;font-size:clamp(1rem,4.6vw,1.6rem)}
+@keyframes stormIn{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){#smoke i{animation:none;opacity:.5}.whisper{animation-duration:.01s}}
 /* 업적 */
 .achs{display:grid;gap:8px;margin-top:18px}
 .achs h3{margin:0}
@@ -750,6 +764,8 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
 <!-- 설정 -->
 <!-- 첫 방문 로그인 창 -->
 <div id="fx" aria-hidden="true"></div>
+<div id="smoke" aria-hidden="true" hidden></div>
+<div id="whispers" aria-hidden="true"></div>
 <dialog id="loginDlg">
   <div class="dlg">
     <h2>AI로 플레이하기</h2>
@@ -917,11 +933,11 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2025"></script>
+<script src="parts.js?v=20261107-2040"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-2025";
+const BUILD = "20261107-2040";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1004,6 +1020,7 @@ const NARR_RULES = `
 - [외모] 글 전체를 직접 읽고, 그 생김새·인상·차림이 이 도시에서 어떻게 보일지 판단해 사람들의 반응과 사건에 반영하라([외모에 더해진 것]도 함께). 주인공의 외모에 따라 다가오는 사람도 달라진다: 눈에 띄는 외모면 어릴 때부터 아이들과 어른들이 더 좋아하고 잘 다가오며(순수한 호감·친절), 험한 인상이면 사람들이 꺼린다. [인연]에 '다가오는 사람'이 있으면 그 성별로 그려라. 15세까지는 우정과 순수한 호감으로만, 16~17세는 또래끼리의 풋풋한 설렘까지만(성적인 내용 금지) 그린다. 어른이 미성년(18세 미만)에게 연애·이성적인 관심을 보이는 장면은 절대 쓰지 마라. 18세부터는 이성으로서의 관심과 연애도 그릴 수 있다. 외모 묘사를 장면에 끼워 넣지는 말고, 다른 사람이 외모에 반응할 때만 언급한다.
 - 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않는다. 이미 지닌 인물(게부라 등)에게서 물려받거나 거래하거나 빼앗을 때만 tag_add에 "에고 무기:무기이름"을 적어라. 다른 방법으로는 절대 주지 마라.
 - 납치: 붙잡혀 끌려가면 tag_add에 "납치:잡혀 있음"(어디에 누구에게), 빠져나오면 tag_remove로 지우고 "탈출:납치". 몸값·노동·장기 밀매 같은 도시의 범죄로 그리고, 성적인 의미나 암시는 절대 넣지 마라.
+- 뒤틀린 주인공([뒤틀림]이 있으면): 아무도 주인공을 알아보지 못한다. 가족도 이름을 불러도 모르는 괴물로 대한다. 사람들은 도망치거나 공격하거나 해결사를 부른다. 상점·학교·사무소 같은 곳에 평범하게 들어갈 수 없다. 주인공의 대사는 사람들에게 알아듣기 힘든 소리로 들린다. 몸은 강해졌다. 속삭임을 따르는 쪽이면 충동이 서술에 스며들게 하고, 자기 나름대로 사는 쪽이면 사람이었던 습관을 붙드는 모습을 그려라. 잔혹 묘사는 절제한다.
 - 혈귀인 주인공: 보통 사람보다 몇 배 강하고 빠르고 단단하다(맨손으로 강철을 구기고, 평범한 해결사 여럿을 혼자 상대할 만큼). 혈액 게이지가 있다. 사람의 피만 갈증을 채운다(밥·동물 피·다른 혈귀의 피로는 안 된다). 혈액바(사람과 동물의 피를 눌러 굳힌 막대, 묽다)는 blood "약간 회복", 혈액팩은 "회복", 사람에게서 직접 마시면 "크게 회복". 피를 마시지 않았으면 blood는 "없음". 혈액바·혈액팩은 혈귀 가문이 쥔 가게나 암시장에서 비싸게 판다. 피가 모자라면 미쳐 가고 시든다. 물을 두려워한다. 어린 혈귀는 보호자가 혈액팩·혈액바를 구해다 주는 식으로 그리고, 아이가 사람을 무는 장면은 그리지 마라.
 - 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀". 권속은 피를 마셔야 하고 물을 두려워한다.
 
@@ -1395,6 +1412,7 @@ function scoutEvent(){ const y = ageY(); const l = y < 13 ? SCOUTS.child : y < 2
 /* 납치: 외모가 눈에 띄는 사람이 혼자 인적 드문 곳을 다니면 노리는 자가 있다 */
 const LONELY_RE = /(혼자|홀로|아무도 없|인적(이)? 드문|인적 없|외진|으슥|빈 골목|버려진|폐건물|폐공장|공사장|뒷길|밤길|골목 깊|지름길|어두운 골목|후미진|막다른)/;
 function kidnapChance(input){
+  if(S.distorted) return 0;
   const y = ageY(); if(y < 4) return 0;
   const here = String(input || "") + " " + (S.location || "") + " " + String((lastNarr() || {}).text || "").slice(-200);
   if(!LONELY_RE.test(here)) return 0;
@@ -1409,6 +1427,7 @@ function kidnapChance(input){
 }
 const isKidnap = ev => /^납치:/.test(String(ev || ""));
 function rollEvent(daysAhead){
+  if(!daysAhead && S.distorted && !S.dead && rand01() < 0.28){ S.distortHunts = (S.distortHunts || 0) + 1; return DISTORT_HUNTS[rnd(DISTORT_HUNTS.length)]; }
   if(!daysAhead && warpEligible() && rand01() < 0.03) return WARP_OFFER;
   if(!daysAhead && rand01() < scoutChance()) return scoutEvent();
   if(!daysAhead && rand01() < commissionChance()) return COMMISSIONS[rnd(COMMISSIONS.length)];
@@ -1457,12 +1476,14 @@ function prodigyRatio(){
   return avg / expect;
 }
 function scoutChance(){
+  if(S.distorted) return 0;
   const y = ageY(); if(y < 6) return 0;
   const over = prodigyRatio() - 1.2; if(over <= 0) return 0;
   const ageF = y < 13 ? 3 : y < 20 ? 2 : 1;        /* 어릴수록 크게 */
   return Math.min(0.5, over * 0.3 * ageF);
 }
 function commissionChance(){
+  if(S.distorted) return 0;
   /* 행동할 때 의뢰가 끼어들 확률: 해결사(자격 있음)일 때 평판에 비례(평판 100이면 약 30%) */
   if(!S.license || ageY() < 20) return 0;
   const staff = (S.staff || []).length;
@@ -1540,6 +1561,7 @@ function plainEvent(ev){
   return `\n그리고 장면 끝에 갑작스러운 일이 생긴다. 지금 상황에 맞게 구체적으로 지어내라(무엇을 하던 중 무엇을 마주쳤는지). 예: "${evText(ev)}"`;
 }
 function eventLine(ev){
+  if(isDistortHunt(ev)) return `\n\n[뒤틀림 토벌] 장면 끝에 이 일이 닥친다: ${String(ev).split("|")[0]} 상대는 주인공을 사람으로 알아보지 못하고 괴물로 대한다. 주인공이 어떻게 할지 고르는 순간에서 멈춰라. urgent는 true.`;
   if(ev === WARP_OFFER) return `\n\n[W사 의뢰] 장면 끝에 W사(워프열차 회사, 23구역) 쪽에서 의뢰가 들어온다: 도착한 워프열차 한 대가 '정체' 등급이 되었으니(오래 갇혀 미친 승객들), 맨 앞 칸부터 8칸 끝까지 승객을 제압하며 돌파해 달라는 것. 끝나면 W사가 '불러오기'로 몸과 기억을 들어가기 전으로 되돌려 준다고 한다. 주인공이 받을지 거절할지 고르는 순간에서 멈춰라. 아직 열차에 들어가지 마라.`;
   if(!ev) return "";
   const shop = SHOP_EVENTS.includes(ev);
@@ -2428,6 +2450,7 @@ function stateSummary(local){
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
   if(S.warp) lines.push(warpState());
+  if(S.distorted) lines.push(`[뒤틀림] 주인공은 ${S.distorted.age}세에 감정에 삼켜져 뒤틀림이 되었고, 뒤틀린 채 살아가고 있다(${S.distorted.path === "follow" ? "머릿속 여자의 속삭임을 따르며 충동대로 산다" : S.distorted.path === "self" ? "속삭임을 밀어내고 자기 나름대로 살려 애쓴다" : "아직 속삭임을 따를지 정하지 않았다"}). 겉모습은 괴물로 변해, 가족과 지인을 포함한 누구도 주인공을 알아보지 못한다. 주인공이 말을 걸어도 사람들은 괴물이 내는 소리로 듣고 겁먹거나 공격한다. 해결사·협회 토벌대·조직·날개 보안 부대가 곳곳에서 노린다. 머릿속에는 늘 낯선 여자의 목소리가 속삭인다.`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
   lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
   const idt = identityText(); if(idt) lines.push(`[신분·힘] ${idt}`);
@@ -3011,10 +3034,10 @@ async function memoryTick(){
 
 function checkDeath(){
   if(S.dead || S.warp) return;   /* 워프열차 안에서는 죽지 않는다(쓰러지면 불러오기) */
-  if(S.hp <= 0) S.dead = "체력이 다해 숨을 거두었다.";
+  if(S.hp <= 0) S.dead = S.distorted ? "뒤틀린 채 쓰러졌다. 끝내 아무도 그것이 누구였는지 알지 못했다." : "체력이 다해 숨을 거두었다.";
   else if(S.tags.some(t => /^혈귀:피주머니/.test(t))) S.dead = "혈귀에게 물려 피주머니가 되었다. 이름도 기억도 남지 않았다.";
   if(S.dead){ log({t:"death", text:S.dead}); return; }
-  if(S.sp <= -45) distortionCheck();
+  if(S.sp <= -45 && !S.distorted) distortionCheck();
 }
 
 /* ───────── 뒤틀림 · 에고 ─────────
@@ -3039,8 +3062,13 @@ function distortionCheck(){
       requestName("ego");
     }else log({t:"narr", text:`에고 「${S.ego}」가 다시 당신을 붙잡는다. 이번에도 당신은 당신으로 남았다.`, options:ruleOptions()});
   }else{
-    S.dead = "끝내 감정에 삼켜져 뒤틀림이 되었다. 사람이었던 무언가가 골목을 떠돈다.";
-    log({t:"death", text:S.dead});
+    whisperStorm();
+    /* 높은 확률로 뒤틀린 채 삶이 이어진다. 드물게는 자신을 완전히 잃는다 */
+    if(rand01() < 0.85) becomeDistorted();
+    else {
+      S.dead = "끝내 감정에 삼켜져 뒤틀림이 되었다. 사람이었던 무언가가 골목을 떠돈다.";
+      log({t:"death", text:S.dead});
+    }
   }
   save(); renderStatus();
 }
@@ -3409,7 +3437,7 @@ function migrateSave(){
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
-  renderYearBar(); renderWarpBar();
+  renderYearBar(); renderWarpBar(); renderDistort();
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
   const spriteKey = [S.name, S.look, S.outfit || "", S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
@@ -3430,6 +3458,7 @@ function renderStatus(){
     const colorOfName = n => { const c = findColor(String(n || "") + " 머리", /(머리)/); return c || "#d4a93c"; };
     if(S.color){ const sp = el("span", null, "특색 · " + S.color); sp.style.color = colorOfName(S.color); ht.appendChild(sp); }
     if(S.ego){ const sp = el("span", null, "E.G.O · " + S.ego); sp.style.color = colorOfName(S.ego); ht.appendChild(sp); }
+    if(S.distorted){ const sp = el("span", null, "뒤틀림"); sp.style.color = "#ff4a55"; ht.appendChild(sp); }
     ht.hidden = !ht.children.length; }
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
   $("#hAhn").textContent = fmt(S.ahn);
@@ -3543,7 +3572,7 @@ function shortPlace(loc){
   return (ws[ws.length - 1] || rest).slice(0, 6);
 }
 function renderLite(){
-  renderYearBar(); renderWarpBar();
+  renderYearBar(); renderWarpBar(); renderDistort();
   $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
   $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
@@ -3779,6 +3808,88 @@ function splitSpeech(input){
   act = act.replace(/^[,.\s]+|[,.\s]+$/g, "");
   return {says, act};
 }
+/* ───────── 뒤틀림 ─────────
+   뒤틀림 직전엔 낯선 여자(카르멘)의 목소리가 속삭인다. 뒤틀린 사람은 겉모습이 괴물로 변해
+   가족도 알아보지 못하고, 해결사·협회·조직이 토벌하러 온다. 이 게임에선 뒤틀린 채로 삶을 이어 갈 수 있다. */
+const WHISPERS = ["괜찮아. 참지 않아도 돼.", "네가 원하던 건 이런 게 아니었잖아.", "놓아 버려. 그러면 편해질 거야.", "아무도 너를 탓하지 않아.", "그 마음, 그대로 꺼내 봐.", "조금만 더 솔직해져도 돼.", "너는 이미 충분히 버텼어.", "듣고 있어. 계속 듣고 있어.", "왜 숨기려고 해?", "그 감정이 바로 너야.", "다들 너를 두려워하지. 그래도 괜찮아.", "더 가져도 돼. 더 원해도 돼.", "기억나? 처음 무너졌던 날.", "여기 있어. 네 곁에.", "그들은 너를 몰라봐. 나는 알아."];
+function whisperEl(text, opt){
+  const w = el("div", "whisper", text);
+  w.style.left = (opt.x != null ? opt.x : 5 + Math.random() * 60) + "%";
+  w.style.top = (opt.y != null ? opt.y : 8 + Math.random() * 80) + "%";
+  w.style.setProperty("--t", (opt.t || 7) + "s");
+  if(opt.o) w.style.setProperty("--o", opt.o);
+  if(opt.delay) w.style.animationDelay = opt.delay + "s";
+  return w;
+}
+/* 뒤틀리는 순간: 속삭임이 화면을 덮는다 */
+function whisperStorm(){
+  const st = el("div", "whisper-storm");
+  for(let i = 0; i < 14; i++) st.appendChild(whisperEl(pick(WHISPERS), {x:R(2, 30), y:R(6, 88), t:R(2.4, 3.6), delay:i * 0.18}));
+  document.body.appendChild(st);
+  setTimeout(() => st.remove(), 4300);
+  try{ sfx("whisper"); }catch(e){}
+}
+let whisperTimer = null;
+function whisperTick(){
+  const on = !!(S && S.distorted && !S.dead && document.body.classList.contains("in-game"));
+  if(!on) return;
+  const box = document.getElementById("whispers"); if(!box) return;
+  if(box.children.length > 5) return;
+  const w = whisperEl(pick(WHISPERS), {x:R(2, 35), t:R(6, 9), o:(R(0.25, 0.5)).toFixed(2)});
+  box.appendChild(w); setTimeout(() => w.remove(), 9500);
+}
+function renderDistort(){
+  const on = !!(S && S.distorted && !S.dead);
+  document.body.classList.toggle("distort", on && document.body.classList.contains("in-game"));
+  const sm = document.getElementById("smoke");
+  if(sm){
+    sm.hidden = !(on && document.body.classList.contains("in-game"));
+    if(!sm.hidden && !sm.children.length) for(let i = 0; i < 7; i++){ const b = document.createElement("i"); b.style.left = (i * 15 - 10) + "%"; b.style.setProperty("--t", (18 + i * 3) + "s"); b.style.setProperty("--d", (-i * 4) + "s"); b.style.setProperty("--x", (i % 2 ? 8 : -8) + "vw"); sm.appendChild(b); }
+  }
+  if(on && !whisperTimer) whisperTimer = setInterval(whisperTick, 3800);
+  if(!on && whisperTimer){ clearInterval(whisperTimer); whisperTimer = null; const b = document.getElementById("whispers"); if(b) b.replaceChildren(); }
+}
+function becomeDistorted(){
+  S.distorted = {at:S.days, age:ageY(), path:null};
+  S.distortPending = true;
+  S.sp = -30;
+  for(const k of ["str", "def", "spd"]) S[k] += 3;
+  if(!S.tags.some(t => /^뒤틀림:/.test(t))) S.tags.push("뒤틀림:뒤틀린 채 살아감");
+  if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); try{ updateFlowUI(); }catch(e){} }
+  log({t:"narr", text:"속삭임이 머릿속을 가득 채운다. 끝까지 붙들고 있던 무언가가 툭 끊어진다.\n\n살갗 아래에서 뼈가 비틀리고, 감정이 형태가 되어 몸 밖으로 비어져 나온다. 거울에 비친 것은 더 이상 사람의 얼굴이 아니다. 그런데도, 당신은 아직 생각할 수 있다. 목소리는 여전히 귓가에서 속삭인다.",
+    deltas:[{k:"힘", v:3}, {k:"방어력", v:3}, {k:"속도", v:3}, {k:"돌발", v:0, event:true}], options:["속삭임을 따른다", "나 나름대로 살아간다"]});
+  log({t:"sys", text:"뒤틀렸다. 뒤틀린 채로 삶이 이어진다. 이제 아무도 당신을 알아보지 못하고, 곳곳에서 당신을 노린다."});
+  chron("뒤틀림이 되었다");
+  S.awaitEvent = true; S.urgent = false;
+  renderDistort();
+}
+/* 뒤틀린 직후의 선택: 속삭임을 따를지, 나름대로 살아갈지 */
+function resolveDistortChoice(input){
+  S.distortPending = false;
+  const follow = /(따르|따라|따른|받아들|목소리대로|속삭임대로|맡긴)/.test(input) && !/(안 ?따|따르지|거부|버틴|무시)/.test(input);
+  S.distorted.path = follow ? "follow" : "self";
+  log({t:"me", text:input});
+  if(follow){
+    S.str += 2; S.spd += 2;
+    log({t:"narr", text:"당신은 속삭임에 몸을 맡긴다. 하고 싶은 대로, 느끼는 대로. 망설임이 사라진 몸은 놀라울 만큼 가볍다. 그 대신 무엇을 원하는지는 점점 목소리가 정해 준다.", deltas:[{k:"힘", v:2}, {k:"속도", v:2}], options:["거리로 나간다", "배고픔을 채운다", "목소리에게 묻는다"]});
+  }else{
+    S.int += 1;
+    log({t:"narr", text:"당신은 속삭임을 등 뒤로 밀어낸다. 들리지 않는 척, 아직 사람인 척. 괴물의 몸으로, 그래도 당신의 방식대로 살아가 보기로 한다.", deltas:[{k:"지력", v:1}], options:["몸을 숨길 곳을 찾는다", "집으로 돌아가 본다", "거리를 살핀다"]});
+  }
+  S.awaitEvent = false;
+  checkAch(); save(); renderStatus();
+}
+const DISTORT_HUNTS = [
+  "골목 끝에서 해결사 셋이 무기를 뽑아 든다. \"보고된 뒤틀림이다. 여기서 처리한다.\"|맞서 싸운다/달아난다/말을 걸어 본다",
+  "협회 토벌대의 무전 소리가 사방에서 좁혀 온다. 지붕 위에서 누군가 당신을 겨눈다.|돌파한다/숨는다/지붕으로 뛰어오른다",
+  "조직원들이 당신을 둘러싼다. 뒤틀림의 몸값을 노리는 사냥꾼들이다.|맞서 싸운다/틈을 노려 달아난다/위협한다",
+  "당신을 본 주민이 비명을 지르며 돌을 던지고, 사람들이 몽둥이를 들고 모여든다.|자리를 피한다/소리쳐 말려 본다/맞선다",
+  "익숙한 얼굴, 당신의 가족이었던 사람이 겁에 질려 문을 걸어 잠그고 해결사를 부른다.|문 앞에 서 있는다/조용히 떠난다/이름을 불러 본다",
+  "새벽 3시 13분. 뒷골목의 밤, 청소부들이 당신 쪽으로 다가온다.|숨는다/달아난다/맞선다",
+  "날개의 보안 부대가 구역 경계를 막아섰다. 뒤틀림은 한 발짝도 들일 수 없다고 한다.|돌아선다/돌파한다/다른 길을 찾는다",
+  "어린 해결사 하나가 떨리는 손으로 칼을 겨눈다. 첫 의뢰인 모양이다.|겁을 줘서 쫓는다/그냥 지나친다/맞선다"];
+const isDistortHunt = ev => DISTORT_HUNTS.includes(ev);
+
 /* ───────── 혈귀 ─────────
    설정: 혈귀는 사람의 피만으로 갈증을 채운다. 피가 모자라면 이성을 잃고 시들며, 넉넉하면 강해진다.
    혈액바(라만차랜드 '이발사'의 압축 혈액 막대)는 묽고, 혈액팩은 오래 두면 신선하지 않다.
@@ -3835,7 +3946,7 @@ const WARP_OFFER = "W사에서 의뢰가 들어왔다. 도착한 워프열차 �
 const WARP_YES = /(받|맡|수락|하겠|할게|할래|가겠|갈게|간다|좋아|좋다|승낙|지원|탄다|타겠|들어간|오케이|ㅇㅋ|응|네)/;
 const WARP_NO = /(거절|안 ?(받|맡|해|할|가|탈)|않|싫|못 ?(하|가)|보수|얼마|묻)/;
 function warpEligible(){
-  if(S.warp || S.warpOffered || ageY() < 18) return false;
+  if(S.warp || S.warpOffered || S.distorted || ageY() < 18) return false;
   return !!S.license || S.tags.some(t => /^(소속|조직):/.test(t) || /^직업:.*(해결사|사무소|협회|조직|파$|회$)/.test(t));
 }
 function warpState(){
@@ -4047,6 +4158,20 @@ const ACHS = [
   ["dieOld", "천수를 누리다", "여든 넘어 세상을 떠났다", () => !!S.dead && ageY() >= 80, "e"],
   ["dieDistort", "뒤틀린 끝", "뒤틀림이 되어 삶이 끝났다", () => /뒤틀림/.test(S.dead || ""), "r"],
   ["dieBag", "피주머니", "혈귀에게 물려 피주머니가 되었다", () => /피주머니/.test(S.dead || ""), "r"],
+  /* 뒤틀림 */
+  ["whisper", "속삭임", "머릿속에서 낯선 여자의 목소리를 들었다", () => !!S.ego || !!S.distorted || /뒤틀림/.test(S.dead || ""), "u"],
+  ["distorted", "뒤틀린 채로", "뒤틀림이 되고도 삶을 이어 갔다", () => !!S.distorted, "e"],
+  ["distortFollow", "속삭임을 따라", "뒤틀린 뒤 속삭임을 따랐다", () => !!S.distorted && S.distorted.path === "follow", "r"],
+  ["distortSelf", "나 자신으로", "뒤틀린 뒤에도 내 방식대로 살았다", () => !!S.distorted && S.distorted.path === "self", "r"],
+  ["distortKid", "어린 뒤틀림", "열세 살이 되기 전에 뒤틀렸다", () => !!S.distorted && S.distorted.age < 13, "e"],
+  ["hunted1", "쫓기는 몸", "뒤틀린 채로 습격받았다", () => (S.distortHunts || 0) >= 1, "u"],
+  ["hunted5", "현상수배", "뒤틀린 채로 다섯 번 습격받았다", () => (S.distortHunts || 0) >= 5, "r"],
+  ["hunted20", "도시의 공포", "뒤틀린 채로 스무 번 습격받았다", () => (S.distortHunts || 0) >= 20, "l"],
+  ["distortMonth", "버티는 괴물", "뒤틀린 채로 한 달을 버텼다", () => !!S.distorted && S.days - S.distorted.at >= 30, "r"],
+  ["distortYear", "살아남은 뒤틀림", "뒤틀린 채로 1년을 버텼다", () => !!S.distorted && S.days - S.distorted.at >= 365, "l"],
+  ["egoDistort", "두 얼굴", "에고를 발현한 뒤에 뒤틀렸다", () => !!S.ego && !!S.distorted, "l"],
+  ["distortHunter", "괴물이 된 사냥꾼", "해결사였다가 뒤틀렸다", () => !!S.license && !!S.distorted, "e"],
+  ["dieDistorted", "토벌된 뒤틀림", "뒤틀린 채로 쓰러졌다", () => !!S.dead && !!S.distorted, "r"],
 ];
 function loadAch(){ const a = store.get(ACH_KEY); return a && typeof a === "object" ? a : {}; }
 function checkAch(){
@@ -4103,6 +4228,8 @@ function renderAch(){
 async function doAction(input, opt = {}){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(busy || S.dead) return;
+  /* 뒤틀린 직후: 속삭임을 따를지 */
+  if(S.distortPending && S.distorted && !opt.passive){ resolveDistortChoice(input); return; }
   /* W사 워프열차 의뢰에 대한 대답 */
   if(S.warpOffer){
     S.warpOffer = false;
@@ -4168,6 +4295,7 @@ async function doAction(input, opt = {}){
   fin.event = !!ev;
   S.awaitEvent = !!ev;
   if(isKidnap(ev)){ fin.urgent = true; chron("납치당할 뻔했다"); }
+  if(isDistortHunt(ev)) fin.urgent = true;
   if(ev === WARP_OFFER){ S.warpOffer = true; S.warpOffered = true; }
   if(wo) warpFin(fin, wo, !!n);
   /* 그냥 넘긴 결과는 그 일이 끝난 것으로 본다(다시 위급 판정을 하지 않는다) */
@@ -5710,7 +5838,7 @@ function ruleBio(){
 function lastStatus(){
   const g = shownGauges().map(k => ({k, ko:GAUGE_KO[k], v:Math.round(S[k] || 0), pct:Math.max(0, Math.min(100, k === "sp" ? (S.sp + 45) / 90 * 100 : (S[k] || 0)))}));
   return {gauges:g, stats:STAT_KEYS.map(k => [STAT_KO[k], eff(k)]), ahn:S.ahn, time:timeText(), loc:S.location || "", equip:equipText(),
-    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : ""].filter(Boolean)};
+    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : "", S.distorted ? "뒤틀림" : ""].filter(Boolean)};
 }
 let ending = false;
 async function endLife(){
@@ -5941,7 +6069,8 @@ function relive(id){
 function showMenu(){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(S && !S.dead && !S.archived) save();
-  document.body.classList.remove("in-game", "show-status", "warp");
+  document.body.classList.remove("in-game", "show-status", "warp", "distort");
+  try{ renderDistort(); }catch(e){}
   $("#menu").hidden = false; $("#game").hidden = true; $("#btnMenu").hidden = true;
   renderMenu();
 }
@@ -6314,6 +6443,7 @@ function sfx(kind, opt = {}){
     case "block": tone(620, 0.25, {type:"triangle", vol:0.2, slide:0.9}); tone(930, 0.18, {type:"sine", vol:0.1}); noiseHit(0.08, {f0:3000, f1:1500, vol:0.2}); break;
     case "miss": noiseHit(0.25, {f0:1200, f1:300, q:1, vol:0.15}); break;
     case "hurt": tone(90, 0.35, {type:"sawtooth", vol:0.45, slide:0.5}); tone(180, 0.2, {type:"square", vol:0.12, slide:0.5}); noiseHit(0.2, {f0:900, f1:150, type:"lowpass", vol:0.6}); break;
+    case "whisper": for(let i = 0; i < 8; i++) noiseHit(0.5, {f0:2400 + Math.random() * 2000, f1:1200, q:6, vol:0.08, at:i * 0.35}); tone(110, 3.2, {type:"sine", vol:0.12, slide:0.8}); break;
     case "shot": noiseHit(0.09, {f0:3000, f1:400, type:"lowpass", vol:0.9}); tone(140, 0.12, {vol:0.4, slide:0.4}); if(hit) noiseHit(0.05, {f0:2500, f1:1800, q:4, vol:0.25, at:0.08}); break;
     case "explode": noiseHit(0.9, {f0:1200, f1:60, type:"lowpass", vol:1}); tone(55, 0.8, {vol:0.7, slide:0.4}); break;
     case "elec": for(let i = 0; i < 6; i++) tone(1800 + Math.random() * 2400, 0.03, {type:"square", vol:0.07, at:i * 0.04}); noiseHit(0.25, {f0:6000, f1:3000, q:2, vol:0.2}); break;
