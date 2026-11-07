@@ -1006,11 +1006,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0320"></script>
+<script src="parts.js?v=20261108-0330"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-0320";
+const BUILD = "20261108-0330";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2769,6 +2769,18 @@ function inputDays(t){
     if(/반년/.test(t)) d = 180; else if(/몇 ?년/.test(t)) d = 1095; else if(/하루/.test(t)) d = 1; else d = wordDays(t);
   }
   return Math.max(0, Math.min(3650, d));
+}
+/* 기간 동안 누구와 호감을 쌓았는지: 입력에 아는 사람(가족 포함)의 이름이 있고, 가까이 지내는 행동이면 그 사람 */
+const BOND_RE = /(친해|친하게|호감|어울|같이 지내|함께 지내|함께 시간|같이 시간|시간을 보내|시간을 보낸|사이를 좁|정을 쌓|가까워|챙겨|챙긴|챙기|돌봐|돌보|돌본|간호|보살피|보살핀|도와주|데이트|연애|사귀|자주 만나|만나며|놀며|같이 놀|함께 놀|같이 일|함께 일|대화를 나누|이야기를 나누|편지를 주고)/;
+function bondTarget(t){
+  t = String(t || "");
+  if(!BOND_RE.test(t)) return null;
+  const names = Object.keys(S.npcs || {}).concat(S.family.filter(f => f.alive && f.name).map(f => f.name));
+  /* 전체 이름 먼저, 없으면 이름의 뒷부분(서진이·서진아·마르코 등) */
+  let hit = names.find(n => t.includes(n));
+  if(!hit) hit = names.find(n => { const parts = n.split(/\s+/); const given = parts.length > 1 ? parts[0] : n.slice(-2); return given.length >= 2 && t.includes(given); });
+  if(!hit){ const rel = /(엄마|어머니)/.test(t) ? "어머니" : /(아빠|아버지)/.test(t) ? "아버지" : /(남편|아내|배우자)/.test(t) ? "배우자" : null; const f = rel && S.family.find(x => x.rel === rel && x.alive); if(f) hit = f.name; }
+  return hit || null;
 }
 /* 오랫동안 무언가를 익히거나 일한 경우: 어느 능력치가 자라는지 */
 function trainStat(t, results){
@@ -5486,6 +5498,18 @@ async function doAction(input, opt = {}){
     const ok = results.some(r => r.auto || r.cls === "ok" || r.cls === "crit");
     if(want > 0 && ok){
       if(!(fin.days >= want)) fin.days = want;
+      /* 그동안 누군가와 가까이 지냈으면 그 사람의 호감이 기간만큼 쌓인다 */
+      const who = bondTarget(actInput || input);
+      if(who){
+        const crit = results.some(r => r.cls === "crit");
+        const g = Math.min(40, Math.round(6 * Math.log2(1 + want / 3) * (crit ? 1.3 : 1)));
+        const fam = S.family.find(f => f.name === who);
+        if(fam){ if(fam.aff == null) fam.aff = 30; fam.aff = clamp(fam.aff + g, -100, 100); }
+        else { const r = personOf(who); if(r){ r.aff = clamp((r.aff || 0) + g, -100, 100); r.last = S.days + want; r.n = (r.n || 0) + 1; } }
+        const aff = fam ? fam.aff : (S.npcs[who] || {}).aff || 0;
+        log({t:"sys", text:`♥ ${who}와(과) ${dayLabel(want)} 동안 가까이 지냈다. 호감 +${g} (지금 ${aff}, ${affWord(aff)})`});
+        if(!fam && aff >= 40 && !S.tags.some(t => t.startsWith("인연:" + who))){ S.tags.push(`인연:${who}/친구`); log({t:"sys", text:`${who}와(과) 인연을 맺었다.`}); }
+      }
       const tr = trainStat(actInput || input, results);
       if(tr){
         const crit = results.some(r => r.cls === "crit");
