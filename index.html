@@ -892,10 +892,10 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1955"></script>
+<script src="parts.js?v=20261107-2005"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1955";
+const BUILD = "20261107-2005";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1626,7 +1626,7 @@ const STAT_KO = {str:"힘",def:"방어력",spd:"속도",int:"지력"};
 const GAUGE_KEYS = ["hp","sp","en","rep"];
 const GAUGE_KO = {hp:"체력",sp:"정신력",en:"기력",rep:"평판",blood:"혈액"};
 /* 혈귀는 혈액 게이지가 하나 더 보인다 */
-const shownGauges = () => (S && S.tags && S.tags.some(t => /^혈귀:권속/.test(t))) ? GAUGE_KEYS.concat("blood") : GAUGE_KEYS;
+const shownGauges = () => (S && S.tags && S.tags.some(t => /^혈귀:권속/.test(t)) && (!S.bornKindred || S.kindredAwake)) ? GAUGE_KEYS.concat("blood") : GAUGE_KEYS;
 /* 정신력은 0이 평온, -45~45. 나머지 게이지는 0~100 */
 const GMIN = k => k === "sp" ? -45 : 0, GMAX = k => k === "sp" ? 45 : 100;
 const gclamp = (k, v) => clamp(v, GMIN(k), GMAX(k));
@@ -2379,7 +2379,7 @@ const statRel = v => v >= 35 ? "특색급" : v >= 26 ? "이름난 해결사급" 
 const isKindred = () => !!(S && S.tags && S.tags.some(t => /^혈귀:권속/.test(t)));
 function identityText(){
   const out = [];
-  if(isKindred()) out.push(`혈귀의 권속(늙지 않음, 사람의 피에 굶주림, 물을 두려워함, 피로 무기를 빚을 수 있음${S.kindredAwake ? ", 아기 때 받은 수혈에 섞인 혈귀의 피로 다섯 살에 깨어남" : ""}) · 혈액 ${S.blood == null ? 60 : Math.round(S.blood)}/100${S.blood <= 0 ? " — 피가 바닥나 시들고 있다(약해지고 이성이 흐려진다)" : S.blood < 30 ? " — 굶주려 목이 탄다" : ""}`);
+  if(isKindred()) out.push(`혈귀의 권속(늙지 않음, 사람의 피에 굶주림, 물을 두려워함, 피로 무기를 빚을 수 있음${S.bornKindred ? ", 혈귀로 태어남" : ""})` + (S.bornKindred && !S.kindredAwake ? " · 아직 어려서 갈증이 없다" : ` · 혈액 ${S.blood == null ? 60 : Math.round(S.blood)}/100${S.blood <= 0 ? " — 피가 바닥나 시들고 있다(약해지고 이성이 흐려진다)" : S.blood < 30 ? " — 굶주려 목이 탄다" : ""}`));
   if(S.ego) out.push(`에고 「${S.ego}」를 발현했다(뒤틀림을 이겨낸 사람)`);
   syncCareers();
   for(const t of Object.keys(S.careers)) out.push(`${careerLabel(t)}(실적 ${S.careers[t].merit}/100)`);
@@ -2618,9 +2618,9 @@ function ruleBirth(){
   const wl = nest ? ["둥지에서도 가장 싼 구역의 비좁은 집이다.", "둥지 안이지만 살림은 빠듯하다.", "", "집에는 필요한 것이 다 갖춰져 있다.", "집은 넓고, 일하는 사람도 따로 있다."][w]
     : ["집에는 먹을 것조차 넉넉하지 않다.", "", "뒷골목치고는 형편이 나쁘지 않은 집이다.", "뒷골목에서는 보기 드물게 살림이 넉넉한 집이다.", "뒷골목에서 손꼽히게 잘사는 집이다. 그래도 둥지와는 비교가 안 된다."][w];
   if(wl) n.narration = n.narration.replace("\n\n이름은", " " + wl + "\n\n이름은");
-  if(S.bornKindred) n.narration = n.narration.replace("\n\n이름은", " 숨이 약하던 당신은 태어나자마자 급히 수혈을 받았다.\n\n이름은");
+  if(S.bornKindred) n.narration = n.narration.replace("\n\n이름은", " 당신의 살결은 유난히 차갑고, 눈동자에는 붉은빛이 어린다. 당신은 혈귀로 태어났다.\n\n이름은");
   n.location = `${corpOf(S.district)} 구역 ${nest ? (w >= 3 ? "둥지 저택" : "둥지 병원") : (w >= 3 ? "뒷골목 2층집" : "뒷골목 단칸방")}`;
-  n.tag_add = `출신:${nest ? "둥지" : "뒷골목"}, 형편:${WEALTH_KO[wealthOf()]}`;
+  n.tag_add = `출신:${nest ? "둥지" : "뒷골목"}, 형편:${WEALTH_KO[wealthOf()]}` + (S.bornKindred ? ", 혈귀:권속(타고남)" : "");
   return n;
 }
 
@@ -2901,7 +2901,7 @@ function applyNarr(n, forcedDays, shownDays){
   const deltas = [];
   for(const k of GAUGE_KEYS) if(n[k]) deltas.push({k:GAUGE_KO[k], v:n[k]});
   if(n.ahn) deltas.push({k:"안", v:n.ahn});
-  if(n.blood && isKindred()){ ensureBlood(); const b0 = S.blood; S.blood = clamp(Math.round(S.blood + n.blood), 0, 100); if(S.blood !== b0) deltas.push({k:"혈액", v:S.blood - b0}); if(S.blood >= 30) S.bloodWarn = 0; }
+  if(n.blood && isKindred() && (!S.bornKindred || S.kindredAwake)){ ensureBlood(); const b0 = S.blood; S.blood = clamp(Math.round(S.blood + n.blood), 0, 100); if(S.blood !== b0) deltas.push({k:"혈액", v:S.blood - b0}); if(S.blood >= 30) S.bloodWarn = 0; }
   for(const k of STAT_KEYS) if(n[k]) deltas.push({k:STAT_KO[k], v:n[k]});
   const days = forcedDays != null ? forcedDays : n.days;
   if(days > 0 || shownDays > 0) deltas.push({k:"경과", v:days || shownDays, days:true});
@@ -3755,23 +3755,23 @@ function splitSpeech(input){
 /* ───────── 혈귀 ─────────
    설정: 혈귀는 사람의 피만으로 갈증을 채운다. 피가 모자라면 이성을 잃고 시들며, 넉넉하면 강해진다.
    혈액바(라만차랜드 '이발사'의 압축 혈액 막대)는 묽고, 혈액팩은 오래 두면 신선하지 않다.
-   게임에서는 아주 드물게 '아기 때 받은 수혈에 혈귀의 피가 섞여' 다섯 살에 깨어나는 경우를 둔다. */
-function ensureBlood(){ if(isKindred() && S.blood == null) S.blood = 60; }
+   게임에서는 아주 드물게 혈귀로 태어나고, 다섯 살부터 목이 마르기 시작한다. */
+function ensureBlood(){ if(isKindred() && S.blood == null && (!S.bornKindred || S.kindredAwake)) S.blood = 60; }
 function awakenKindred(){
   S.kindredAwake = true;
-  if(!S.tags.includes("혈귀:권속")) S.tags.push("혈귀:권속");
+  if(!isKindred()) S.tags.push("혈귀:권속(타고남)");
   S.blood = 45;
   if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); try{ updateFlowUI(); }catch(e){} }
   const mom = S.family.find(f => f.rel === "어머니" && f.alive) || S.family.find(f => f.alive);
-  log({t:"narr", text:`다섯 살이 된 어느 날, ${mom ? mom.name + "의" : "누군가의"} 손끝이 종이에 살짝 베인다. 맺힌 붉은 한 방울에서 눈을 뗄 수가 없다. 목이 바싹 탄다. 입안에서 무언가 뾰족한 것이 혀에 닿는다.\n\n아기 때 받은 그 수혈. 그 피에 혈귀의 피가 섞여 있었다는 것을, 당신의 몸이 먼저 알아차렸다.`,
+  log({t:"narr", text:`다섯 살이 된 어느 날, ${mom ? mom.name + "의" : "누군가의"} 손끝이 종이에 살짝 베인다. 맺힌 붉은 한 방울에서 눈을 뗄 수가 없다. 목이 바싹 탄다. 입안에서 무언가 뾰족한 것이 혀에 닿는다.\n\n물을 마셔도, 밥을 먹어도 가시지 않는 갈증. 혈귀로 태어난 몸이 처음으로 피를 원하기 시작했다.`,
     deltas:[{k:"돌발", v:0, event:true}], options:["엄마에게 말한다", "입을 꾹 다물고 숨긴다", "방으로 뛰어간다"]});
-  log({t:"sys", text:"혈귀로 깨어났다. 이제 혈액 게이지가 보인다. 혈액바나 혈액팩, 사람의 피를 마셔야 버틸 수 있다. 피가 바닥나면 시든다."});
-  chron("혈귀로 깨어났다");
+  log({t:"sys", text:"목마름이 시작되었다. 이제 혈액 게이지가 보인다. 혈액바나 혈액팩, 사람의 피를 마셔야 버틸 수 있다. 피가 바닥나면 시든다."});
+  chron("혈귀의 갈증이 시작되었다");
   S.awaitEvent = true; S.urgent = false;
   sfx("event");
 }
 function bloodDay(){
-  if(!isKindred()) return;
+  if(!isKindred() || (S.bornKindred && !S.kindredAwake)) return;
   ensureBlood();
   const before = S.blood;
   S.blood = Math.max(0, S.blood - (ageY() < 13 ? 2 : 3));
@@ -4134,9 +4134,9 @@ async function birth(){
   let n = null;
   try{
     n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
-      user: plainContext() + "\n\n방금 주인공이 태어났다. 위 가족(부모)이 등장하는, 태어나는 순간의 장면을 써라. 집안 형편에 맞는 집과 살림으로 그려라. 아기는 말을 못 하고 울거나 꼼지락거릴 뿐이다." + (S.bornKindred ? " 아기는 태어나자마자 숨이 약해 급히 수혈을 받았다는 사실을 한 문장으로 넣어라(혈귀라는 말은 하지 마라)." : "")}
+      user: plainContext() + "\n\n방금 주인공이 태어났다. 위 가족(부모)이 등장하는, 태어나는 순간의 장면을 써라. 집안 형편에 맞는 집과 살림으로 그려라. 아기는 말을 못 하고 울거나 꼼지락거릴 뿐이다." + (S.bornKindred ? " 아기는 혈귀로 태어났다(아직 갈증은 없다). 그 낌새를 한 문장 넣어라(예: 유난히 차가운 살결, 붉은 눈빛)." : "")}
       : ({sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
-      user: stateSummary(local) + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [가족]의 부모를 그대로 등장시키고, [집안 형편]에 맞는 집과 살림을 그려라(태그는 게임이 정하니 tag_add는 \"\")." + (S.bornKindred ? " 아기는 태어나자마자 숨이 약해 급히 수혈을 받았다(이 사실만 짧게, 혈귀라는 말은 절대 하지 마라)." : "") + " spouse, family_dead는 \"\", child_born은 false. 변화는 모두 \"없음\", days도 \"없음\"."}), 700, NARR_SCHEMA, false, done.live), 0);
+      user: stateSummary(local) + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [가족]의 부모를 그대로 등장시키고, [집안 형편]에 맞는 집과 살림을 그려라(태그는 게임이 정하니 tag_add는 \"\")." + (S.bornKindred ? " 아기는 혈귀로 태어났다(아직 갈증은 없고 다섯 살부터 목이 마르기 시작한다). 그 낌새를 한 문장 넣어라(예: 유난히 차가운 살결, 붉은 눈빛)." : "") + " spouse, family_dead는 \"\", child_born은 false. 변화는 모두 \"없음\", days도 \"없음\"."}), 700, NARR_SCHEMA, false, done.live), 0);
     if(n){ const rb = ruleBirth(); n.location = rb.location; if(n.plain && !n.options.length) n.options = ruleOptions(); n.tag_add = rb.tag_add; }
   }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message + (aiOn() ? "" : " 규칙 기반으로 진행합니다.")}); }
   done();
@@ -5903,7 +5903,7 @@ async function createLife(){
   /* 출생 환경은 고르지 않는다: 태어난 구역의 둥지 비율에 따라 정해진다 */
   const origin = rand01() < nestP(district) ? "nest" : "back";
   const wealth = rollWealth(origin, district);
-  /* 아주 드물게: 태어나자마자 받은 수혈에 혈귀의 피가 섞여 있었다. 다섯 살에 깨어난다 */
+  /* 아주 드물게 혈귀로 태어난다. 다섯 살부터 목이 마르기 시작한다 */
   const bornKindred = rand01() < 0.02;
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
