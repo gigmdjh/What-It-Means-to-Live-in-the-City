@@ -231,6 +231,11 @@ body.flowing #log{scroll-behavior:auto}
 .quick .btn{padding:4px 10px;font-size:.82rem}
 .inrow{display:flex;gap:8px;align-items:stretch;min-width:0;width:100%}
 .inrow .btn{flex:none;white-space:nowrap;padding-inline:16px}
+.inbox{flex:1 1 0;min-width:0;width:0;position:relative;display:flex}
+.inbox textarea{padding-right:44px!important}
+.quote-btn{position:absolute;right:6px;bottom:6px;width:32px;height:28px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--gold, #d4a93c);font:700 15px/1 Georgia,serif;cursor:pointer;padding:0}
+.quote-btn:hover{border-color:var(--gold, #d4a93c)}
+.e-me .say{color:var(--gold, #d4a93c)}
 .inrow textarea{flex:1 1 0;min-width:0;width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:none;height:64px}
 
 /* 설정 */
@@ -448,6 +453,19 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 @keyframes fxDrop{0%{opacity:0;transform:translate(0,0) scale(.3)}15%{opacity:1;transform:translate(calc(var(--dx)*.3),calc(var(--dy)*.1)) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.9)}}
 @keyframes fxShake{0%,100%{transform:translate(0,0)}20%{transform:translate(calc(var(--shake)*-1),calc(var(--shake)*.5))}40%{transform:translate(var(--shake),calc(var(--shake)*-.4))}60%{transform:translate(calc(var(--shake)*-.6),calc(var(--shake)*.3))}80%{transform:translate(calc(var(--shake)*.4),0)}}
 @media (prefers-reduced-motion: reduce){.fx-drop,.fx-burst,.fx-ring,.fx-pop{animation-duration:.01s}}
+.fold{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:left}
+.fold .label{margin:0}.fold-n{font-size:.75rem;color:var(--muted)}.fold-arrow{margin-left:auto;transition:transform .15s}
+.fold[aria-expanded="true"] .fold-arrow{transform:rotate(180deg)}
+.fold + .tags{margin-top:8px}
+.inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.inv-it{display:flex;flex-direction:column;gap:2px;text-align:left;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:inherit;cursor:pointer;font:inherit}
+.inv-it.on{border-color:var(--gold, #d4a93c);box-shadow:0 0 0 1px var(--gold, #d4a93c) inset}
+.inv-it b{font-size:.86rem}.inv-it span{font-size:.72rem;color:var(--muted)}
+.inv-it .ego{font:700 .68rem var(--f-mono)}
+.inv-sec{grid-column:1/-1;font-size:.72rem;color:var(--muted);margin-top:4px}
+.hname-wrap{display:flex;flex-direction:column;min-width:0}
+.htitle{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:.72rem;font-weight:700;letter-spacing:.02em;margin:2px 0 0}
+.htitle span{padding:1px 6px;border-radius:4px;border:1px solid currentColor}
 .abno-g{font:700 .72rem var(--f-mono)!important;letter-spacing:.04em}
 </style>
 </head>
@@ -515,7 +533,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 <main class="game" id="game" hidden>
   <div class="hud" id="hud">
     <div class="yearbar" id="yearBarH" aria-label="올해 흐름"></div>
-    <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><b id="hName"></b><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
+    <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><span class="hname-wrap"><b id="hName"></b><span class="htitle" id="hTitle" hidden></span></span><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
     <div class="hud-g" id="hGauges"></div>
     <div class="hud-career" id="hCareer" hidden></div>
     <div class="hud-stats" id="hStats"></div>
@@ -564,20 +582,16 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <div class="family" id="sBonds"></div>
     </div>
     <div class="card">
-      <div class="label">추출 E.G.O 무기</div>
-      <div class="family" id="sEgo"></div>
-    </div>
-    <div class="card">
-      <div class="label">만난 원작 인물</div>
-      <div class="family" id="sMet"></div>
-    </div>
-    <div class="card">
       <div class="label">마주친 환상체</div>
       <div class="family" id="sAbnos"></div>
     </div>
-    <div class="card">
-      <div class="label">기록</div>
-      <div class="tags" id="sTags"></div>
+    <div class="card full">
+      <button class="fold" type="button" id="btnTagsFold" aria-expanded="false"><span class="label">기록</span><span class="fold-n" id="sTagsN"></span><span class="fold-arrow">▾</span></button>
+      <div class="tags" id="sTags" hidden></div>
+    </div>
+    <div class="card full">
+      <div class="label">인벤토리 · 장착할 무기·방어구를 누르세요</div>
+      <div class="inv" id="sInv"></div>
     </div>
   </aside>
   <section class="play">
@@ -589,7 +603,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
         <span class="note" id="flowDate"></span>
       </div>
       <div class="inrow">
-        <textarea id="actInput" maxlength="400" placeholder="무엇을 하나요? 여러 행동을 한 번에 적어도 됩니다. (Enter 전송, Shift+Enter 줄바꿈)"></textarea>
+        <div class="inbox">
+          <textarea id="actInput" maxlength="400" placeholder="무엇을 하나요? 여러 행동을 한 번에 적어도 됩니다. (Enter 전송, Shift+Enter 줄바꿈)"></textarea>
+          <button class="quote-btn" type="button" id="btnQuote" title="말하기: 따옴표 안은 주인공이 하는 말, 밖은 행동" aria-label="말하기 따옴표 넣기">“ ”</button>
+        </div>
         <button class="btn primary" type="submit" id="btnAct">행동</button>
       </div>
     </form>
@@ -817,11 +834,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1818"></script>
+<script src="parts.js?v=20261107-1858"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-1818";
+const BUILD = "20261107-1858";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -847,7 +864,8 @@ const JUDGE_RULES = `
 너는 이 세계관의 텍스트 RPG 판정관이다. 서술은 하지 않고, 플레이어가 하려는 행동의 난이도만 정한다.
 
 [할 일]
-- 플레이어 입력에 실제로 적힌 행동만 나눈다(최대 3개). 플레이어가 적지 않은 행동(주변 살피기, 위험물 확인, 감시자·흔적 찾기, 경계하기 등)을 덧붙이거나 지어내지 마라.
+- 먼저 [최근 상황]의 바로 직전 장면을 읽고, 입력이 그 장면의 누구·무엇에 대한 것인지 파악한다.
+- 플레이어 입력에 실제로 적힌 행동만 나눈다(최대 3개). 따옴표 안의 말은 판정하지 않는다. 플레이어가 적지 않은 행동(주변 살피기, 위험물 확인, 감시자·흔적 찾기, 경계하기 등)을 덧붙이거나 지어내지 마라.
 - 받기·건네기·대답·인사·고마워하기·동의·거절·웃기처럼 위험도 실패도 없는 평범한 행동은 행동 하나로 두고 trivial: true.
 - 행동마다 가장 관련 있는 능력치(stat) 하나와 난이도(difficulty)를 말로 정한다. 숫자는 쓰지 마라.
 
@@ -881,8 +899,13 @@ const NARR_RULES = `
 - [때]의 시각(새벽·아침·낮·저녁·밤)과 계절·날씨를 자연스럽게 녹여라: 밝기, 사람들, 문 연 가게, 위험.
 - 구역은 날개 이름으로 부른다(예: 12구역은 'L사 구역', 23구역은 'W사 구역').
 
+[0. 맥락 먼저]
+- 쓰기 전에 [최근 상황]의 맨 아래(바로 직전 장면과 대사)를 읽고, 플레이어 입력이 그 장면의 누구·무엇에 대한 것인지 먼저 파악하라. '그거', '그 사람', '네', '받을게'처럼 짧은 입력은 직전 장면에서 가리키는 대상과 이어서 해석한다.
+- 직전 장면에서 이어지는 장소·사람·물건·시간을 그대로 이어 쓰고, 멋대로 다른 곳으로 옮기거나 새 인물을 끼워 넣지 마라.
+
 [3. 주인공은 플레이어의 것]
-- 플레이어가 입력하지 않은 행동·말·생각·감정을 플레이어가 한 것처럼 지어내지 마라. 플레이어의 대사도 쓰지 마라. 서술은 플레이어가 입력한 행동, 그 결과, 주변의 반응만.
+- 플레이어가 입력하지 않은 행동·말·생각·감정을 플레이어가 한 것처럼 지어내지 마라. 플레이어의 대사도 지어내지 마라. 서술은 플레이어가 입력한 행동, 그 결과, 주변의 반응만.
+- 플레이어 입력에서 따옴표("…") 안은 주인공이 실제로 한 말이다. 바꾸거나 덧붙이지 말고 그 말을 한 것으로 다루며, 상대는 그 말에 대답한다. 따옴표 밖은 행동이다.
 - 주인공을 '낯선 아이'·'소년' 같은 다른 호칭으로 바꿔 부르며 그 입으로 말하게 하지 마라.
 - 플레이어 대신 새 결정을 내리지 마라.
 
@@ -917,6 +940,8 @@ const NARR_RULES = `
 [8. 장면 정보 칸]
 - location: 장면이 끝난 현재 장소(짧게, "L사 구역 뒷골목"처럼).
 - options: 지금 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다".
+- outfit: 이 장면에서 주인공이 옷을 갈아입거나, 벗거나, 걸치거나, 옷이 찢기거나 젖어 바뀌었으면 지금 입은 옷차림 전체를 짧게("남색 코트, 흰 셔츠, 검은 치마"처럼 색+옷 이름을 쉼표로). 바뀌지 않았으면 "".
+- talk의 인물이 이 장면에서 옷을 갈아입었으면 그 talk 항목의 "outfit"에 그 인물의 새 옷차림을 같은 방식으로. 말하지 않은 인물이 옷을 바꿨으면 npc_outfit에 "이름/옷차림"(여럿이면 ;로). 없으면 "".
 - urgent: 지금 당장 대응해야 하는 위급한 순간(누가 공격해 온다, 쫓긴다, 불이 났다, 무언가 덮쳐 온다 등)으로 끝나면 true, 아니면 false.
 - shop: 플레이어가 공방·무기점·방어구점·의체 시술소 안에서 물건을 직접 고를 수 있는 상태로 끝나면 true(돌발 상황으로 들어오게 된 경우 포함). 찾아가다 실패했거나, 지나치기만 했거나, 습격·도둑질이거나, 아기·어린아이가 혼자 갈 수 없는 상황이면 false.
 
@@ -933,14 +958,15 @@ const NARR_RULES = `
 - 협회 지부에 들어가면 "협회:협회 이름", 남의 사무소에 들어가면 "소속 사무소:사무소 이름". 나오면 tag_remove.
 - 자기 사무소는 하나 협회 4급 이상만 차릴 수 있다. 성공하면 tag_add에 "사무소:새로 차림"만(이름은 플레이어가 짓는다). 사람을 고용하면 "고용:이름/역할"(예: "고용:한서진/해결사").
 
-반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","urgent":false,"shop":false,"merit":"없음","talk":[]}`;
+반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","urgent":false,"shop":false,"merit":"없음","outfit":"","npc_outfit":"","talk":[]}`;
 
 /* 기기 AI용 짧은 규칙: 폰에서는 프롬프트가 길면 읽는 데만 수십 초가 걸린다 */
 const NARR_RULES_LOCAL = `
 너는 텍스트 RPG 서술자다.
 [판정] 결과를 바꾸지 말고 그대로 그린다(대성공은 기대 이상, 대실패는 대가).
 [문체] 한국어, '당신' 2인칭, 현재형, 1~2문단(모두 3~5문장). 비유·시적 표현·줄표 없이 한 문장에 한 가지 일만. 설명 없는 기이한 현상을 지어내지 마라. 나이에 맞게.
-[주인공] 플레이어가 입력하지 않은 행동·말·생각·감정을 지어내지 마라(플레이어의 대사도 금지). 주인공을 '낯선 아이' 같은 다른 사람으로 바꿔 불러 말하게 하지 마라. 플레이어 대신 결정하지 마라.
+[맥락] 직전 장면과 대사를 먼저 읽고, 입력이 그 장면의 누구·무엇에 대한 것인지 이어서 해석하라.
+[주인공] 플레이어가 입력하지 않은 행동·말·생각·감정을 지어내지 마라(플레이어의 대사도 지어내지 마라). 따옴표 안은 주인공이 실제로 한 말이니 그대로 다룬다. 주인공을 '낯선 아이' 같은 다른 사람으로 바꿔 불러 말하게 하지 마라. 플레이어 대신 결정하지 마라.
 [장면의 끝] 보통은 반응해야 할 상황으로 끝내고, 마지막 문장은 '지금 무엇이 문제인지' 한 줄. 아무 반응 없이 넘겼다는 지시가 오면 일이 일단락된 조용한 상태로 끝낸다.
 [시간] 며칠·몇 달이 지났으면 음식·포장지 같은 자잘한 물건은 이미 없고 가벼운 상처는 아물었다. 지난 장면을 지금 일처럼 이어 쓰지 마라.
 [대사] 짧은 구어체 1~2문장. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말).
@@ -949,11 +975,14 @@ const NARR_RULES_LOCAL = `
 JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
 
 const SUM_RULES = `
-너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 이야기를 이어 갈 때 필요한 사실 위주로 한국어 2~3문장으로 요약하라(사람 이름, 관계, 사건, 약속, 빚, 부상, 장소). 꾸밈말 없이.
+너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 이야기를 이어 갈 때 필요한 사실만 한국어 2~4문장으로 요약하라.
+- 반드시 남길 것: 사람 이름과 주인공과의 관계, 누가 무엇을 했고 어떻게 끝났는지, 약속·빚·원한·은혜, 다친 곳, 얻거나 잃은 물건, 사는 곳·자주 가는 곳, 주인공이 품은 목표.
+- 버릴 것: 분위기 묘사, 날씨, 끝난 자잘한 일.
+- 아직 끝나지 않은 일(지켜야 할 약속, 갚을 빚, 쫓아오는 사람)은 "아직:"으로 따로 밝혀라. 꾸밈말 없이.
 반드시 JSON만 출력: {"summary":"요약"}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"},combat:{type:"boolean"}},required:["text","stat","difficulty","why","trivial","combat"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},merit:{type:"string"},time:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
 
 /* 계절 · 달력 */
@@ -1230,7 +1259,7 @@ const EGO_WEAPONS = [
 ];
 const EGO_BONUS = {ZAYIN:1, TETH:2, HE:3, WAW:4, ALEPH:5};
 const egoOf = n => EGO_WEAPONS.find(w => w[0] === n);
-const myEgo = () => (S.tags || []).filter(t => t.startsWith("에고 무기:")).map(t => egoOf(t.slice(6))).filter(Boolean);
+const myEgo = () => { const ids = [S.equip && S.equip.weapon].concat(S.inv || []).filter(Boolean); return EGO_WEAPONS.filter(w => ids.includes("ego:" + w[0]) || (S.tags || []).includes("에고 무기:" + w[0])); };
 function famousChance(y){ return y < 10 ? 0.01 : y < 20 ? 0.03 : 0.06; }
 function pickFamous(y){
   const met = S.met || [];
@@ -2105,20 +2134,22 @@ function repairJSON(t){
    그래서 기기 AI에게는 장면 글과 선택지만 받고, 수치는 주사위 결과로 게임이 정한다. */
 const NARR_PLAIN = `너는 소설가다. 아래 상황을 이어서, 한국어로 짧은 장면을 쓴다.
 [문체] '당신'으로 부르는 2인칭 현재형, 1~2문단, 모두 합쳐 3~5문장. 꾸밈 묘사는 줄이고 일어난 일과 지금 상황만. 비유·시적 표현·말줄임·줄표(—) 없이 한 문장에 한 가지 일만, 누가·어디서·무엇을 했는지 순서대로. 설명 없는 기이한 현상을 지어내지 마라. 주인공의 나이에 맞게.
-[주인공] 플레이어가 입력하지 않은 행동·말·생각·감정을 지어내지 마라(플레이어의 대사도 금지). 서술은 플레이어가 입력한 행동, 그 결과, 주변의 반응만. 주인공 대신 결정하지 마라.
+[맥락] 직전 장면과 대사를 먼저 읽고, 입력이 그 장면의 누구·무엇에 대한 것인지 이어서 해석하라.
+[주인공] 플레이어가 입력하지 않은 행동·말·생각·감정을 지어내지 마라(대사도 지어내지 마라). "주인공이 한 말"은 실제로 한 말이니 그대로 다루고 상대가 대답하게 하라. 서술은 플레이어가 입력한 행동, 그 결과, 주변의 반응만. 주인공 대신 결정하지 마라.
 [장면의 끝] 보통은 주인공이 반응해야 하는 순간에서 끝내고, 마지막 문장은 '지금 무엇이 문제인지' 한 줄(예: "문밖에서 누군가 문을 억지로 열려고 한다."). 아무 반응 없이 넘겼다는 지시가 오면 일이 정리된 조용한 상태로 끝낸다.
 [대사] 누군가 말을 하면 따로 한 줄에 「이름: "대사"」로 적는다(가족은 주어진 이름 그대로). 이 줄은 주인공이 아닌 다른 사람의 말만 적는다(주인공을 '낯선 아이' 같은 호칭으로 바꿔 쓰지 마라). 짧은 구어체 1~2문장, 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
 [형식] 글 맨 끝에 한 줄로 "선택지: 행동1 / 행동2 / 행동3"(각 12자 이내). 설명, 제목, 영어, 숫자 목록은 쓰지 않는다.`;
 function plainContext(){
   const y = ageY(), lines = [];
-  lines.push(`주인공: ${S.name}, ${S.gender}, ${y}세(${stage(y)}). 외모: ${S.look || "평범함"}.`);
+  lines.push(`주인공: ${S.name}, ${S.gender}, ${y}세(${stage(y)}). 외모: ${curLook() || "평범함"}.`);
   lines.push(`곳: ${corpOf(S.district)} 구역 ${S.location || originKo(S.origin)}. 때: ${timeText()}. 집안 형편: ${wealthText()}.`);
   if(S.family.length) lines.push(`가족: ${familyText()}.`);
   const eqT = equipText(); if(eqT && eqT !== "없음") lines.push(`지닌 것: ${eqT}.`);
+  if((S.inv || []).length) lines.push(`가방: ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")}.`);
   const recent = S.log.filter(e => e.t === "narr").slice(-1);
   if(recent.length){ const gap = recent[0].day != null ? S.days - recent[0].day : 0;
     if(gap >= 2) lines.push(`직전 장면은 ${agoText(gap)} 일이다. 그때의 자잘한 물건·사람·기분은 이미 지나갔다. 지금은 그 뒤의 새 장면이다.`);
-    else lines.push(`직전 장면: …${recent[0].text.slice(-220)}`); }
+    else { lines.push(`직전 장면: …${recent[0].text.slice(-260)}`); const tk = (recent[0].talk || []).slice(-2); if(tk.length) lines.push(`직전 대사: ${tk.map(t => `${t.who}: "${t.say}"`).join(" ")}`); } }
   return lines.join("\n");
 }
 function parsePlain(txt){
@@ -2275,11 +2306,12 @@ function identityText(){
 }
 /* 며칠 전 → 사람 말로 */
 function durText(d){ return d < 7 ? `${d}일` : d < 30 ? `${Math.round(d / 7)}주` : d < 365 ? `${Math.round(d / 30)}달` : `${Math.floor(d / 365)}년`; }
-function agoText(d){ return durText(d) + " 전"; }
+function agoText(d){ return d <= 0 ? "오늘" : durText(d) + " 전"; }
 function stateSummary(local){
   const lines = [];
   lines.push(`[캐릭터] 이름 ${S.name} / 성별 ${S.gender}`);
   lines.push(`[외모(플레이어가 쓴 글 그대로)] ${S.look || "특별한 설명 없음"}`);
+  if(S.outfit) lines.push(`[지금 입은 옷] ${S.outfit} (외모 글의 옷 대신 이걸 입고 있다)`);
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
@@ -2288,6 +2320,7 @@ function stateSummary(local){
   lines.push(`[소지금] ${fmt(S.ahn)}안 [집안 형편] ${wealthText()}` + (allowanceNow() ? ` (부모에게 한 달 용돈 ${fmt(allowanceNow())}안)` : ""));
   lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}(${statRel(eff(k))})`).join(", "));
   lines.push(`[장비] ${equipText()}`);
+  if((S.inv || []).length) lines.push(`[가방] ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")} (갈아 낄 수 있는 무기·방어구)`);
   lines.push(`[가족] ${familyText()}`);
   const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => t.slice(3));
   if(bonds.length) lines.push(`[인연] ${bonds.slice(-8).join(", ")} (이 사람들이 가끔 다시 등장하면 좋다)`);
@@ -2302,13 +2335,21 @@ function stateSummary(local){
     if(near.length) lines.push(`[최근 만난 원작 인물] ${near.map(famousLine).join(" / ")}`);
     const eg = myEgo(); if(eg.length) lines.push(`[지닌 추출 E.G.O 무기] ${eg.map(w => `${w[0]}(${w[1]})`).join(", ")}. 강하지만 오래 쓰면 환상체의 목소리에 잠식될 수 있다(정신력 소모).`); }
   const T = PROMPT_TIGHT;
-  const ltm = T >= 3 ? [] : S.ltm.slice(local ? (T >= 2 ? -1 : -2) : -6);
+  /* 지금 장면과 관련된 옛 기억 + 가장 최근 기억 */
+  const q = ((lastNarr() || {}).text || "") + " " + ((S.log.filter(e => e.t === "me").slice(-1)[0] || {}).text || "");
+  const recentL = S.ltm.slice(local ? (T >= 2 ? -1 : -2) : -4);
+  const relL = local ? [] : relevantMem(S.ltm.slice(0, -4), q, 3);
+  const ltm = T >= 3 ? [] : relL.map(m => "(관련된 옛일) " + m).concat(recentL);
   if(ltm.length) lines.push("[장기 기억]\n" + ltm.map(m => "- " + m).join("\n"));
   const stm = T >= 3 ? [] : S.stm.slice(local ? -1 : -3);
   if(stm.length) lines.push("[단기 기억]\n" + stm.map(m => "- " + m).join("\n"));
-  const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -6);
+  if(!local || T < 2){ const kp = knownPeopleText(local ? 3 : 8); if(kp) lines.push("[아는 사람] (이름이 같으면 같은 사람이다. 관계와 마지막 일을 이어서 그려라) " + kp); }
+  if(!local && (S.chron || []).length) lines.push("[인생 연표] " + S.chron.slice(-14).map(c => `${Math.floor(c.d / 365)}세 ${c.t}`).join(" / "));
+  const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -10);
   const cut = local ? [400, 260, 160, 120][T] : 900;
-  if(recent.length) lines.push("[최근 상황]\n" + recent.map(e => { const ago = e.day != null ? S.days - e.day : 0; return (ago >= 2 ? `(${agoText(ago)}) ` : "") + (e.t === "me" ? "플레이어: " : "서술: ") + (e.text.length > cut ? "…" + e.text.slice(-cut) : e.text); }).join("\n"));
+  /* 서술마다 그때 누가 무슨 말을 했는지도 같이(맥락: '그거', '그 사람'이 무엇인지) */
+  const talkTxt = e => (e.talk || []).length ? " / 대사: " + e.talk.map(t => `${t.who}: "${t.say}"`).join(" ") : "";
+  if(recent.length) lines.push("[최근 상황] (위가 오래된 것, 맨 아래가 바로 직전)\n" + recent.map(e => { const ago = e.day != null ? S.days - e.day : 0; return (ago >= 2 ? `(${agoText(ago)}) ` : "") + (e.t === "me" ? "플레이어: " : "서술: ") + (e.text.length > cut ? "…" + e.text.slice(-cut) : e.text) + (e.t === "narr" && !local ? talkTxt(e) : ""); }).join("\n"));
   return lines.join("\n");
 }
 
@@ -2371,7 +2412,7 @@ function rollCheck(a){
   if(a.stat !== "int" && yy >= 60 && !isKindred()) mods.push({label:"노쇠", v:-Math.min(3, Math.floor((yy - 50) / 10))});
   if(S.hp < 25) mods.push({label:"부상", v:-2});
   /* 추출 E.G.O 무기: 싸울 때 가장 높은 등급만큼 보탠다 */
-  if(a.combat && a.stat !== "int"){ const eg = myEgo(); if(eg.length){ const best = eg.reduce((x, w) => EGO_BONUS[w[1]] > EGO_BONUS[x[1]] ? w : x); mods.push({label:best[0], v:EGO_BONUS[best[1]]}); } }
+  /* 추출 E.G.O 무기는 장착하면 무기 능력치로 반영된다 */
   const total = d + b + mods.reduce((s, m) => s + m.v, 0);
   let tier, cls;
   if(d === 20 || total >= a.dc + 10){ tier = "대성공"; cls = "crit"; }
@@ -2387,6 +2428,8 @@ function normalizeNarr(j, statCap){
   if(!j || typeof j.narration !== "string" || !j.narration.trim()) return null;
   const n = blankNarr(j.narration.trim().slice(0, 4000));
   if(typeof j.urgent === "boolean" || j.urgent === "true" || j.urgent === "false") n.urgent = j.urgent === true || j.urgent === "true";
+  if(typeof j.outfit === "string" && j.outfit.trim() && !/^(없음|그대로|변화 ?없음)$/.test(j.outfit.trim())) n.outfit = j.outfit.trim().slice(0, 80);
+  if(typeof j.npc_outfit === "string" && j.npc_outfit.trim() && !/^(없음)$/.test(j.npc_outfit.trim())) n.npcOutfit = j.npc_outfit.trim().slice(0, 200);
   for(const k of GAUGE_KEYS) n[k] = num(wordAmount(j[k], k === "rep" ? "rep" : "gauge"), -60, 60);
   for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")), -statCap, statCap);
   n.ahn = num(wordAmount(j.ahn, "ahn"), -1e10, 1e10);
@@ -2403,7 +2446,7 @@ function normalizeNarr(j, statCap){
   n.merit = j.merit == null ? 0 : num(wordAmount(j.merit, "gauge"), -30, 30);
   n.talk = (Array.isArray(j.talk) ? j.talk : []).filter(t => t && t.who && t.say).slice(0, 4).map(t => ({
     who:String(t.who).slice(0, 20).trim(), say:String(t.say).replace(/^["“”']+|["“”']+$/g, "").slice(0, 200).trim(),
-    act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : ""}));
+    act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : "", outfit:/^(없음|)$/.test(String(t.outfit || "").trim()) ? "" : String(t.outfit).slice(0, 80).trim()}));
   n.plain = !!j._plain;
   return n;
 }
@@ -2513,6 +2556,8 @@ function applyTags(add, remove){
     /* 추출 E.G.O 무기는 지닌 인물을 만났을 때만 얻을 수 있다 */
     if(a.startsWith("에고 무기:")){ const w = egoOf(a.slice(6).trim()); if(!w || !(S.met || []).some(m => m.name === w[3])) continue; }
     S.tags.push(a); S.tagAt[a] = S.days; changed.push("+" + a);
+    if(a.startsWith("에고 무기:")) grantItem("ego:" + a.slice(6).trim(), true);
+    if(/^(인연|사망|소속|자격|조직|견습|공무원|협회|소속 사무소|사무소|고용|혈귀|토벌|에고 무기|환상체 제압|빚|부상)/.test(a)) chron(a);
   }
   /* 오래된 태그부터 지우되 추출 E.G.O 무기는 남긴다 */
   while(S.tags.length > 24){ const i = S.tags.findIndex(t => !t.startsWith("에고 무기:")); if(i < 0) break; S.tags.splice(i, 1); }
@@ -2601,9 +2646,10 @@ function isPlayerTalk(t){
 /* 말하는 사람을 기억해 두고(외모·성별) 그림에 쓴다. 가족이면 가족 정보를 쓴다 */
 function registerSpeaker(t){
   const fam = S.family.find(f => f.name && (f.name === t.who || t.who.includes(f.name) || (f.rel && t.who === f.rel) || (t.who === "엄마" && f.rel === "어머니") || (t.who === "아빠" && f.rel === "아버지")));
-  if(fam) return {who:fam.name, rel:fam.rel, say:t.say, act:t.act || "", look:fam.look || "", gender:fam.gender, age:famAge(fam)};
+  const OF = S.outfits || {};
+  if(fam) return {who:fam.name, rel:fam.rel, say:t.say, act:t.act || "", look:lookWithOutfit(fam.look || "", OF[fam.name] || OF[t.who]), gender:fam.gender, age:famAge(fam)};
   const cu = customLookOf(t.who);
-  if(cu) return {who:t.who, say:t.say, act:t.act || "", look:cu.look, gender:cu.gender, age:cu.age || 28, seed:cu.seed};
+  if(cu) return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(cu.look, OF[t.who]), gender:cu.gender, age:cu.age || 28, seed:cu.seed};
   if(!S.npcs) S.npcs = {};
   const known = S.npcs[t.who];
   const gender = t.gender || (known && known.gender) || (/(여자|여인|할머니|아주머니|소녀|언니|누나|아가씨|부인|그녀)/.test(t.who) ? "여성" : /(사내|남자|할아버지|아저씨|소년|형|오빠|청년)/.test(t.who) ? "남성" : randGender());
@@ -2612,7 +2658,45 @@ function registerSpeaker(t){
   const age = known && known.age ? known.age + Math.floor((S.days - (known.at != null ? known.at : S.days)) / 365) : (/(할머니|할아버지|노인|노파)/.test(t.who + look) ? 70 : /(아이|소년|소녀|꼬마)/.test(t.who + look) ? 10 : 25 + rnd(25));
   S.npcs[t.who] = {look, gender, age, at:S.days};
   const keys = Object.keys(S.npcs); if(keys.length > 30) delete S.npcs[keys[0]];
-  return {who:t.who, say:t.say, act:t.act || "", look, gender, age};
+  return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(look, OF[t.who]), gender, age};
+}
+/* 다른 사람 옷차림 기억: 가족은 가족 이름으로 */
+function setOutfit(who, outfit){
+  if(!who || !outfit) return;
+  const fam = S.family.find(f => f.name && (f.name === who || who.includes(f.name) || (f.rel && who === f.rel) || (who === "엄마" && f.rel === "어머니") || (who === "아빠" && f.rel === "아버지")));
+  if(!S.outfits) S.outfits = {};
+  S.outfits[fam ? fam.name : who] = outfit;
+}
+/* AI가 옷차림 칸을 주지 않을 때(그냥 글·규칙): 입력에서 옷 갈아입기를 읽는다 */
+function outfitFromInput(input){
+  const t = String(input || "").replace(/["“”][^"“”]*["”]/g, " ");
+  if(!CLOTH_SEG_RE.test(t)) return null;
+  const cur = (S.outfit || lookWithOutfit(S.look, "").split(/\s*,\s*/).filter(x => CLOTH_SEG_RE.test(x)).join(", "));
+  if(/(벗는다|벗어|벗고|벗었)/.test(t) && !/(입는다|입고|입었|갈아입|걸친|걸쳐)/.test(t)){
+    const m = t.match(CLOTH_SEG_RE); if(!m) return null;
+    const rest = cur.split(/\s*,\s*/).filter(x => x && !x.includes(m[1]));
+    return rest.length ? rest.join(", ") : "상의 없음";
+  }
+  if(/(입는다|입고|입었|입어|갈아입|걸친|걸쳐|차려입)/.test(t)){
+    /* 낱말 단위로: 옷 이름 낱말과 그 앞의 꾸밈말(색 등) */
+    const toks = t.split(/\s+/), items = [];
+    for(let k = 0; k < toks.length; k++){
+      const m = toks[k].match(/^([가-힣]*?)(옷|셔츠|블라우스|티셔츠|반팔|민소매|니트|스웨터|후드티|후드|트레이닝복|운동복|재킷|자켓|점퍼|패딩|가디건|코트|외투|트렌치코트|망토|케이프|조끼|정장|양복|원피스|드레스|교복|제복|군복|작업복|가운|간호복|로브|한복|바지|청바지|반바지|레깅스|치마|스커트|앞치마|수영복)/);
+      if(!m) continue;
+      const noun = m[1] + m[2];
+      /* 앞 낱말이 꾸밈말(받침 ㄴ으로 끝남: 흰·빨간·검은, 또는 ~색)이면 같이 */
+      const pw = k > 0 ? toks[k - 1].replace(/의$/, "") : "", lc = pw.charCodeAt(pw.length - 1) - 0xAC00;
+      const isMod = pw && !/(입|벗|갈아|하고|그리고)/.test(pw) && (/색$/.test(pw) || (lc >= 0 && lc < 11172 && lc % 28 === 4));
+      const prev = isMod ? pw + " " : "";
+      items.push((prev + noun).trim());
+    }
+    if(!items.length) return null;
+    /* 겉옷만 걸쳤으면 기존 옷 위에 더한다 */
+    const keep = cur.split(/\s*,\s*/).filter(x => x && !items.some(it => CLOTH_SEG_RE.exec(it) && x.includes(CLOTH_SEG_RE.exec(it)[1])));
+    const onlyOuter = items.every(x => /(코트|외투|트렌치|망토|케이프|재킷|자켓|점퍼|가디건|조끼|가운)/.test(x));
+    return (onlyOuter ? items.concat(keep) : items).join(", ").slice(0, 80);
+  }
+  return null;
 }
 function childLook(g){
   const sp = S.family.find(f => f.rel === "배우자");
@@ -2723,6 +2807,10 @@ function applyNarr(n, forcedDays, shownDays){
   if(days > 0 || shownDays > 0) deltas.push({k:"경과", v:days || shownDays, days:true});
   if(n.event) deltas.push({k:"돌발", v:0, event:true});
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
+  /* 옷차림이 바뀌었으면 먼저 반영(그래야 이 장면의 대화 카드에도 새 옷으로 나온다) */
+  if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
+  for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
+  for(const pr of String(n.npcOutfit || "").split(/\s*;\s*/)){ const [w, o] = pr.split("/"); if(w && o) setOutfit(w.trim(), o.trim()); }
   const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
   applyDays(days);
@@ -2733,7 +2821,8 @@ function applyNarr(n, forcedDays, shownDays){
 /* ───────── 숨은 기억 시스템: 10턴마다 단기기억, 30턴마다 단기기억 3개 → 장기기억 ───────── */
 let memBusy = false;
 function fallbackSummary(texts){
-  return texts.map(t => t.split(/(?<=[.!?。])\s/)[0]).join(" ").slice(0, 300);
+  /* 기기 AI일 때: 장면마다 첫 문장과 끝 문장(무슨 일이 있었고 어떻게 됐나) */
+  return texts.map(t => { const ss = t.split(/(?<=[.!?。])\s/).filter(Boolean); return ss.length > 1 ? ss[0] + " " + ss[ss.length - 1] : ss[0] || ""; }).join(" ").slice(0, 360);
 }
 async function summarize(text){
   /* 기기 AI는 한 번에 하나만 처리한다 → 뒤에서 요약을 돌리면 다음 행동이 그만큼 늦어진다. 기기 AI일 땐 간단 요약으로 */
@@ -2744,23 +2833,51 @@ async function summarize(text){
   }catch(e){ console.warn("기억 요약 실패", e); }
   return null;
 }
+/* ───────── 기억 보조: 아는 사람 수첩, 인생 연표, 지금과 관련 있는 옛 기억 꺼내기 ───────── */
+function notePeople(talk){
+  if(!S.people) S.people = {};
+  for(const t of talk || []){
+    if(!t || !t.who || isPlayerTalk(t)) continue;
+    const p = S.people[t.who] || (S.people[t.who] = {n:0, first:S.days});
+    p.n++; p.last = S.days; p.say = String(t.say || "").slice(0, 50); if(t.gender) p.g = t.gender;
+  }
+  /* 너무 많으면 오래 안 본 사람부터 */
+  const ks = Object.keys(S.people); if(ks.length > 60){ ks.sort((a, b) => (S.people[a].last || 0) - (S.people[b].last || 0)); for(const k of ks.slice(0, ks.length - 60)) delete S.people[k]; }
+}
+const CHRON_RE = /(세상을 떠났|태어났|결혼|면허|합격|자격|스카우트|승급|강등|특색|에고|뒤틀림|사무소|견습|조직|협회|공무원|혈귀|환상체|용돈이 끊|부상이 나았|이사|졸업|입학|고용)/;
+function chron(text){ if(!S.chron) S.chron = []; S.chron.push({d:S.days, t:String(text).slice(0, 80)}); if(S.chron.length > 80) S.chron.splice(0, S.chron.length - 80); }
+/* 관련도: 지금 장면·입력과 글자 겹침이 많은 옛 기억을 위로 */
+function relevantMem(list, query, k){
+  if(!list.length || k <= 0) return [];
+  const q = bigrams(query); if(!q.size) return list.slice(-k);
+  const sc = list.map((m, i) => { const b = bigrams(m); let h = 0; for(const x of b) if(q.has(x)) h++; return {m, i, s:h / Math.sqrt(b.size + 1)}; });
+  const top = sc.filter(x => x.s > 0.6).sort((a, b) => b.s - a.s).slice(0, k).sort((a, b) => a.i - b.i);
+  return top.map(x => x.m);
+}
+function knownPeopleText(n){
+  const ps = Object.entries(S.people || {}).sort((a, b) => (b[1].last || 0) - (a[1].last || 0)).slice(0, n);
+  if(!ps.length) return "";
+  return ps.map(([name, p]) => { const bond = (S.tags || []).find(t => t.startsWith("인연:" + name)); const rel = bond ? bond.split("/")[1] || "아는 사이" : ""; return `${name}${rel ? "(" + rel + ")" : ""}: ${p.n}번 만남, 마지막 ${agoText(S.days - (p.last || S.days))}${p.say ? `, 마지막 말 "${p.say}"` : ""}`; }).join(" / ");
+}
 async function memoryTick(){
-  if(memBusy || !S || S.turn % 10 !== 0) return;
+  if(memBusy || !S || S.turn % 6 !== 0) return;
   memBusy = true;
   const game = S, turn = S.turn;
   try{
-    const entries = game.log.filter(e => (e.t === "me" || e.t === "narr") && e.turn > turn - 10 && e.turn <= turn);
+    const entries = game.log.filter(e => (e.t === "me" || e.t === "narr") && e.turn > turn - 6 && e.turn <= turn);
     if(entries.length){
-      const raw = entries.map(e => (e.t === "me" ? "플레이어: " : "") + e.text);
+      const raw = entries.map(e => (e.t === "me" ? "플레이어: " : "") + e.text + ((e.talk || []).length ? " [대사] " + e.talk.map(t => `${t.who}: ${t.say}`).join(" / ") : ""));
       const text = `[${game.name}, ${Math.floor(game.days / 365)}세 무렵의 기록]\n` + raw.join("\n");
       const sum = await summarize(text) || fallbackSummary(entries.filter(e => e.t === "narr").map(e => e.text));
       game.stm.push(`(${Math.floor(game.days / 365)}세) ` + sum);
     }
-    if(turn % 30 === 0 && game.stm.length >= 3){
-      const three = game.stm.splice(game.stm.length - 3, 3);
-      const sum = await summarize("[단기 기억 세 개를 하나의 장기 기억으로 합쳐라]\n" + three.join("\n"));
-      game.ltm.push(sum || three.join(" ").slice(0, 400));
-      if(game.ltm.length > 40) game.ltm.shift();
+    /* 단기 기억이 4개 쌓이면 오래된 3개를 장기 기억 하나로 */
+    if(game.stm.length >= 4){
+      const three = game.stm.splice(0, 3);
+      const sum = await summarize("[단기 기억 세 개를 하나의 장기 기억으로 합쳐라. 사람·관계·아직 끝나지 않은 일은 빠뜨리지 마라]\n" + three.join("\n"));
+      game.ltm.push((sum ? three[0].match(/^\(\d+세\) /)?.[0] || "" : "") + (sum || three.join(" ").slice(0, 400)));
+      /* 장기 기억이 너무 많으면 가장 오래된 두 개를 하나로 */
+      if(game.ltm.length > 60){ const two = game.ltm.splice(0, 2); game.ltm.unshift(two.join(" ").slice(0, 500)); }
     }
     if(S === game) save();
   } finally { memBusy = false; }
@@ -2975,6 +3092,8 @@ function plainStatusFromText(t){
 /* ───────── 기록 & 화면 ───────── */
 function log(entry){
   if(entry.t === "me" || entry.t === "narr"){ entry.turn = S.turn; entry.day = S.days; }
+  if(entry.t === "sys" && CHRON_RE.test(entry.text || "")) chron(entry.text);
+  if(entry.t === "narr" && entry.talk) notePeople(entry.talk);
   S.log.push(entry);
   if(S.log.length > 250) S.log.splice(0, S.log.length - 250);
   /* 장면이 지나가면(행동·시간 흐름·작은 일) 앞 장면의 선택지는 지운다 */
@@ -2991,7 +3110,12 @@ function dayLabel(d){
 function appendEntry(e, live){
   const box = $("#log");
   let node;
-  if(e.t === "me"){ node = el("div", "e-me", e.text); }
+  if(e.t === "me"){
+    node = el("div", "e-me");
+    /* 따옴표 안(말)은 따로 색을 준다 */
+    const parts = String(e.text).split(/(["“][^"“”]*["”])/);
+    for(const pt of parts){ if(!pt) continue; node.appendChild(/^["“]/.test(pt) ? el("span", "say", pt) : document.createTextNode(pt)); }
+  }
   else if(e.t === "sys"){ node = el("div", "e-sys", e.text); }
   else if(e.t === "small"){
     node = el("div", "e-small");
@@ -3161,7 +3285,7 @@ function renderStatus(){
   renderYearBar();
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
-  const spriteKey = [S.name, S.look, S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
+  const spriteKey = [S.name, S.look, S.outfit || "", S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
   if(spriteKey !== lastSpriteKey){ drawSprite($("#sSprite")); drawSprite($("#hSprite")); lastSpriteKey = spriteKey; }
   const eqBox = $("#sEquip"); eqBox.replaceChildren();
   for(const slot of Object.keys(SLOT_KO)){
@@ -3174,6 +3298,12 @@ function renderStatus(){
   $("#sLoc").textContent = "📍 " + (S.location || "알 수 없음");
   $("#sSeason").textContent = "🗓 " + timeText() + (S.seed ? ` · 시드 ${S.seed}` : "");
   $("#hName").textContent = S.name;
+  /* 특색·에고 이름: 그 색으로 이름 아래에 */
+  { const ht = $("#hTitle"); ht.replaceChildren();
+    const colorOfName = n => { const c = findColor(String(n || "") + " 머리", /(머리)/); return c || "#d4a93c"; };
+    if(S.color){ const sp = el("span", null, "특색 · " + S.color); sp.style.color = colorOfName(S.color); ht.appendChild(sp); }
+    if(S.ego){ const sp = el("span", null, "E.G.O · " + S.ego); sp.style.color = colorOfName(S.ego); ht.appendChild(sp); }
+    ht.hidden = !ht.children.length; }
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()} · ${S.location || ""}`;
   $("#hAhn").textContent = fmt(S.ahn);
   const hg = $("#hGauges"); hg.replaceChildren();
@@ -3183,7 +3313,7 @@ function renderStatus(){
     const tr = el("div", "track" + (k === "sp" ? " mid" : "")); const f = el("div", "fill"); setFill(f, k); tr.appendChild(f);
     w.append(top, tr); hg.appendChild(w);
   }
-  $("#sLook").textContent = S.look || "설명 없음";
+  $("#sLook").textContent = (S.look || "설명 없음") + (S.outfit ? `\n지금 입은 옷: ${S.outfit}` : "");
   const g = $("#sGauges"); g.replaceChildren();
   for(const k of GAUGE_KEYS){
     const w = el("div", "g-" + k);
@@ -3215,14 +3345,7 @@ function renderStatus(){
     if(f.look) row.title = f.look;
     fam.appendChild(row);
   }
-  /* 추출 E.G.O 무기와 만난 원작 인물 */
-  const eb = $("#sEgo"); eb.replaceChildren();
-  const eg = myEgo();
-  if(!eg.length) eb.appendChild(el("div", "note", "없음 · 지닌 사람에게서만 얻을 수 있다"));
-  for(const w of eg){ const row = el("div", "fam"); const b = el("span", "f-rel abno-g", w[1]); b.style.color = (ABNO_INFO[w[1]] || {}).color || ""; row.append(b, el("span", "f-name", w[0]), el("span", "f-age", w[3] + "에게서")); eb.appendChild(row); }
-  const mb = $("#sMet"); mb.replaceChildren();
-  if(!(S.met || []).length) mb.appendChild(el("div", "note", "아직 없음"));
-  for(const m of S.met || []){ const f = famousOf(m.name); if(!f) continue; const row = el("div", "fam"); row.append(el("span", "f-rel", f.org.length > 9 ? f.org.slice(0, 9) + "…" : f.org), el("span", "f-name", f.name), el("span", "f-age", f.game)); row.title = f.desc;  mb.appendChild(row); }
+  renderInv();
   /* 마주친 환상체: 등급 배지, 제압했으면 표시 */
   const ab = $("#sAbnos"); ab.replaceChildren();
   if(!(S.abnos || []).length) ab.appendChild(el("div", "note", "아직 없음"));
@@ -3246,6 +3369,7 @@ function renderStatus(){
     const np = S.npcs && S.npcs[b.nm]; if(np && np.look) row.title = np.look;
     bd.appendChild(row);
   }
+  $("#sTagsN").textContent = (S.tags || []).length ? `${S.tags.length}개` : "";
   const tg = $("#sTags"); tg.replaceChildren();
   if(!S.tags.length) tg.appendChild(el("div", "note", "아직 없음"));
   for(const t of S.tags) tg.appendChild(el("span", "tag", "#" + t));
@@ -3403,6 +3527,13 @@ function fxAfter(n){
 
 /* 돌발 상황에 대응하지 않고 재생을 누르면: '아무것도 하지 않음'으로 판정해 결과를 서술한 뒤 재생 */
 const PASSIVE_INPUT = "아무 반응도 하지 않고 그냥 넘긴다";
+/* 따옴표 안은 주인공이 하는 말(주사위 없음), 밖은 행동(판정 대상) */
+function splitSpeech(input){
+  const says = []; let act = String(input || "");
+  act = act.replace(/["“”「」『』]([^"“”「」『』]+)["“”「」『』]/g, (_, t) => { if(t.trim()) says.push(t.trim()); return " "; }).replace(/\s+/g, " ").trim();
+  act = act.replace(/^[,.\s]+|[,.\s]+$/g, "");
+  return {says, act};
+}
 async function doAction(input, opt = {}){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(busy || S.dead) return;
@@ -3414,18 +3545,25 @@ async function doAction(input, opt = {}){
   S.turn++;
   log({t:"me", text:passive ? "(아무것도 하지 않고 넘긴다)" : input});
   let aiOK = true, actions = null;
+  const sp = passive ? {says:[], act:""} : splitSpeech(input);
+  /* 말만 했으면 판정할 행동이 없다 */
+  const actInput = sp.act || (sp.says.length ? "" : input);
+  const sayLine = sp.says.length ? `\n[주인공이 한 말(플레이어가 직접 적음, 그대로 말한 것)] ${sp.says.map(x => `"${x}"`).join(" ")}` : "";
   let done = thinking(passive ? "그냥 넘긴 결과를 따져 보는 중…" : "난이도를 가늠하는 중…");
   if(passive){
     /* 아무것도 하지 않음: 주사위 없이, 상황이 저절로 흘러가는 대로 */
     actions = [{text:"아무것도 하지 않는다", stat:"int", dc:0, why:"대응하지 않음", trivial:true}];
+  }else if(!actInput){
+    /* 말만 함: 주사위 없이 */
+    actions = [{text:"말한다", stat:"int", dc:0, why:"말하기", trivial:true}];
   }else{
     try{
-      actions = normalizeActions(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + JUDGE_RULES, user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input}), 500, JUDGE_SCHEMA));
+      actions = normalizeActions(await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + JUDGE_RULES, user: stateSummary(local) + "\n\n[플레이어 입력(판정할 행동)]\n" + actInput + (sp.says.length ? "\n(따옴표 안의 말은 판정하지 않는다: " + sp.says.map(x => `"${x}"`).join(" ") + ")" : "")}), 500, JUDGE_SCHEMA));
     }catch(e){ aiOK = false; log({t:"sys", text:"AI 판정 실패: " + e.message + (aiOn() ? " 이번 행동은 간이 판정으로 처리합니다." : " 규칙 기반으로 판정합니다.")}); }
   }
   done();
-  if(!actions) actions = ruleJudge(input);
-  actions = sanitizeActions(actions, input);
+  if(!actions) actions = ruleJudge(actInput || input);
+  actions = sanitizeActions(actions, actInput || input);
   const results = actions.map(a => Object.assign({}, a, rollCheck(a)));
   if(passive) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
   else for(const r of results){
@@ -3444,9 +3582,9 @@ async function doAction(input, opt = {}){
       ev = passive ? null : rollEvent(0);
       const rl = passive ? "- 플레이어는 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 상황이 어떻게 흘러가는지(좋든 나쁘든 그럴 법한 결과) 서술하고, 그 일이 일단락된 상태로 끝내라. 이번 장면만은 '장면 끝에 반응해야 할 상황을 남기라'는 규칙을 따르지 마라: 위협은 지나가거나(포기하고 떠난다, 다른 곳으로 간다, 누군가 막아 준다) 결과가 확정되어(다치거나 빼앗기는 등) 조용히 끝난 상태로 마무리하고, 새 위협이나 새 사건을 만들지 마라. 마지막 문장은 상황이 정리된 지금의 모습이다. urgent는 false." : results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
       n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
-        user: plainContext() + (passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + input + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + plainEvent(ev))}
+        user: plainContext() + (passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + (actInput || "(말만 한다)") + (sp.says.length ? "\n주인공이 한 말(그대로 말한 것, 바꾸지 말 것): " + sp.says.map(x => `"${x}"`).join(" ") : "") + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + plainEvent(ev))}
         : {sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
-        user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + eventLine(ev)}, 700, NARR_SCHEMA, false, done.live), 3);
+        user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + sayLine + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + eventLine(ev)}, 700, NARR_SCHEMA, false, done.live), 3);
       if(n && n.plain){ tierEffects(n, input, results); if(!n.options.length) n.options = ruleOptions(); n.shop = visitsShop(input) || SHOP_EVENTS.includes(ev); n.tag_add = plainStatusFromText(n.narration); }
     }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
     done();
@@ -3457,6 +3595,7 @@ async function doAction(input, opt = {}){
   S.awaitEvent = !!ev;
   /* 그냥 넘긴 결과는 그 일이 끝난 것으로 본다(다시 위급 판정을 하지 않는다) */
   if(passive){ fin.urgent = false; fin.passiveDone = true; }
+  if(!passive && fin.outfit === undefined){ const o = outfitFromInput(input); if(o) fin.outfit = o; }
   recordAbno(ev); recordFamous(ev);
   if(!(fin.days > 0)) advanceMins(timeWordMins(fin.time, input));
   else S.mins = 8 * 60 + rnd(10 * 60);
@@ -3581,6 +3720,10 @@ const ITEMS = [
   {id:"seye", slot:"eye", name:"분석 의안", shop:"슈바르츠 인더스트리", fx:{int:4}, price:18000000, age:18},
   {id:"ubody", slot:"body", name:"피하 장갑판", shop:"유니온 공방", fx:{def:3}, price:6000000, age:16, union:true}
 ];
+/* 추출 E.G.O 무기: 상점에 없고, 지닌 인물에게서 얻으면 인벤토리에 들어온다 */
+const EGO_FX = {"미미크리(시제품)":{str:8, def:1}, "다 카포":{str:7, int:2}, "스마일":{str:9, spd:-1}, "저스티티아":{str:7, spd:2}, "등불":{str:5, def:1}, "회절":{str:5, spd:1}, "여우비":{str:3, def:1}, "붉은 시트":{str:3, int:1}};
+const EGO_LOOK = {"미미크리(시제품)":"greatsword", "다 카포":"blade", "스마일":"hammer", "저스티티아":"sword", "등불":"mace", "회절":"blade", "여우비":"blade", "붉은 시트":"knife"};
+for(const w of EGO_WEAPONS) ITEMS.push({id:"ego:" + w[0], slot:"weapon", name:w[0], shop:"추출 E.G.O · " + w[3] + "에게서", fx:EGO_FX[w[0]] || {str:4}, price:0, age:0, look:EGO_LOOK[w[0]] || "sword", ego:w[1], hidden:true});
 const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
@@ -3767,7 +3910,16 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   tr.apronColor = findColor(t, /(앞치마|에이프런)/) || "#efede6";
   return tr;
 }
-function lookTraits(){ return lookTraitsOf(S.look, S.name, S.gender, String(S.district)); }
+/* 옷차림 바꾸기: 외모 글에서 옷에 관한 조각만 새 옷차림으로 바꾼다(머리·눈·흉터 등은 그대로) */
+const CLOTH_SEG_RE = /(옷|셔츠|블라우스|티셔츠|반팔|민소매|나시|탱크 ?톱|니트|스웨터|후드|후디|트레이닝|츄리닝|운동복|체육복|저지|재킷|자켓|점퍼|패딩|가디건|블레이저|코트|외투|트렌치|망토|케이프|조끼|정장|수트|양복|턱시도|원피스|드레스|교복|세일러|제복|군복|유니폼|작업복|멜빵|점프 ?수트|가운|간호복|사제복|수녀복|로브|기모노|한복|유카타|바지|슬랙스|청바지|반바지|레깅스|스타킹|치마|스커트|속옷|수영복|앞치마|상의|하의|겉옷|맨몸|웃통)/;
+function lookWithOutfit(look, outfit){
+  const segs = String(look || "").split(/\s*[,，]\s*/).filter(Boolean);
+  if(!outfit) return segs.join(", ");
+  return segs.filter(x => !CLOTH_SEG_RE.test(x)).concat(String(outfit).split(/\s*[,，]\s*/).filter(Boolean)).join(", ");
+}
+/* 지금 보이는 모습 = 외모 글 + 지금 입은 옷 */
+const curLook = () => lookWithOutfit(S.look, S.outfit);
+function lookTraits(){ return lookTraitsOf(curLook(), S.name, S.gender, String(S.district)); }
 
 function shade(hex, k){ const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return "#" + ((f(n >> 16) << 16) | (f((n >> 8) & 255) << 8) | f(n & 255)).toString(16).padStart(6, "0"); }
 /* ───────── 캐릭터: 플레이어가 그린 시트를 픽셀로 바꾼 부품(몸·눈·머리카락)을 겹친다 ───────── */
@@ -4202,7 +4354,7 @@ function drawSprite(cv, opt){
   const stage = y0 < 7 ? 0 : y0 < 18 ? 1 : 2;
   const B = PART.bodies[g + stage]; if(!B || !B.px) return;
   const hseed = hashStr((o.seedName != null ? o.seedName : (S && S.name || "")) + (tr.gender || ""));
-  const lookTxt = o.look != null ? o.look : (S && S.look);
+  const lookTxt = o.look != null ? o.look : (S && (S.outfit ? curLook() : S.look));
   const baby = y0 < 2;
   let outfit = tr.outfit || (origin === "nest" ? "#45587a" : "#6a6152");
   if(baby) outfit = "#e8dcc0";
@@ -4831,7 +4983,7 @@ function renderShop(){
   }
   if(!any) now.appendChild(el("div", "note", "착용한 장비가 없습니다."));
   const list = $("#shopList"); list.replaceChildren();
-  const items = ITEMS.filter(i => shopTab === "aug" ? isAug(i) : i.slot === shopTab);
+  const items = ITEMS.filter(i => !i.hidden && (shopTab === "aug" ? isAug(i) : i.slot === shopTab));
   for(const it of items){
     const c = el("div", "item");
     const top = el("div", "item-top");
@@ -4839,9 +4991,9 @@ function renderShop(){
     c.appendChild(top);
     c.appendChild(el("div", "item-meta", `${it.shop} · ${isAug(it) ? SLOT_KO[it.slot] + " · " : ""}${fxText(it.fx)}${it.age ? ` · ${it.age}세부터` : ""}`));
     if(isAug(it)) c.appendChild(el("div", "item-meta", "이식 수술: 체력 −15, 정신력 −10" + (it.union ? " (출처 모를 시신의 살을 쓴다는 소문, 정신력 추가 −5)" : "") + ", 회복 7일"));
-    const owned = S.equip[it.slot] === it.id;
-    let why = owned ? "착용 중" : ageY() < it.age ? `${it.age}세부터` : S.ahn < it.price ? "돈이 모자람" : "";
-    const b = el("button", "btn" + (why ? "" : " primary"), why || (S.equip[it.slot] ? "교체 구매" : "구매")); b.type = "button";
+    const owned = S.equip[it.slot] === it.id || (S.inv || []).includes(it.id);
+    let why = owned ? (S.equip[it.slot] === it.id ? "착용 중" : "가방에 있음") : ageY() < it.age ? `${it.age}세부터` : S.ahn < it.price ? "돈이 모자람" : "";
+    const b = el("button", "btn" + (why ? "" : " primary"), why || "구매"); b.type = "button";
     b.disabled = !!why || busy || !!S.dead;
     b.addEventListener("click", () => buyItem(it));
     c.appendChild(b);
@@ -4857,11 +5009,61 @@ function sellItem(slot){
   if(isAug(it)){ S.hp = clamp(S.hp - 10, 0, 100); S.sp = gclamp("sp", S.sp - 5); checkDeath(); }
   save(); renderStatus(); renderShop();
 }
+/* ───────── 인벤토리: 무기·방어구는 갖고 다니며 바꿔 낄 수 있다(의체는 몸에 이식되어 바꿀 수 없다) ───────── */
+function grantItem(id, equip){
+  const it = itemById(id); if(!it) return;
+  if(!S.inv) S.inv = [];
+  if(S.equip[it.slot] === id || S.inv.includes(id)) return;
+  if(equip){ const old = S.equip[it.slot]; if(old) S.inv.push(old); S.equip[it.slot] = id; log({t:"sys", text:`${it.name}을(를) 손에 넣어 장착했다. ${fxText(it.fx)}`}); }
+  else { S.inv.push(id); log({t:"sys", text:`${it.name}을(를) 인벤토리에 넣었다.`}); }
+}
+function equipFromInv(id){
+  if(busy || S.dead) return;
+  const it = itemById(id); if(!it || isAug(it)) return;
+  if(!S.inv) S.inv = [];
+  const k = S.inv.indexOf(id); if(k < 0) return;
+  S.inv.splice(k, 1);
+  const old = S.equip[it.slot]; if(old) S.inv.push(old);
+  S.equip[it.slot] = id;
+  log({t:"sys", text:`${it.name}(으)로 바꿔 장착했다.`});
+  save(); renderStatus();
+}
+function unequip(slot){
+  if(busy || S.dead) return;
+  const id = S.equip[slot]; const it = id && itemById(id); if(!it || isAug(it)) return;
+  if(!S.inv) S.inv = [];
+  S.inv.push(id); S.equip[slot] = null;
+  log({t:"sys", text:`${it.name}을(를) 벗어 인벤토리에 넣었다.`});
+  save(); renderStatus();
+}
+function renderInv(){
+  const box = $("#sInv"); if(!box) return; box.replaceChildren();
+  const card = (it, on, slot) => {
+    const b = el("button", "inv-it" + (on ? " on" : "")); b.type = "button";
+    const nm = el("b", null, it.name);
+    b.appendChild(nm);
+    if(it.ego){ const g = el("span", "ego", it.ego + " · 추출 E.G.O"); g.style.color = (ABNO_INFO[it.ego] || {}).color || ""; b.appendChild(g); }
+    b.appendChild(el("span", null, `${SLOT_KO[it.slot]} · ${fxText(it.fx)}${on ? " · 착용 중 (눌러서 벗기)" : " · 눌러서 장착"}`));
+    b.disabled = busy || !!S.dead;
+    b.addEventListener("click", () => on ? unequip(slot) : equipFromInv(it.id));
+    return b;
+  };
+  let any = false;
+  for(const slot of ["weapon", "armor"]){
+    const id = S.equip[slot]; const it = id && itemById(id);
+    if(it){ any = true; box.appendChild(card(it, true, slot)); }
+  }
+  const inv = (S.inv || []).map(itemById).filter(Boolean);
+  if(inv.length){ box.appendChild(el("div", "inv-sec", "가방")); for(const it of inv) box.appendChild(card(it, false)); any = true; }
+  if(!any) box.appendChild(el("div", "note", "가진 무기·방어구가 없어요. 공방에서 사거나 얻으면 여기에 들어와요."));
+}
+$("#btnTagsFold").addEventListener("click", () => { const b = $("#btnTagsFold"), open = b.getAttribute("aria-expanded") !== "true"; b.setAttribute("aria-expanded", String(open)); $("#sTags").hidden = !open; });
 function buyItem(it){
   if(busy || S.dead || S.ahn < it.price || ageY() < it.age) return;
   const old = S.equip[it.slot] && itemById(S.equip[it.slot]);
   S.ahn -= it.price;
-  if(old){ const back = Math.round(old.price * 0.3); S.ahn += back; if(isAug(old)) applyTags("", "의체:" + old.name); log({t:"sys", text:`쓰던 ${old.name}을(를) ${fmt(back)}안에 넘겼다.`}); }
+  if(old && !isAug(old)){ if(!S.inv) S.inv = []; S.inv.push(old.id); log({t:"sys", text:`쓰던 ${old.name}은(는) 인벤토리에 넣었다.`}); }
+  else if(old){ const back = Math.round(old.price * 0.3); S.ahn += back; applyTags("", "의체:" + old.name); log({t:"sys", text:`쓰던 ${old.name}을(를) ${fmt(back)}안에 넘겼다.`}); }
   S.equip[it.slot] = it.id;
   log({t:"sys", text:`${it.shop}에서 ${it.name}을(를) 샀다 (−${fmt(it.price)}안). ${fxText(it.fx)}`});
   if(isAug(it)){
@@ -5131,6 +5333,9 @@ async function continueLife(){
   if(S.v === 1){ Object.assign(S, {v:2, family:[], tags:(S.mem || []).slice(-20).map(m => "기억:" + m.slice(0, 30)), stm:[], ltm:[], turn:0, pendingChild:null}); delete S.mem; }
   if(S.doy0 == null) S.doy0 = rnd(365);
   if(!S.equip) S.equip = {};
+  if(!S.inv) S.inv = [];
+  /* 예전 저장본: 태그로만 있던 추출 E.G.O 무기를 가방으로 */
+  for(const t of S.tags || []) if(t.startsWith("에고 무기:")){ const id = "ego:" + t.slice(6).trim(); if(itemById(id) && S.equip.weapon !== id && !S.inv.includes(id)) S.inv.push(id); }
   if(S.rng == null) S.rng = hashStr(String(Date.now()));
   migrateSave();
   showGame();
@@ -5277,6 +5482,17 @@ $("#btnSpeed").addEventListener("click", () => {
 /* 기본은 늘 1배속으로 시작 (바꾼 배속은 그 판에서만) */
 flow.speed = 1;
 updateFlowUI();
+/* “ ” 버튼: 커서 자리에 따옴표 한 쌍을 넣고 그 안에서 바로 말을 적게 한다 */
+$("#btnQuote").addEventListener("mousedown", e => e.preventDefault());
+$("#btnQuote").addEventListener("click", () => {
+  const ta = $("#actInput"), a = ta.selectionStart ?? ta.value.length, b = ta.selectionEnd ?? a;
+  const before = ta.value.slice(0, a), sel = ta.value.slice(a, b), after = ta.value.slice(b);
+  const pad = before && !/\s$/.test(before) ? " " : "";
+  ta.value = before + pad + "\"" + sel + "\"" + after;
+  const pos = before.length + pad.length + 1 + sel.length;
+  ta.focus(); ta.setSelectionRange(pos, pos);
+  ta.dispatchEvent(new Event("input"));
+});
 $("#actInput").addEventListener("focus", () => { if(flow.on) stopFlow(null); setTyping(true); });
 $("#actInput").addEventListener("blur", () => setTimeout(() => { if(document.activeElement !== $("#actInput")) setTyping(false); }, 150));
 /* 글 칠 때 모드: 상태창을 줄이고, 키보드 위 화면 높이에 맞추고, 대화 내역은 맨 아래로 */
