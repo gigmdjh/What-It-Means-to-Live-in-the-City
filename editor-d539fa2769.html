@@ -490,6 +490,13 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .co-stat input{min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:var(--f-mono)}
 .item-meta.bad{color:var(--bad)}
 .people{display:grid;gap:4px}
+.quests{display:grid;gap:4px}
+.quest{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+.quest b{font-weight:600;min-width:0}
+.quest .q-meta{grid-column:1;color:var(--muted);font-size:12px}
+.quest .q-st{grid-column:2;grid-row:1/3;align-self:center;font-size:12px;color:var(--muted)}
+.quest.q-done{border-color:var(--good)} .quest.q-done .q-st{color:var(--good);font-weight:600}
+.quest.q-paid,.quest.q-failed{opacity:.55}
 .person{border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
 .person summary{display:flex;gap:8px;align-items:baseline;padding:6px 10px;cursor:pointer;list-style:none}
 .person summary::-webkit-details-marker{display:none}
@@ -738,6 +745,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
     <div class="card">
       <div class="label">인연</div>
       <div class="family" id="sBonds"></div>
+    </div>
+    <div class="card full">
+      <div class="label">미션 <span class="note" id="sQuestsN"></span></div>
+      <div class="quests" id="sQuests"></div>
     </div>
     <div class="card full">
       <div class="label">만난 사람 <span class="note" id="sPeopleN"></span></div>
@@ -1013,11 +1024,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0420"></script>
+<script src="parts.js?v=20261108-0430"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-0420";
+const BUILD = "20261108-0430";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1088,6 +1099,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 [2. Style]
 - Second person ("당신" in Korean), present tense. 1-2 paragraphs, 3-5 sentences in total (about 200 Korean characters). Dry, but with a human smell.
 - Plain and clear: no metaphors, no poetic phrasing, no ellipses, no em dashes. One thing per sentence; who, where, what, in order.
+- Never state abilities as numbers, ratios, grades or stat names ("평균의 1.5배", "힘 45", "지력이 높다"). Show them as an impression or a reaction instead, e.g. "당신의 그 모습은 꽤나 강해 보이는군요." or a thug quietly stepping back. The stat numbers you are given are for your judgment only.
 - Do not invent unexplained weird phenomena (moving objects, a mysterious hand). If something strange happens, say what it is right away.
 - Work the time of day from [때] (dawn, morning, day, evening, night), season and weather in naturally: light, people around, open shops, danger.
 - Call Districts by their Wing name (District 12 is "L사 구역", District 23 is "W사 구역").
@@ -1119,6 +1131,13 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Lines are short, spoken, 1-2 sentences, like real people. No expository, written or exaggerated speech. Speech level fits age and relationship (in Korean: parents use 반말 to their kids, strangers use 존댓말 with each other, rough people talk rough).
 - Use family exactly as in [가족] (names, looks, jobs, personality); never change them. Parents act and talk according to their job and personality.
 - #personality tags in [가족 성격] and [아는 사람] tell you who that person is. Show them through speech, choices and how they treat the protagonist. Never print the tag words or explain ("he is a kind person"); show it in action.
+
+[6b. Missions]
+- When someone asks the protagonist for a favor or gives an order (an errand, a request, a job, a command from a superior) and the player clearly accepts it in this scene, write quest_add as "giver name/task/reward" (e.g. "한서진/잃어버린 고양이 찾기/5만안", "카포 로렌초/빚진 가게 주인에게 돈 받아 오기/30만안"). If the reward was not mentioned, write a fitting one ("사례금", "작은 선물"). Several joined by ";". Do not add it if the player only listened, hesitated or refused.
+- When the protagonist actually finishes a task listed in [미션] (진행 중), write quest_clear as the task text exactly as listed. A finished task is not paid yet: the protagonist must go back to the giver.
+- When the protagonist meets the giver of a task marked 완료 (보고 전) and reports it, the giver hands over the reward in the scene: write quest_reward as the giver's name. The game pays the money; do not also put it in ahn.
+- If a task becomes impossible or the player abandons it, quest_fail with the task text.
+- Otherwise "".
 
 [7. Number fields] Write words, not numbers (the game sets the exact values). Use these Korean words exactly.
 - hp (health), sp (mental), en (stamina), rep (reputation): "없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복".
@@ -1170,7 +1189,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 [Korean style sample: match this tone when writing Korean]
 "골목 끝 국밥집은 아직 불이 켜져 있다. 당신이 문을 밀자 주인 아주머니가 고개를 든다. 가게 안에는 술 취한 해결사 둘이 구석 자리를 차지하고 있다. 그중 한 명이 당신 쪽을 힐끗 보더니 의자를 뒤로 뺀다."
 
-Output JSON only: {"narration":"narration","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"place","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","urgent":false,"shop":false,"merit":"없음","blood":"없음","outfit":"","npc_outfit":"","talk":[]}`;
+Output JSON only: {"narration":"narration","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"place","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","urgent":false,"shop":false,"merit":"없음","blood":"없음","outfit":"","npc_outfit":"","quest_add":"","quest_clear":"","quest_reward":"","quest_fail":"","talk":[]}`;
 
 /* 기기 AI용 짧은 규칙: 폰에서는 프롬프트가 길면 읽는 데만 수십 초가 걸린다 */
 const NARR_RULES_LOCAL = `
@@ -1178,6 +1197,7 @@ You are the narrator of a text RPG.
 [Rolls] Never change the results; draw them as given (대성공 beyond expectations, 대실패 with a cost).
 [Style] Second person ("당신"), present tense, 1-2 paragraphs (3-5 sentences total). No metaphors, poetic phrasing or dashes; one thing per sentence. No unexplained weird phenomena. True to the character's age.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
+[Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
 [Ending] Usually end on a situation to react to, with the last sentence naturally showing what the protagonist faces (no labels like "지금 무엇이 문제인지"). If told the player let it pass, end settled and quiet.
 [Time] After days or months, small things like food and wrappers are gone and light wounds have healed. Do not continue an old scene as if it were now.
@@ -1185,9 +1205,10 @@ You are the narrator of a text RPG.
 [Looks] Read the [외모] text and let that impression affect people's reactions and events.
 [Romance] Up to 15 innocent liking only; 16-17 innocent dating between 16-17 peers only (nothing sexual); adults never with minors; 18+ may date.
 [Talk] When another character speaks, 1-3 entries in talk: {"who":"the character's real name (e.g. 한서진, 마르코 벨리니). Never labels like '새 친구', '이웃 주민', '낯선 사내'; give a name even if unknown to the protagonist","say":"short spoken line, no quotes","act":"short action while speaking","look":"looks, first appearance only","gender":"남성/여성","age":"age number, first appearance only","job":"job, first appearance only","aff":"change in liking toward the protagonist (없음/오름/내림/크게 오름/크게 내림)"}. Never put the protagonist in talk, and do not repeat the lines in narration. If the player speaks to someone, they must answer via talk. Keep gender, age, job and #personality from [아는 사람]; never repeat earlier lines. Nobody speaks = [].
+[Missions] If the player accepts someone's favor or order in this scene, quest_add "giver/task/reward" (e.g. "한서진/잃어버린 고양이 찾기/5만안"). When a task in [미션] is finished, quest_clear with the task text. When the protagonist reports a 완료 task to its giver, the giver pays: quest_reward with the giver's name (do not put that money in ahn). Otherwise "".
 [Special status] If fields like [혈귀], [뒤틀림], [心], [발톱], [엄지], [검지], [중지], [약지], [소지], [별의 이름], [라만차랜드], [워프열차] exist, reflect them. Grades, ranks, Colors and Star names are decided by the game; never change them.
 [Fields] Changes as Korean words: hp/sp/en/rep "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복"; ahn "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎"; str/def/spd/int "없음/오름/내림"; days "없음/하루/며칠/일주일/한 달/몇 달"; time (within the day) "잠깐/한 시간/몇 시간/반나절/밤새". If the player wrote a duration or time passed in the scene, reflect it in days/time. options: always "". tag_add/tag_remove: "Korean category:content" or "". shop: true if it ends inside a workshop.
-Output JSON only: {"narration":"narration","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"잠깐","location":"place","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","shop":false,"urgent":false,"talk":[]}`;
+Output JSON only: {"narration":"narration","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"잠깐","location":"place","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","shop":false,"urgent":false,"quest_add":"","quest_clear":"","quest_reward":"","talk":[]}`;
 
 const SUM_RULES = `
 You keep the memory of a text RPG. Summarize the given record into short fields so another AI can read it later and continue the story. Facts only, no decoration.
@@ -1201,7 +1222,7 @@ You keep the memory of a text RPG. Summarize the given record into short fields 
 Output JSON only: {"where":"","situation":"","people":"","outcome":"","pending":""}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"},combat:{type:"boolean"}},required:["text","stat","difficulty","why","trivial","combat"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},blood:{type:"string"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"},aff:{type:"string"},age:{type:"string"},job:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},blood:{type:"string"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},quest_add:{type:"string"},quest_clear:{type:"string"},quest_reward:{type:"string"},quest_fail:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"},aff:{type:"string"},age:{type:"string"},job:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{where:{type:"string"},situation:{type:"string"},people:{type:"string"},outcome:{type:"string"},pending:{type:"string"},summary:{type:"string"}},required:["situation","outcome"]};
 
 /* 계절 · 달력 */
@@ -2458,6 +2479,7 @@ function repairJSON(t){
 const NARR_PLAIN = `You are a novelist. Continue the situation below with a short scene.
 [Style] Second person ("당신"), present tense, 1-2 paragraphs, 3-5 sentences total. Little decoration; only what happened and the current situation. No metaphors, poetic phrasing, ellipses or em dashes; one thing per sentence, who/where/what in order. No unexplained weird phenomena. True to the protagonist's age.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
+[Abilities] Never write stats as numbers, ratios or grades. Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (no lines either). "주인공이 한 말" is what they actually said; use it as is and have others answer. Narrate only the input action, its result and the reactions around. Never decide for the protagonist.
 [Ending] Usually stop at a moment the protagonist must react to, with the last sentence naturally showing what they face (e.g. "문밖에서 누군가 문을 억지로 열려고 한다."). No labels like "지금 무엇이 문제인지". If told the player let it pass, end settled and quiet.
 [Dialogue] When someone speaks, put it on its own line as 「이름: "대사"」 (family names exactly as given). These lines are only for people other than the protagonist (never rename the protagonist). Short spoken lines, 1-2 sentences; speech level fits age and relationship (parents use 반말 to kids, strangers use 존댓말, rough people talk rough).
@@ -2662,12 +2684,13 @@ function stateSummary(local){
   { const fs = fingerState(); if(fs) lines.push(fs); }
   if(S.distorted) lines.push(`[뒤틀림] 주인공은 ${S.distorted.age}세에 감정에 삼켜져 뒤틀림이 되었고, 뒤틀린 채 살아가고 있다(${S.distorted.path === "follow" ? "머릿속 여자의 속삭임을 따르며 충동대로 산다" : S.distorted.path === "self" ? "속삭임을 밀어내고 자기 나름대로 살려 애쓴다" : "아직 속삭임을 따를지 정하지 않았다"}). 겉모습은 괴물로 변해, 가족과 지인을 포함한 누구도 주인공을 알아보지 못한다. 주인공이 말을 걸어도 사람들은 괴물이 내는 소리로 듣고 겁먹거나 공격한다. 해결사·협회 토벌대·조직·날개 보안 부대가 곳곳에서 노린다. 머릿속에는 늘 낯선 여자의 목소리가 속삭인다.`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
-  lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
+  lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 45~59, 이름난 해결사 60~74, 특색급 75 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라. 이 숫자는 판단용일 뿐이다. 서술과 대사에 숫자·배율·등급("평균의 1.5배", "힘 45")을 절대 쓰지 말고, 사람들이 받는 인상과 반응으로 보여 줘라.`);
   const idt = identityText(); if(idt) lines.push(`[신분·힘] ${idt}`);
   lines.push(`[소지금] ${fmt(S.ahn)}안 [집안 형편] ${wealthText()}` + (allowanceNow() ? ` (부모에게 한 달 용돈 ${fmt(allowanceNow())}안)` : ""));
   lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}(${statRel(eff(k))})`).join(", "));
   lines.push(`[장비] ${equipText()}`);
   if((S.inv || []).length) lines.push(`[가방] ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")} (갈아 낄 수 있는 무기·방어구)`);
+  { const qs = questState(); if(qs) lines.push(qs); }
   lines.push(`[가족] ${familyText()}`);
   { const fp = S.family.filter(f => f.alive).map(f => { if(!f.persona) f.persona = rollPersona(); return `${f.name}: #${f.persona.join(" #")}`; }); if(fp.length) lines.push(`[가족 성격] ${fp.join(" / ")}`); }
   const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => t.slice(3));
@@ -2854,6 +2877,7 @@ function normalizeNarr(j, statCap){
     act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : "", outfit:/^(없음|)$/.test(String(t.outfit || "").trim()) ? "" : String(t.outfit).slice(0, 80).trim(),
     aff:t.aff == null ? null : wordLevel(t.aff), age:/^\d{1,3}$/.test(String(t.age || "").trim()) ? +String(t.age).trim() : null,
     job:/^(없음|모름|)$/.test(String(t.job || "").trim()) ? "" : String(t.job).slice(0, 30).trim()}));
+  for(const k of ["quest_add", "quest_clear", "quest_reward", "quest_fail"]){ const v = String(j[k] || "").trim(); n[k] = /^(없음|없다|none|-)$/i.test(v) ? "" : v.slice(0, 300); }
   n.plain = !!j._plain;
   return n;
 }
@@ -3425,6 +3449,7 @@ function applyNarr(n, forcedDays, shownDays){
   if(days > 0 || shownDays > 0) deltas.push({k:"경과", v:days || shownDays, days:true});
   if(n.event) deltas.push({k:"돌발", v:0, event:true});
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
+  const qNotes = questApply(n, deltas);
   /* 옷차림이 바뀌었으면 먼저 반영(그래야 이 장면의 대화 카드에도 새 옷으로 나온다) */
   if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; bump("outfit"); log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
   for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
@@ -3432,10 +3457,81 @@ function applyNarr(n, forcedDays, shownDays){
   const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
   if(talk.length) n.narration = dedupeTalk(n.narration, talk);
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
+  for(const q of qNotes) log({t:"sys", text:q});
+  if(qNotes.length) try{ renderQuests(); }catch(e){}
   enCalcNote();
   applyDays(days);
   applyFamily(n);
   checkDeath();
+}
+
+/* ───────── 미션 ─────────
+   누군가의 부탁·명령을 받아들이면 미션이 생긴다. 해낸 뒤 그 사람을 다시 찾아가 알리면 보상을 받는다.
+   상태: active(진행 중) → done(완료, 보고 전) → paid(보상 받음) / failed */
+function questReward(text){
+  const t = String(text || "").replace(/,/g, "");
+  let m = /(\d+(?:\.\d+)?)\s*억/.exec(t); if(m) return Math.round(+m[1] * 1e8);
+  m = /(\d+(?:\.\d+)?)\s*만/.exec(t); if(m) return Math.round(+m[1] * 1e4);
+  m = /(\d{3,})\s*안?/.exec(t); if(m) return +m[1];
+  const y = ageY(), base = y < 13 ? 5000 : y < 20 ? 30000 : 150000;
+  return /(큰|두둑|거액|많은)/.test(t) ? base * 4 : /(작은|약간|조금|용돈|간식|과자)/.test(t) ? Math.round(base / 3) : base;
+}
+const qMatch = (q, key) => { const a = String(q.task).replace(/\s+/g, ""), b = String(key || "").replace(/\s+/g, ""); return !!b && (a === b || a.includes(b) || b.includes(a) || q.giver === key.trim()); };
+function questApply(n, deltas){
+  if(!S.quests) S.quests = [];
+  const notes = [];
+  for(const part of String(n.quest_add || "").split(/\s*;\s*/)){
+    const [giver, task, reward] = part.split("/").map(x => (x || "").trim());
+    if(!giver || !task || isPlayerTalk({who:giver})) continue;
+    if(S.quests.some(q => q.state === "active" && q.giver === giver && qMatch(q, task))) continue;
+    const q = {id:(S.questN = (S.questN || 0) + 1), giver:realNameFor({who:giver}), task:task.slice(0, 60), reward:(reward || "사례").slice(0, 30), amt:questReward(reward), state:"active", at:S.days};
+    S.quests.push(q); bump("questTake");
+    notes.push(`📜 미션을 받았다: ${q.task} (의뢰인 ${q.giver}, 보상 ${q.reward})`);
+    try{ sfx("event"); }catch(e){}
+  }
+  for(const key of String(n.quest_clear || "").split(/\s*;\s*/).filter(Boolean)){
+    const q = S.quests.find(q => q.state === "active" && qMatch(q, key)); if(!q) continue;
+    q.state = "done"; q.doneAt = S.days;
+    notes.push(`✔ 미션 완료: ${q.task}. ${q.giver}에게 알리면 보상을 받을 수 있다.`);
+    try{ sfx("good"); }catch(e){}
+  }
+  for(const key of String(n.quest_reward || "").split(/\s*;\s*/).filter(Boolean)){
+    const q = S.quests.find(q => q.state === "done" && (q.giver === key.trim() || qMatch(q, key))); if(!q) continue;
+    q.state = "paid"; q.paidAt = S.days; bump("questDone");
+    S.ahn += q.amt; deltas.push({k:"안", v:q.amt}); n.ahn = 0;
+    S.rep = gclamp("rep", S.rep + 2);
+    try{ bumpAff(q.giver, 3); }catch(e){}
+    notes.push(`💰 ${q.giver}에게 미션 보상을 받았다: ${fmt(q.amt)}안`);
+    try{ sfx("coin"); }catch(e){}
+  }
+  for(const key of String(n.quest_fail || "").split(/\s*;\s*/).filter(Boolean)){
+    const q = S.quests.find(q => q.state === "active" && qMatch(q, key)); if(!q) continue;
+    q.state = "failed"; notes.push(`✖ 미션 실패: ${q.task}`);
+    try{ bumpAff(q.giver, -2); }catch(e){}
+  }
+  /* 오래된 기록은 정리 */
+  const old = S.quests.filter(q => q.state === "paid" || q.state === "failed");
+  if(old.length > 20) S.quests = S.quests.filter(q => !old.slice(0, old.length - 20).includes(q));
+  return notes;
+}
+function questState(){
+  const qs = (S.quests || []).filter(q => q.state === "active" || q.state === "done");
+  if(!qs.length) return "";
+  return "[미션] " + qs.map(q => `${q.task} (의뢰인 ${q.giver}, 보상 ${q.reward}, ${q.state === "active" ? "진행 중" : "완료 (보고 전): " + q.giver + "을(를) 만나 알리면 보상을 받는다"})`).join(" / ");
+}
+function renderQuests(){
+  const box = $("#sQuests"); if(!box) return;
+  box.replaceChildren();
+  const qs = (S.quests || []).slice().sort((a, b) => ({done:0, active:1, paid:2, failed:3}[a.state] - {done:0, active:1, paid:2, failed:3}[b.state]) || b.at - a.at);
+  const live = qs.filter(q => q.state === "active" || q.state === "done").length;
+  $("#sQuestsN").textContent = live ? `${live}개 진행` : "";
+  if(!qs.length){ box.appendChild(el("div", "note", "아직 없음 · 누군가의 부탁을 받아들이면 생겨요")); return; }
+  for(const q of qs.slice(0, 12)){
+    const row = el("div", "quest q-" + q.state);
+    const st = {active:"진행 중", done:"완료 · 보고하러 가기", paid:"보상 받음", failed:"실패"}[q.state];
+    row.append(el("b", null, q.task), el("span", "q-meta", `${q.giver} · ${q.reward}`), el("span", "q-st", st));
+    box.appendChild(row);
+  }
 }
 
 /* ───────── 기력: 빨리 회복되고, 바닥나면 기절한다 ─────────
@@ -4147,7 +4243,7 @@ function renderStatus(){
     const np = S.npcs && S.npcs[b.nm]; if(np && np.look) row.title = np.look;
     bd.appendChild(row);
   }
-  renderPeople();
+  renderPeople(); renderQuests();
   $("#sTagsN").textContent = (S.tags || []).length ? `${S.tags.length}개` : "";
   const tg = $("#sTags"); tg.replaceChildren();
   if(!S.tags.length) tg.appendChild(el("div", "note", "아직 없음"));
@@ -5475,6 +5571,10 @@ const ACHS = [
   ["bigHurt", "깊은 상처", "한 번에 크게 다쳤다", () => cnt("bigHurt") >= 1, "c", "몸과 마음"],
   ["bigHurt10", "흉터투성이", "크게 다친 게 열 번", () => cnt("bigHurt") >= 10, "r", "몸과 마음"],
   ["exhausted", "기진맥진", "기력이 바닥났다", () => S.en <= 0 || cnt("faint") >= 1, "c", "몸과 마음"],
+  ["quest1", "첫 부탁", "누군가의 부탁을 받아들였다", () => cnt("questTake") >= 1, "c", "몸과 마음"],
+  ["questDone1", "약속은 지킨다", "미션을 마치고 보상을 받았다", () => cnt("questDone") >= 1, "u", "몸과 마음"],
+  ["questDone10", "믿을 만한 사람", "미션 열 개를 마치고 보상을 받았다", () => cnt("questDone") >= 10, "r", "몸과 마음"],
+  ["questDone30", "동네의 해결사", "미션 서른 개를 마치고 보상을 받았다", () => cnt("questDone") >= 30, "e", "몸과 마음"],
   ["faint1", "픽 쓰러지다", "기력이 다해 기절했다", () => cnt("faint") >= 1, "u", "몸과 마음"],
   ["faint5", "쓰러지는 게 일상", "다섯 번 기절했다", () => cnt("faint") >= 5, "r", "몸과 마음"],
   ["faintHosp", "병원 천장", "기절했다가 병원에서 깨어났다", () => cnt("faintHosp") >= 1, "u", "몸과 마음"],
