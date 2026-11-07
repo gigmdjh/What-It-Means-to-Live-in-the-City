@@ -162,6 +162,26 @@ body.in-game .game{flex:1;min-height:0;height:auto}
 .bio-body{font:400 1rem/1.85 var(--f-display);max-width:62ch}
 .bio-body p{margin:0 0 .8em}
 .bio-facts{display:grid;gap:4px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.bio-death{margin:2px 0 0;font:600 .95rem var(--f-mono);color:var(--bad)}
+.bio-card{display:grid;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+.bio-card .bio-body p{margin:0}
+.bio-sec{display:grid;gap:6px}
+.bio-sec h4{margin:0}
+.bio-achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.bio-ach{display:grid;gap:1px;padding:8px 10px;border:2px solid var(--c);border-radius:8px;background:var(--panel-2);min-width:0;box-shadow:inset 0 0 14px -6px var(--c)}
+.bio-ach b{font-size:.86rem}
+.bio-ach span{font-size:.72rem;color:var(--muted)}
+.bio-ach i{font:600 .62rem var(--f-mono);font-style:normal;color:var(--c);letter-spacing:.04em}
+.bio-last{gap:10px}
+.bl-time{font:500 .8rem var(--f-mono);color:var(--muted)}
+.bl-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.bl-g .g-top{display:flex;justify-content:space-between;font-size:.74rem}
+.bl-g .track{height:5px;border-radius:3px;background:var(--bg);overflow:hidden}
+.bl-g .fill{height:100%}
+.bl-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bl-stats div{display:grid;justify-items:center;padding:6px 4px;border:1px solid var(--line);border-radius:8px;font-size:.7rem;color:var(--muted)}
+.bl-stats b{font:600 1rem var(--f-mono);color:var(--fg)}
+.bl-row{font-size:.8rem;color:var(--muted)}
 .loader{position:fixed;inset:0;z-index:50;background:rgba(19,20,27,.94);background:color-mix(in srgb, var(--bg) 92%, transparent);display:grid;place-items:center;
   padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
 .ld-box{width:min(440px, 100%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -676,11 +696,15 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
   <form method="dialog" class="dlg bio">
     <div class="bio-head">
       <img id="bioSprite" alt="" width="72" height="108">
-      <div><h2 id="bioName"></h2><p class="note" id="bioYears"></p></div>
+      <div><h2 id="bioName"></h2><div class="note" id="bioYears"></div></div>
     </div>
-    <h3 class="bio-title" id="bioTitle"></h3>
-    <p class="bio-epi" id="bioEpitaph"></p>
-    <div class="bio-body" id="bioBody"></div>
+    <section class="bio-card">
+      <h3 class="bio-title" id="bioTitle"></h3>
+      <div class="bio-body" id="bioBody"></div>
+      <p class="bio-epi" id="bioEpitaph"></p>
+    </section>
+    <section class="bio-sec"><h4 class="label">업적</h4><div class="bio-achs" id="bioAchs"></div></section>
+    <section class="bio-sec"><h4 class="label">생전 마지막 상태</h4><div class="bio-card bio-last" id="bioLast"></div></section>
     <div class="bio-facts" id="bioFacts"></div>
     <p class="note" id="bioMsg" aria-live="polite"></p>
     <div class="row">
@@ -892,10 +916,10 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2005"></script>
+<script src="parts.js?v=20261107-2025"></script>
 <script>
 "use strict";
-const BUILD = "20261107-2005";
+const BUILD = "20261107-2025";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -978,7 +1002,7 @@ const NARR_RULES = `
 - [외모] 글 전체를 직접 읽고, 그 생김새·인상·차림이 이 도시에서 어떻게 보일지 판단해 사람들의 반응과 사건에 반영하라([외모에 더해진 것]도 함께). 주인공의 외모에 따라 다가오는 사람도 달라진다: 눈에 띄는 외모면 어릴 때부터 아이들과 어른들이 더 좋아하고 잘 다가오며(순수한 호감·친절), 험한 인상이면 사람들이 꺼린다. [인연]에 '다가오는 사람'이 있으면 그 성별로 그려라. 15세까지는 우정과 순수한 호감으로만, 16~17세는 또래끼리의 풋풋한 설렘까지만(성적인 내용 금지) 그린다. 어른이 미성년(18세 미만)에게 연애·이성적인 관심을 보이는 장면은 절대 쓰지 마라. 18세부터는 이성으로서의 관심과 연애도 그릴 수 있다. 외모 묘사를 장면에 끼워 넣지는 말고, 다른 사람이 외모에 반응할 때만 언급한다.
 - 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않는다. 이미 지닌 인물(게부라 등)에게서 물려받거나 거래하거나 빼앗을 때만 tag_add에 "에고 무기:무기이름"을 적어라. 다른 방법으로는 절대 주지 마라.
 - 납치: 붙잡혀 끌려가면 tag_add에 "납치:잡혀 있음"(어디에 누구에게), 빠져나오면 tag_remove로 지우고 "탈출:납치". 몸값·노동·장기 밀매 같은 도시의 범죄로 그리고, 성적인 의미나 암시는 절대 넣지 마라.
-- 혈귀인 주인공: 혈액 게이지가 있다. 사람의 피만 갈증을 채운다(밥·동물 피·다른 혈귀의 피로는 안 된다). 혈액바(사람과 동물의 피를 눌러 굳힌 막대, 묽다)는 blood "약간 회복", 혈액팩은 "회복", 사람에게서 직접 마시면 "크게 회복". 피를 마시지 않았으면 blood는 "없음". 혈액바·혈액팩은 혈귀 가문이 쥔 가게나 암시장에서 비싸게 판다. 피가 모자라면 미쳐 가고 시든다. 물을 두려워한다. 어린 혈귀는 보호자가 혈액팩·혈액바를 구해다 주는 식으로 그리고, 아이가 사람을 무는 장면은 그리지 마라.
+- 혈귀인 주인공: 보통 사람보다 몇 배 강하고 빠르고 단단하다(맨손으로 강철을 구기고, 평범한 해결사 여럿을 혼자 상대할 만큼). 혈액 게이지가 있다. 사람의 피만 갈증을 채운다(밥·동물 피·다른 혈귀의 피로는 안 된다). 혈액바(사람과 동물의 피를 눌러 굳힌 막대, 묽다)는 blood "약간 회복", 혈액팩은 "회복", 사람에게서 직접 마시면 "크게 회복". 피를 마시지 않았으면 blood는 "없음". 혈액바·혈액팩은 혈귀 가문이 쥔 가게나 암시장에서 비싸게 판다. 피가 모자라면 미쳐 가고 시든다. 물을 두려워한다. 어린 혈귀는 보호자가 혈액팩·혈액바를 구해다 주는 식으로 그리고, 아이가 사람을 무는 장면은 그리지 마라.
 - 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀". 권속은 피를 마셔야 하고 물을 두려워한다.
 
 [6. 다른 인물과 대화]
@@ -3347,7 +3371,8 @@ function renderHudStats(){
   for(const k of STAT_KEYS){
     const v = eff(k), b = bonus(v), base = S[k];
     const c = el("div", "hs-card");
-    c.title = `${STAT_KO[k]} ${v}${v !== base ? ` (기본 ${base} + 장비 ${v - base})` : ""} · 판정 +${b} · ${statRel(v)}`;
+    const km = kinMul(k);
+    c.title = `${STAT_KO[k]} ${v}${v !== base ? ` (기본 ${base}${equipBonus(k) ? " + 장비 " + equipBonus(k) : ""}${km !== 1 ? " × 혈귀 " + km : ""})` : ""} · 판정 +${b} · ${statRel(v)}`;
     c.append(el("span", "hs-k", STAT_KO[k]), el("b", "hs-v", String(v)), el("span", "hs-b", `+${b}`));
     if(v !== base) c.classList.add("boost");
     box.appendChild(c);
@@ -3909,35 +3934,117 @@ function renderWarpBar(){
 /* ───────── 업적 ─────────
    한 삶에서 이룬 것(S.ach)은 전기에, 모든 삶을 합친 것은 첫 화면에 남는다 */
 const ACH_KEY = "dosi_ach";
+const RARITY = {c:{ko:"흔함", col:"#8b8f9c"}, u:{ko:"고급", col:"#5fb36a"}, r:{ko:"희귀", col:"#4f8fd6"}, e:{ko:"영웅", col:"#a86be0"}, l:{ko:"전설", col:"#e0a83c"}};
 const famN = () => S.family.filter(f => f.rel === "자녀").length;
 const ACHS = [
-  ["born", "첫 울음", "도시에 태어났다", () => true],
-  ["age1", "첫돌", "한 살이 되었다", () => ageY() >= 1],
-  ["age18", "어른이 되다", "열여덟 살이 되었다", () => ageY() >= 18],
-  ["age40", "불혹", "마흔 살까지 살았다", () => ageY() >= 40],
-  ["age70", "장수", "일흔 살까지 살았다", () => ageY() >= 70],
-  ["age90", "도시의 노인", "아흔 살까지 살았다", () => ageY() >= 90],
-  ["head", "머리 아래에서", "A~C사 구역에서 태어났다", () => S.district >= 1 && S.district <= 3],
-  ["nest", "둥지의 아이", "둥지에서 태어났다", () => S.origin === "nest"],
-  ["license", "해결사", "해결사 자격을 땄다", () => !!S.license],
-  ["color", "특색", "특색으로 불리게 되었다", () => !!S.color],
-  ["ego", "E.G.O", "뒤틀림을 이겨내고 에고를 발현했다", () => !!S.ego],
-  ["married", "반려", "결혼했다", () => S.family.some(f => f.rel === "배우자")],
-  ["parent", "부모가 되다", "아이가 태어났다", () => famN() >= 1],
-  ["kids3", "대가족", "아이가 셋 이상", () => famN() >= 3],
-  ["rich", "부자", "1억 안을 모았다", () => S.ahn >= 100000000],
-  ["tycoon", "거부", "10억 안을 모았다", () => S.ahn >= 1000000000],
-  ["rep", "이름난 사람", "평판 80 이상", () => S.rep >= 80],
-  ["strong", "단련된 몸", "힘이 20을 넘었다", () => eff("str") >= 20],
-  ["abno", "환상체 목격", "환상체와 마주쳤다", () => (S.abnos || []).length >= 1],
-  ["abno5", "환상체 수집가", "환상체 다섯과 마주쳤다", () => (S.abnos || []).length >= 5],
-  ["famous", "전설과의 만남", "원작 인물을 만났다", () => (S.met || []).length >= 1],
-  ["famous10", "도시의 인맥", "원작 인물 열 명을 만났다", () => (S.met || []).length >= 10],
-  ["kidnap", "빠져나오다", "납치에서 벗어났다", () => S.tags.some(t => /^탈출:.*납치/.test(t))],
-  ["kindred", "피의 아이", "혈귀가 되었다", () => isKindred()],
-  ["warpIn", "W사의 의뢰", "워프열차 의뢰를 받아 열차에 올랐다", () => !!S.warpTried],
-  ["warp4", "절반의 돌파", "워프열차 4칸 이상 돌파", () => (S.warpBest || 0) >= 4],
-  ["warp8", "워프열차 완주", "워프열차 8칸을 모두 돌파했다", () => (S.warpBest || 0) >= WARP_CARS]
+  ["born", "첫 울음", "도시에 태어났다", () => true, "c"],
+  ["age1", "첫돌", "한 살이 되었다", () => ageY() >= 1, "c"],
+  ["age18", "어른이 되다", "열여덟 살이 되었다", () => ageY() >= 18, "c"],
+  ["age40", "불혹", "마흔 살까지 살았다", () => ageY() >= 40, "u"],
+  ["age70", "장수", "일흔 살까지 살았다", () => ageY() >= 70, "r"],
+  ["age90", "도시의 노인", "아흔 살까지 살았다", () => ageY() >= 90, "e"],
+  ["head", "머리 아래에서", "A~C사 구역에서 태어났다", () => S.district >= 1 && S.district <= 3, "r"],
+  ["nest", "둥지의 아이", "둥지에서 태어났다", () => S.origin === "nest", "u"],
+  ["license", "해결사", "해결사 자격을 땄다", () => !!S.license, "u"],
+  ["color", "특색", "특색으로 불리게 되었다", () => !!S.color, "l"],
+  ["ego", "E.G.O", "뒤틀림을 이겨내고 에고를 발현했다", () => !!S.ego, "e"],
+  ["married", "반려", "결혼했다", () => S.family.some(f => f.rel === "배우자"), "u"],
+  ["parent", "부모가 되다", "아이가 태어났다", () => famN() >= 1, "u"],
+  ["kids3", "대가족", "아이가 셋 이상", () => famN() >= 3, "r"],
+  ["rich", "부자", "1억 안을 모았다", () => S.ahn >= 100000000, "r"],
+  ["tycoon", "거부", "10억 안을 모았다", () => S.ahn >= 1000000000, "e"],
+  ["rep", "이름난 사람", "평판 80 이상", () => S.rep >= 80, "r"],
+  ["strong", "단련된 몸", "힘이 20을 넘었다", () => eff("str") >= 20, "r"],
+  ["abno", "환상체 목격", "환상체와 마주쳤다", () => (S.abnos || []).length >= 1, "u"],
+  ["abno5", "환상체 수집가", "환상체 다섯과 마주쳤다", () => (S.abnos || []).length >= 5, "e"],
+  ["famous", "전설과의 만남", "원작 인물을 만났다", () => (S.met || []).length >= 1, "u"],
+  ["famous10", "도시의 인맥", "원작 인물 열 명을 만났다", () => (S.met || []).length >= 10, "e"],
+  ["kidnap", "빠져나오다", "납치에서 벗어났다", () => S.tags.some(t => /^탈출:.*납치/.test(t)), "r"],
+  ["kindred", "피의 아이", "혈귀가 되었다", () => isKindred(), "e"],
+  ["warpIn", "W사의 의뢰", "워프열차 의뢰를 받아 열차에 올랐다", () => !!S.warpTried, "r"],
+  ["warp4", "절반의 돌파", "워프열차 4칸 이상 돌파", () => (S.warpBest || 0) >= 4, "e"],
+  ["warp8", "워프열차 완주", "워프열차 8칸을 모두 돌파했다", () => (S.warpBest || 0) >= WARP_CARS, "l"],
+  /* 나이 */
+  ["age5", "다섯 살", "다섯 살이 되었다", () => ageY() >= 5, "c"],
+  ["age10", "열 살", "열 살이 되었다", () => ageY() >= 10, "c"],
+  ["age13", "사춘기", "열세 살이 되었다", () => ageY() >= 13, "c"],
+  ["age20", "스무 살", "스무 살이 되었다", () => ageY() >= 20, "c"],
+  ["age30", "서른", "서른 살이 되었다", () => ageY() >= 30, "c"],
+  ["age50", "지천명", "쉰 살까지 살았다", () => ageY() >= 50, "u"],
+  ["age60", "환갑", "예순 살까지 살았다", () => ageY() >= 60, "u"],
+  ["age80", "팔순", "여든 살까지 살았다", () => ageY() >= 80, "r"],
+  ["age100", "백 년", "백 살까지 살았다", () => ageY() >= 100, "l"],
+  /* 태생 */
+  ["poorBorn", "맨바닥에서", "가장 가난한 집에서 태어났다", () => S.wealth === 0, "u"],
+  ["richBorn", "은수저", "가장 부유한 집에서 태어났다", () => S.wealth === 4, "r"],
+  ["headNest", "머리의 둥지", "A~C사 구역 둥지에서 태어났다", () => S.district >= 1 && S.district <= 3 && S.origin === "nest", "e"],
+  ["poorToRich", "자수성가", "가난하게 태어나 1억 안을 모았다", () => S.wealth <= 1 && S.ahn >= 100000000, "e"],
+  /* 일과 신분 */
+  ["apprentice", "견습생", "사무소에서 견습을 했다", () => S.tags.some(t => /^견습:/.test(t)) || !!(S.careers && S.careers.apprentice), "u"],
+  ["lic5", "중견 해결사", "해결사 5급 이상이 되었다", () => !!S.license && S.license <= 5, "r"],
+  ["lic3", "베테랑", "해결사 3급 이상이 되었다", () => !!S.license && S.license <= 3, "e"],
+  ["lic1", "1급 해결사", "해결사 1급이 되었다", () => S.license === 1, "l"],
+  ["office", "사무소 대표", "자기 해결사 사무소를 차렸다", () => !!S.office, "r"],
+  ["staff3", "작은 사무소", "직원 셋을 두었다", () => (S.staff || []).length >= 3, "e"],
+  ["staff8", "북적이는 사무소", "직원 여덟을 두었다", () => (S.staff || []).length >= 8, "l"],
+  ["syndicate", "조직원", "조직에 몸담았다", () => S.tags.some(t => /^조직:/.test(t)), "u"],
+  ["assoc", "협회 사람", "협회에 들어갔다", () => S.tags.some(t => /^(협회|소속):.*협회/.test(t) || /^협회/.test(t)), "r"],
+  ["civil", "공무원", "공무원이 되었다", () => S.tags.some(t => /^공무원/.test(t)), "u"],
+  /* 돈과 평판 */
+  ["ahn1m", "첫 백만 안", "백만 안을 모았다", () => S.ahn >= 1000000, "c"],
+  ["ahn10m", "천만 안", "천만 안을 모았다", () => S.ahn >= 10000000, "u"],
+  ["broke", "빈털터리", "어른이 되어 한 푼도 없었다", () => ageY() >= 20 && S.ahn <= 0, "c"],
+  ["debt", "빚쟁이", "빚을 졌다", () => S.tags.some(t => /^빚/.test(t)), "c"],
+  ["rep50", "알려진 사람", "평판 50 이상", () => S.rep >= 50, "u"],
+  ["rep100", "도시의 이름", "평판 100", () => S.rep >= 100, "e"],
+  /* 능력 */
+  ["str40", "괴력", "힘이 40을 넘었다", () => eff("str") >= 40, "e"],
+  ["def20", "철벽", "방어력이 20을 넘었다", () => eff("def") >= 20, "r"],
+  ["spd20", "질풍", "속도가 20을 넘었다", () => eff("spd") >= 20, "r"],
+  ["int20", "명석", "지력이 20을 넘었다", () => eff("int") >= 20, "r"],
+  ["all15", "만능", "모든 능력치가 15를 넘었다", () => STAT_KEYS.every(k => eff(k) >= 15), "e"],
+  ["all30", "완성된 사람", "모든 능력치가 30을 넘었다", () => STAT_KEYS.every(k => eff(k) >= 30), "l"],
+  /* 장비 */
+  ["weapon", "첫 무기", "무기를 손에 넣었다", () => !!(S.equip && S.equip.weapon), "c"],
+  ["armor", "몸을 지키는 것", "방어구를 갖췄다", () => !!(S.equip && S.equip.armor), "c"],
+  ["aug", "의체", "의체를 이식했다", () => !!(S.equip && ["arm", "leg", "eye", "body"].some(k => S.equip[k])), "u"],
+  ["augFull", "반쯤은 기계", "의수·의족·의안·신체 장갑을 모두 이식했다", () => !!(S.equip && ["arm", "leg", "eye", "body"].every(k => S.equip[k])), "e"],
+  ["egoWeapon", "추출 E.G.O", "추출 E.G.O 무기를 들었다", () => /^ego:/.test((S.equip || {}).weapon || "") || (S.inv || []).some(i => /^ego:/.test(i)), "e"],
+  ["inv5", "가방이 무겁다", "장비를 다섯 개 넘게 모았다", () => (S.inv || []).length >= 5, "u"],
+  ["outfit", "옷을 갈아입다", "옷을 갈아입었다", () => !!S.outfit, "c"],
+  /* 가족과 사람 */
+  ["kids5", "대가문", "아이가 다섯 이상", () => famN() >= 5, "e"],
+  ["orphan", "홀로 남다", "어른이 되기 전에 부모를 모두 잃었다", () => ageY() < 18 && S.family.some(f => f.rel === "아버지" || f.rel === "어머니") && !parentsAlive(), "r"],
+  ["bond1", "첫 인연", "인연을 맺었다", () => S.tags.some(t => /^인연:/.test(t)), "c"],
+  ["bond5", "마당발", "인연 다섯을 맺었다", () => S.tags.filter(t => /^인연:/.test(t)).length >= 5, "u"],
+  ["bond10", "모두의 친구", "인연 열을 맺었다", () => S.tags.filter(t => /^인연:/.test(t)).length >= 10, "r"],
+  ["loss", "떠나보내다", "가까운 사람을 잃었다", () => S.tags.some(t => /^사망:/.test(t)) || S.family.some(f => f.alive === false), "c"],
+  ["famous3", "소문 속의 사람들", "원작 인물 셋을 만났다", () => (S.met || []).length >= 3, "u"],
+  ["famous25", "도시의 전설들", "원작 인물 스물다섯을 만났다", () => (S.met || []).length >= 25, "l"],
+  /* 환상체 */
+  ["abnoWaw", "WAW", "WAW 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "WAW"), "r"],
+  ["abnoAleph", "재앙과 마주하다", "ALEPH 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "ALEPH"), "e"],
+  ["abno10", "환상체 도감", "환상체 열과 마주쳤다", () => (S.abnos || []).length >= 10, "l"],
+  /* 혈귀 */
+  ["bornKin", "타고난 혈귀", "혈귀로 태어났다", () => !!S.bornKindred, "r"],
+  ["bloodFull", "포만", "혈액을 가득 채웠다", () => isKindred() && S.blood >= 100, "u"],
+  ["starve", "시든 혈귀", "혈액이 바닥났다", () => isKindred() && S.blood != null && S.blood <= 0, "r"],
+  ["hunter", "혈귀 사냥꾼", "혈귀를 토벌했다", () => S.tags.some(t => /^토벌:.*혈귀/.test(t)), "r"],
+  /* 몸 */
+  ["wound", "첫 상처", "다쳤다", () => S.tags.some(t => /^부상:/.test(t)), "c"],
+  ["bone", "부러진 뼈", "뼈가 부러졌다", () => S.tags.some(t => /^부상:.*(골절|부러)/.test(t)), "u"],
+  ["lowHp", "죽을 고비", "체력이 10 아래로 떨어지고도 살아남았다", () => !S.dead && S.hp > 0 && S.hp < 10, "r"],
+  ["calm", "평정", "정신력이 +40을 넘었다", () => S.sp >= 40, "r"],
+  ["edge", "벼랑 끝", "정신력이 −40 아래로 떨어졌다", () => S.sp <= -40, "u"],
+  /* 삶의 길이와 선택 */
+  ["turn100", "백 번의 선택", "행동을 백 번 했다", () => (S.turn || 0) >= 100, "u"],
+  ["turn500", "오백 번의 선택", "행동을 오백 번 했다", () => (S.turn || 0) >= 500, "r"],
+  ["turn1000", "천 번의 선택", "행동을 천 번 했다", () => (S.turn || 0) >= 1000, "e"],
+  /* 마지막 */
+  ["dieYoung", "요절", "어른이 되기 전에 세상을 떠났다", () => !!S.dead && ageY() < 18, "u"],
+  ["dieOld", "천수를 누리다", "여든 넘어 세상을 떠났다", () => !!S.dead && ageY() >= 80, "e"],
+  ["dieDistort", "뒤틀린 끝", "뒤틀림이 되어 삶이 끝났다", () => /뒤틀림/.test(S.dead || ""), "r"],
+  ["dieBag", "피주머니", "혈귀에게 물려 피주머니가 되었다", () => /피주머니/.test(S.dead || ""), "r"],
 ];
 function loadAch(){ const a = store.get(ACH_KEY); return a && typeof a === "object" ? a : {}; }
 function checkAch(){
@@ -3953,7 +4060,17 @@ function checkAch(){
   if((S.warpBest || 0) > ((g.warpBest || {}).v || 0)){ g.warpBest = {v:S.warpBest, who:S.name, at:Date.now()}; changed = true; }
   if(changed) store.set(ACH_KEY, g);
 }
-/* 전기에 남길 업적 이름(워프열차는 몇 칸까지 갔는지) */
+/* 전기에 남길 업적 카드(이름·설명·희귀도). 워프열차는 몇 칸까지 갔는지 하나로 */
+function lifeAchList(){
+  const ids = S.ach || [], out = [];
+  for(const [id, name, desc, , r] of ACHS){
+    if(!ids.includes(id) || id === "born" || id === "warpIn" || id === "warp4" || id === "warp8") continue;
+    out.push({name, desc, r});
+  }
+  if(S.warpTried){ const b = S.warpBest || 0; out.push(b >= WARP_CARS ? {name:"워프열차 완주", desc:"8칸을 모두 돌파했다", r:"l"} : {name:`워프열차 ${b}칸 돌파`, desc:`8칸 중 ${b}칸까지 돌파했다`, r:b >= 4 ? "e" : "r"}); }
+  const ord = "leruc"; out.sort((a, b) => ord.indexOf(a.r) - ord.indexOf(b.r));
+  return out;
+}
 function lifeAchNames(){
   const ids = S.ach || [], out = [];
   for(const [id, name] of ACHS){
@@ -3970,6 +4087,8 @@ function renderAch(){
   for(const [id, name, desc] of ACHS){
     const on = !!g[id]; if(on) n++;
     const c = el("div", "ach " + (on ? "on" : "off"));
+    const rr = (ACHS.find(a => a[0] === id) || [])[4] || "c";
+    c.style.borderColor = on ? RARITY[rr].col : ""; c.title = RARITY[rr].ko;
     let d = desc;
     if(id === "warp8" && !on && g.warpBest) d += ` (최고 ${g.warpBest.v}칸)`;
     if(on && g[id].who) d += ` · ${g[id].who}`;
@@ -4186,7 +4305,14 @@ const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
 function equipBonus(k){ let b = 0; for(const id of Object.values(S.equip || {})){ const it = id && itemById(id); if(it && it.fx[k]) b += it.fx[k]; } return b; }
-const eff = k => Math.max(0, S[k] + equipBonus(k));
+/* 혈귀는 사람보다 몇 배 강하다(지력 제외). 피가 모자라면 그만큼 약해진다 */
+function kinMul(k){
+  if(k === "int" || !isKindred()) return 1;
+  if(S.bornKindred && !S.kindredAwake) return 1.5;
+  const b = S.blood == null ? 60 : S.blood;
+  return b <= 0 ? 1.3 : b < 30 ? 2 : 3;
+}
+const eff = k => Math.max(0, Math.round((S[k] + equipBonus(k)) * kinMul(k)));
 function equipText(){
   const parts = [];
   for(const slot of Object.keys(SLOT_KO)){
@@ -5540,9 +5666,9 @@ function buyItem(it){
 const LIVES_KEY = "dosi_lives", MAX_LIVES = 10;
 const BIO_RULES = `
 너는 도시의 기록관이다. 방금 생을 마친 한 사람의 전기를 써라.
-- 한국어, 3인칭(이름으로 부른다), 담담한 기록체, 3~5문단.
+- 한국어, 3인칭(이름으로 부른다), 담담한 기록체. bio는 3~4문장의 짧은 요약 한 문단.
 - 주어진 기록(기억, 태그, 가족, 장비, 사인)에 있는 사실 위주로 쓰고, 없는 큰 사건을 지어내지 마라.
-- 어린 시절, 살아온 방식, 가까웠던 사람, 마지막 순간 순서로.
+- 어린 시절, 살아온 방식, 가까웠던 사람, 마지막 순간을 한두 문장씩 압축해서.
 - title: "○○○, ~한 사람" 같은 짧은 제목. epitaph: 묘비에 새길 한 줄.
 반드시 JSON만 출력: {"title":"제목","epitaph":"묘비명","bio":"전기 본문"}`;
 const BIO_SCHEMA = {type:"object",properties:{title:{type:"string"},epitaph:{type:"string"},bio:{type:"string"}},required:["title","epitaph","bio"]};
@@ -5562,6 +5688,11 @@ function bioContext(local){
   ].filter(Boolean).join("\n\n");
   return all.slice(0, local ? 3500 : 12000);
 }
+/* 전기 요약: 문장 4개까지 */
+function shortBio(t){
+  const ss = String(t || "").replace(/\s*\n+\s*/g, " ").match(/[^.!?。]+[.!?。]+["”’]?|[^.!?。]+$/g) || [];
+  return ss.slice(0, 4).map(x => x.trim()).join(" ").slice(0, 600);
+}
 function ruleBio(){
   const fam = S.family.filter(f => f.rel !== "아버지" && f.rel !== "어머니");
   const parts = [];
@@ -5571,7 +5702,13 @@ function ruleBio(){
   if(S.ltm.length) parts.push(S.ltm.slice(-3).join(" "));
   if(fam.length) parts.push(`곁에는 ${fam.map(f => `${f.rel === "자녀" ? (f.gender === "남성" ? "아들" : "딸") : f.rel} ${f.name}`).join(", ")}이(가) 있었다.`);
   parts.push(`${S.name}은(는) ${ageY()}세에 ${S.dead.replace(/\.$/, "")}.`);
-  return {title:`${S.name}, ${corpOf(S.district)} 구역의 한 사람`, epitaph:"도시는 그를 기억하지 않아도, 기록은 남는다.", bio:parts.join("\n\n")};
+  return {title:`${S.name}, ${corpOf(S.district)} 구역의 한 사람`, epitaph:"도시는 그를 기억하지 않아도, 기록은 남는다.", bio:shortBio(parts.join(" "))};
+}
+/* 생전 마지막 상태창 */
+function lastStatus(){
+  const g = shownGauges().map(k => ({k, ko:GAUGE_KO[k], v:Math.round(S[k] || 0), pct:Math.max(0, Math.min(100, k === "sp" ? (S.sp + 45) / 90 * 100 : (S[k] || 0)))}));
+  return {gauges:g, stats:STAT_KEYS.map(k => [STAT_KO[k], eff(k)]), ahn:S.ahn, time:timeText(), loc:S.location || "", equip:equipText(),
+    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : ""].filter(Boolean)};
 }
 let ending = false;
 async function endLife(){
@@ -5581,7 +5718,7 @@ async function endLife(){
   let b = null;
   try{
     const j = await runAI(local => ({sys:(local ? LORE_SHORT : LORE_FULL) + BIO_RULES, user: bioContext(local)}), 1600, BIO_SCHEMA);
-    if(j && typeof j.bio === "string" && j.bio.trim()) b = {title:String(j.title || "").slice(0, 60) || `${S.name}의 생애`, epitaph:String(j.epitaph || "").slice(0, 90), bio:j.bio.trim().slice(0, 6000)};
+    if(j && typeof j.bio === "string" && j.bio.trim()) b = {title:String(j.title || "").slice(0, 60) || `${S.name}의 생애`, epitaph:String(j.epitaph || "").slice(0, 90), bio:shortBio(j.bio.trim())};
   }catch(e){ log({t:"sys", text:"AI 전기 작성 실패: " + e.message + " 기록으로 대신 씁니다."}); }
   done();
   b = b || ruleBio();
@@ -5591,7 +5728,7 @@ async function endLife(){
   const life = {id:"L" + Date.now(), name:S.name, gender:S.gender, look:S.look || "", hairColor:S.hairColor || "", eyeColor:S.eyeColor || "", choice:S.choice || null, district:S.district, origin:S.origin, seed:S.seed || "",
     age:ageY(), ageM:ageM(), cause:S.dead, title:b.title, epitaph:b.epitaph, bio:b.bio,
     stats:STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}`).join(" · ") + ` · 평판 ${S.rep} · 소지금 ${fmt(S.ahn)}안`,
-    family:familyText(), equip:equipText(), ach:lifeAchNames(), sprite, endedAt:Date.now(), fav:false};
+    family:familyText(), equip:equipText(), ach:lifeAchNames(), achs:lifeAchList(), last:lastStatus(), sprite, endedAt:Date.now(), fav:false};
   const lives = loadLives(); lives.unshift(life); saveLives(lives);
   S.archived = life.id;
   store.del("dosi_save");
@@ -5609,17 +5746,33 @@ function openBio(id){
   $("#bioSprite").src = life.sprite || "";
   $("#bioSprite").hidden = !life.sprite;
   $("#bioName").textContent = life.name;
-  $("#bioYears").textContent = `0세 – ${life.age}세 · ${corpOf(life.district)} 구역 ${originKo(life.origin)} 출신`;
+  $("#bioYears").replaceChildren(el("div", "bio-death", `${life.age}세 사망 (${String(life.cause || "").replace(/[.。]\s*$/, "")})`), el("div", null, `${corpOf(life.district)} 구역 ${originKo(life.origin)} 출신`));
   $("#bioTitle").textContent = life.title;
   $("#bioEpitaph").textContent = life.epitaph ? `“${life.epitaph}”` : "";
-  const body = $("#bioBody"); body.replaceChildren();
-  for(const p of life.bio.split(/\n+/)) if(p.trim()) body.appendChild(el("p", null, p.trim()));
+  const body = $("#bioBody"); body.replaceChildren(el("p", null, shortBio(life.bio)));
+  /* 업적 카드: 테두리 색이 희귀도 */
+  const achs = life.achs || (life.ach || []).map(n => { const a = ACHS.find(x => x[1] === n); return {name:n, desc:a ? a[2] : "", r:a ? a[4] : (/워프열차 완주/.test(n) ? "l" : /워프열차/.test(n) ? "r" : "c")}; });
+  const ab = $("#bioAchs"); ab.replaceChildren();
+  if(!achs.length) ab.appendChild(el("p", "note", "남긴 업적이 없다."));
+  for(const a of achs){ const c = el("div", "bio-ach"); const rr = RARITY[a.r] || RARITY.c; c.style.setProperty("--c", rr.col); c.append(el("i", null, rr.ko), el("b", null, a.name), el("span", null, a.desc || "")); ab.appendChild(c); }
+  /* 생전 마지막 상태창 */
+  const lb = $("#bioLast"); lb.replaceChildren();
+  const L = life.last;
+  if(L){
+    lb.appendChild(el("div", "bl-time", `🗓 ${L.time}${L.loc ? " · 📍 " + L.loc : ""}`));
+    if(L.titles && L.titles.length) lb.appendChild(el("div", "bl-row", L.titles.join(" · ")));
+    const gg = el("div", "bl-g");
+    for(const g of L.gauges){ const w = el("div", "g-" + g.k); const top = el("div", "g-top"); top.append(el("span", null, g.ko), el("span", null, g.k === "sp" && g.v > 0 ? "+" + g.v : String(g.v))); const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = g.pct + "%"; tr.appendChild(f); w.append(top, tr); gg.appendChild(w); }
+    lb.appendChild(gg);
+    const st = el("div", "bl-stats");
+    for(const [ko, v] of L.stats){ const d = el("div"); d.append(el("span", null, ko), el("b", null, String(v))); st.appendChild(d); }
+    lb.appendChild(st);
+    lb.append(el("div", "bl-row", `소지금 ${fmt(L.ahn)}안`), el("div", "bl-row", "장비 · " + L.equip));
+  }else{
+    lb.append(el("div", "bl-row", life.stats), el("div", "bl-row", "장비 · " + life.equip));
+  }
   $("#bioFacts").replaceChildren(
-    el("div", null, "사인 · " + life.cause),
-    el("div", null, life.stats),
     el("div", null, "가족 · " + life.family),
-    el("div", null, "장비 · " + life.equip),
-    ...(life.ach && life.ach.length ? [el("div", null, "업적 · " + life.ach.join(", "))] : []),
     el("div", null, "시드 · " + (life.seed || "없음") + " · " + new Date(life.endedAt).toLocaleDateString("ko-KR")));
   $("#bioFav").textContent = life.fav ? "★ 즐겨찾기됨" : "☆ 즐겨찾기";
   $("#bioFav").setAttribute("aria-pressed", String(!!life.fav));
