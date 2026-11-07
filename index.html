@@ -959,10 +959,10 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2310"></script>
+<script src="parts.js?v=20261107-2345"></script>
 <script>
 "use strict";
-const BUILD = "20261107-2310";
+const BUILD = "20261107-2345";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1083,9 +1083,11 @@ const NARR_RULES = `
 - 견습: 13~19세는 면허 없이 사무소에서 견습(잔일·심부름·장비 손질)으로 일할 수 있다. tag_add "견습:사무소 이름". 위험한 의뢰 현장에는 직접 나서지 못하고 뒤에서 돕는다.
 - 해결사 자격 시험: 20세 이상만. 합격하면 tag_add에 "자격:해결사"만(급수는 게임이 정한다). 20세 미만이면 볼 수 없다고 그려라.
 - 조직: 들어가면 tag_add "조직:조직 이름", 나오면 tag_remove.
-- 공무원(관청·날개 등 공적 기관): 되면 tag_add "공무원:기관 이름", 그만두면 tag_remove.
+- 공무원(관청·구청 등 공적 기관): 되면 tag_add "공무원:기관 이름", 그만두면 tag_remove.
+- 협회 직원(하나 협회 등에서 등록·심사·행정을 맡는 직원, 해결사가 아님): 되면 tag_add "협회 직원:협회 이름". 날개(거대 기업) 직원: 둥지에서 일하는 대기업 직원으로, 들어가기가 아주 어렵다. 되면 tag_add "날개 직원:L사"처럼. 그만두면 tag_remove.
+- 무직(소속·직업이 없는 어른)은 벌이가 없다. 돈은 쓰기만 하니 ahn을 함부로 "벎"으로 주지 마라(실제로 일을 해서 번 경우만).
 - 협회 지부에 들어가면 "협회:협회 이름", 남의 사무소에 들어가면 "소속 사무소:사무소 이름". 나오면 tag_remove.
-- 자기 사무소는 하나 협회 4급 이상만 차릴 수 있다. 성공하면 tag_add에 "사무소:새로 차림"만(이름은 플레이어가 짓는다). 사람을 고용하면 "고용:이름/역할"(예: "고용:한서진/해결사").
+- 자기 사무소는 하나 협회 4급 이상만 차릴 수 있다(4급이 되면 협회가 연락해 준다). 4급 미만이면 사무소를 차리는 이야기를 꺼내지 마라. 성공하면 tag_add에 "사무소:새로 차림"만(이름은 플레이어가 짓는다). 사람을 고용하면 "고용:이름/역할"(예: "고용:한서진/해결사").
 - 해결사 승급은 게임이 정한다: 실적이 차면 협회가 호출하고 승급 시험을 본다. 특색은 1급 중에서도 충분히 강한 자에게 협회가 부여한다. 스스로 급수를 올리거나 특색을 붙이지 마라.
 - 다섯 손가락에 들어가면 tag_add에 "조직:엄지"처럼 손가락 이름을 넣어라(엄지·검지·중지·약지·소지). 계급은 게임이 정한다.
 
@@ -1448,7 +1450,7 @@ function recordAbno(ev){
   if(!S.abnos) S.abnos = [];
   if(!S.abnos.some(x => x.name === a.name)) S.abnos.push({name:a.name, g:a.g, at:S.days});
 }
-function scoutEvent(){ const y = ageY(); const l = y < 13 ? SCOUTS.child : y < 20 ? SCOUTS.teen : SCOUTS.adult; return l[rnd(l.length)]; }
+function scoutEvent(){ bump("scout"); const y = ageY(); const l = y < 13 ? SCOUTS.child : y < 20 ? SCOUTS.teen : SCOUTS.adult; return l[rnd(l.length)]; }
 /* 납치: 외모가 눈에 띄는 사람이 혼자 인적 드문 곳을 다니면 노리는 자가 있다 */
 const LONELY_RE = /(혼자|홀로|아무도 없|인적(이)? 드문|인적 없|외진|으슥|빈 골목|버려진|폐건물|폐공장|공사장|뒷길|밤길|골목 깊|지름길|어두운 골목|후미진|막다른)/;
 function kidnapChance(input){
@@ -1474,7 +1476,7 @@ function rollEvent(daysAhead){
   if(!daysAhead && !S.star && !S.distorted && ageY() >= 16 && rand01() < (fingerOf() === "pinky" ? 0.03 : 0.006)) return STAR_FIND;
   if(!daysAhead && S.claw && !S.distorted && rand01() < 0.08){ bump("order"); return CLAW_ORDERS[rnd(CLAW_ORDERS.length)]; }
   if(!daysAhead && rand01() < scoutChance()) return scoutEvent();
-  if(!daysAhead && rand01() < commissionChance()) return COMMISSIONS[rnd(COMMISSIONS.length)];
+  if(!daysAhead && rand01() < commissionChance()){ bump("commission"); return COMMISSIONS[rnd(COMMISSIONS.length)]; }
   const y = Math.floor((S.days + (daysAhead || 0)) / 365);
   let chance = eventChance(y);
   if(daysAhead >= 30) chance = Math.min(0.85, chance * 2.2);
@@ -1746,7 +1748,7 @@ const nestP = d => NEST_P[d] != null ? NEST_P[d] : 0.15;
 const WEALTH_KO = ["아주 가난함", "가난함", "보통", "넉넉함", "부유함"];
 const WEALTH_P = {back:[0.25, 0.4, 0.25, 0.08, 0.02], nest:[0.02, 0.1, 0.38, 0.32, 0.18]};
 /* 한 달 용돈(13~19세 기준, 6~12세는 절반, 5세 이하는 없음) */
-const ALLOWANCE = {back:[0, 5000, 20000, 60000, 150000], nest:[10000, 40000, 100000, 250000, 600000]};
+const ALLOWANCE = {back:[0, 3000, 10000, 25000, 60000], nest:[5000, 15000, 40000, 100000, 220000]};
 function rollWealth(origin, d){ const p = HEAD_D(d) ? (origin === "nest" ? [0, 0.03, 0.12, 0.4, 0.45] : [0.03, 0.07, 0.2, 0.4, 0.3]) : (WEALTH_P[origin] || WEALTH_P.back); let r = rand01(); for(let i = 0; i < p.length; i++){ if((r -= p[i]) < 0) return i; } return 2; }
 const wealthOf = () => S.wealth != null ? S.wealth : (S.origin === "nest" ? 3 : 1);
 const wealthText = () => `${WEALTH_KO[wealthOf()]}(${S.origin === "nest" ? "둥지" : "뒷골목"} 기준)`;
@@ -1754,9 +1756,9 @@ const parentsAlive = () => S.family.some(f => (f.rel === "어머니" || f.rel ==
 /* 지금 받는 한 달 용돈: 성인이 되거나 부모가 모두 없으면 끊긴다 */
 function allowanceNow(){
   const y = ageY();
-  if(y < 6 || y >= 20 || !parentsAlive()) return 0;
+  if(y < 8 || y >= 20 || !parentsAlive()) return 0;
   const base = (ALLOWANCE[S.origin] || ALLOWANCE.back)[wealthOf()] || 0;
-  return Math.round(base * (y < 13 ? 0.5 : 1) / 1000) * 1000;
+  return Math.round(base * (y < 13 ? 0.35 : y < 16 ? 0.7 : 1) / 1000) * 1000;
 }
 const DISTRICT_NOTE = {8:"홍원 바이오(옛 H사)",9:"음악의 거리",10:"도박",12:"Lobotomy",13:"MDM",14:"Nagel und Hammer",19:"살피뼈 농산",20:"TimeTrack",21:"습지",23:"WARP · 맛의 거리",25:"혹한"};
 const PROV_KO = {pollinations:"Pollinations",auto:"자동",anthropic:"Claude",openai:"OpenAI 호환",gemini:"Gemini",chrome:"크롬 내장 AI",webllm:"로컬 모델",rules:"규칙 기반"};
@@ -2368,11 +2370,11 @@ function looksBroken(t){
 function tierEffects(n, input, results){
   for(const r of results){
     if(!r.auto) n.en -= 4;
-    if(r.tier === "대실패"){ n.hp -= 8; n.sp -= 5; }
-    else if(r.tier === "실패"){ n.sp -= 2; }
+    if(r.tier === "대실패"){ n.hp -= 12; n.sp -= 6; }
+    else if(r.tier === "실패"){ n.hp -= 2; n.sp -= 3; }
     if(r.tier === "대성공" && !r.auto && rnd(2) === 0) n[r.stat] += 1;
   }
-  if(/잠|잔다|자고|쉬/.test(input)){ n.en += 40; n.hp += 10; n.sp += 5; }
+  if(/잠|잔다|자고|쉬/.test(input)){ n.en += Math.round(40 * regenFactor()); n.hp += 10; n.sp += 5; }
   if(/먹|식사|밥/.test(input)){ n.en += 10; }
   return n;
 }
@@ -2452,6 +2454,15 @@ const bonus = v => Math.floor(v / 2);
 const originKo = o => o === "nest" ? "둥지" : "뒷골목";
 
 function famAge(f){ return Math.floor((S.days - f.born) / 365); }
+/* 나이가 들수록 회복(기력 포함)이 느려진다. 혈귀는 늙지 않는다 */
+function regenFactor(){
+  if(isKindred()) return 1;
+  const y = ageY();
+  return y < 30 ? 1 : y < 40 ? 0.85 : y < 50 ? 0.65 : y < 60 ? 0.45 : 0.3;
+}
+/* 수명: 평균 60세, 위아래로 흩어진다(혈귀는 늙지 않는다) */
+function rollLife(){ let t = 0; for(let i = 0; i < 4; i++) t += rand01(); return Math.round(60 + (t - 2) * 14); }   /* 대략 46~74, 드물게 그 밖 */
+function lifeOf(f){ if(f.life == null) f.life = rollLife(); return f.life; }
 function familyText(){
   if(!S.family.length) return "없음";
   return S.family.map(f => `${f.rel} ${f.name || "(이름 미정)"}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망: " + (f.cause || "사인 모름")}${f.look ? ", 외모: " + f.look : ""})`).join(", ");
@@ -2497,6 +2508,7 @@ function stateSummary(local){
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
   if(S.warp) lines.push(warpState());
+  if(!isKindred() && ageY() >= 50) lines.push(`[노화] 이 도시의 평균 수명은 60세 남짓이다. 주인공은 ${ageY()}세로 ${ageY() >= (S.lifespan || 60) ? "기력이 많이 쇠했다" : "조금씩 몸이 예전 같지 않다"}.`);
   if(S.lm) lines.push(lmState());
   if(S.claw) lines.push(clawState());
   if(S.shin) lines.push(shinState());
@@ -2689,10 +2701,10 @@ function ruleNarrate(input, results){
   const n = blankNarr(paras.join("\n\n") + (aiOn() ? "" : "\n\n(규칙 기반 서술입니다.)"));
   for(const r of results){
     if(!r.auto) n.en -= 4;
-    if(r.tier === "대실패"){ n.hp -= 8; n.sp -= 5; }
+    if(r.tier === "대실패"){ n.hp -= 12; n.sp -= 6; }
     if(r.tier === "대성공" && !r.auto && rnd(2) === 0) n[r.stat] += 1;
   }
-  if(/잠|잔다|자고|쉬/.test(input)){ n.en += 40; n.hp += 10; n.sp += 5; }
+  if(/잠|잔다|자고|쉬/.test(input)){ n.en += Math.round(40 * regenFactor()); n.hp += 10; n.sp += 5; }
   n.options = ruleOptions();
   return n;
 }
@@ -3001,7 +3013,9 @@ function applyNarr(n, forcedDays, shownDays){
   S.flowNote = "";
   S.urgent = !n.passiveDone && judgeUrgent(n);
   /* 체력·정신력은 회복이 느리다: 오르는 양은 40%만 */
-  for(const k of ["hp", "sp"]) if(n[k] > 0) n[k] = Math.max(1, Math.round(n[k] * 0.4));
+  for(const k of ["hp", "sp"]) if(n[k] > 0) n[k] = Math.max(1, Math.round(n[k] * 0.4 * regenFactor()));
+  /* 다치는 건 더 아프다 */
+  for(const k of ["hp", "sp"]) if(n[k] < 0) n[k] = Math.round(n[k] * 1.3);
   for(const k of GAUGE_KEYS) S[k] = gclamp(k, S[k] + n[k]);
   for(const k of STAT_KEYS) S[k] = Math.max(0, S[k] + n[k]);
   S.ahn = Math.max(0, S.ahn + n.ahn);
@@ -3017,7 +3031,7 @@ function applyNarr(n, forcedDays, shownDays){
   if(n.event) deltas.push({k:"돌발", v:0, event:true});
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
   /* 옷차림이 바뀌었으면 먼저 반영(그래야 이 장면의 대화 카드에도 새 옷으로 나온다) */
-  if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
+  if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; bump("outfit"); log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
   for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
   for(const pr of String(n.npcOutfit || "").split(/\s*;\s*/)){ const [w, o] = pr.split("/"); if(w && o) setOutfit(w.trim(), o.trim()); }
   const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
@@ -3092,6 +3106,18 @@ async function memoryTick(){
   } finally { memBusy = false; }
 }
 
+/* 수명이 다하면 노환으로 세상을 떠난다 */
+function ageDeath(){
+  if(S.dead || isKindred()) return;
+  if(S.lifespan == null) S.lifespan = rollLife();
+  const y = ageY();
+  if(y < S.lifespan) return;
+  if(rand01() < 2 / 365){
+    S.dead = `${y}세, 노환으로 조용히 세상을 떠났다.`;
+    log({t:"death", text:S.dead});
+    if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); try{ updateFlowUI(); }catch(e){} }
+  }else if(!S.oldWarn){ S.oldWarn = true; log({t:"sys", text:"몸이 예전 같지 않다. 계단 몇 개에도 숨이 차고, 아침에 일어나는 일이 점점 힘들어진다."}); }
+}
 function checkDeath(){
   if(S.dead || S.warp) return;   /* 워프열차 안에서는 죽지 않는다(쓰러지면 불러오기) */
   if(S.hp <= 0) S.dead = S.distorted ? "뒤틀린 채 쓰러졌다. 끝내 아무도 그것이 누구였는지 알지 못했다." : "체력이 다해 숨을 거두었다.";
@@ -3168,7 +3194,11 @@ function checkMilestones(input, results){
     if(tagIdx >= 0) S.tags.splice(tagIdx, 1);
     /* 사무소는 4급 해결사부터 */
     if(S.license && S.license <= 4) requestName("office");
-    else log({t:"sys", text:`해결사 사무소는 4급 해결사부터 차릴 수 있다(지금: ${S.license ? S.license + "급" : "자격 없음"}).`});
+  }
+  /* 4급이 되면 협회가 사무소를 차릴 수 있다고 알려 준다 */
+  if(S.license && S.license <= 4 && !S.office && !S.officeCalled){
+    S.officeCalled = true;
+    log({t:"narr", text:"하나 협회 지부에서 연락이 왔다. \"4급 해결사가 되셨으니, 이제 자기 사무소를 차릴 수 있습니다. 개업 신고는 지부에서 받습니다.\"", deltas:[], options:["사무소를 차린다", "지금 소속에 남는다", "생각해 본다"]});
   }
   /* 사무소 직원 고용: 내 사무소가 있을 때 */
   const hireTag = S.tags.findIndex(t => /^고용:/.test(t));
@@ -3238,7 +3268,9 @@ const CAREER = {
   fixer:{ko:"해결사", ranks:["9급","8급","7급","6급","5급","4급","3급","2급","1급"], work:/(의뢰|해결사|사무소|토벌|호위|수색|조사|협회)/},
   syndicate:{ko:"조직", ranks:["말단","조직원","행동대장","간부","부두목","두목"], work:/(조직|수금|보호비|구역|패거리|두목|간부|임무|거래|밀수|협박)/},
   apprentice:{ko:"견습", ranks:["견습생","선임 견습생"], work:/(사무소|견습|심부름|청소|장비|서류|보조|의뢰|대표|선배)/},
-  official:{ko:"공무원", ranks:["9급","8급","7급","6급","5급","4급","3급","2급","1급"], work:/(근무|업무|공무|출근|민원|순찰|단속|보고서|상관|부서)/}
+  official:{ko:"공무원", ranks:["9급","8급","7급","6급","5급","4급","3급","2급","1급"], work:/(근무|업무|공무|출근|민원|순찰|단속|보고서|상관|부서)/},
+  assoc:{ko:"협회 직원", ranks:["사원","주임","대리","과장","지부장"], work:/(협회|지부|서류|심사|등록|등급|감사|출근|업무|보고)/},
+  wing:{ko:"날개 직원", ranks:["사원","주임","대리","과장","차장","부장","이사"], work:/(회사|출근|업무|보고|회의|부서|프로젝트|특이점|연구|날개)/}
 };
 function syncCareers(){
   if(!S.careers) S.careers = {};
@@ -3257,14 +3289,20 @@ function syncCareers(){
   const ap = apprenticeOf();
   if(ap && !S.license){ if(!C.apprentice) C.apprentice = {org:ap, rank:0, merit:0}; else C.apprentice.org = ap; }
   else delete C.apprentice;
-  const off = S.tags.find(t => /^공무원:/.test(t)) || S.tags.find(t => /^(소속|직업|일):.*(공무원|관청|시청|날개 직원|구청)/.test(t));
+  const as = S.tags.find(t => /^협회 직원:/.test(t)) || S.tags.find(t => /^(공무원|직업|일):.*협회/.test(t));
+  if(as){ const org = as.replace(/^[^:]+:/, "").trim(); if(!C.assoc) C.assoc = {org, rank:0, merit:0}; else C.assoc.org = org; }
+  else delete C.assoc;
+  const wg = S.tags.find(t => /^(날개 직원|직장):/.test(t)) || S.tags.find(t => /^(소속|직업|일|공무원):.*([A-Z]사|날개)/.test(t) && !/(협회|사무소)/.test(t));
+  if(wg){ const org = wg.replace(/^[^:]+:/, "").trim(); if(!C.wing) C.wing = {org, rank:0, merit:0}; else C.wing.org = org; }
+  else delete C.wing;
+  const off = S.tags.find(t => /^공무원:/.test(t) && t !== as && t !== wg) || S.tags.find(t => /^(소속|직업|일):.*(공무원|관청|시청|구청)/.test(t));
   if(off){ const org = off.replace(/^[^:]+:/, "").trim(); if(!C.official) C.official = {org, rank:0, merit:0}; else C.official.org = org; }
   else delete C.official;
 }
 function careerLabel(type){
   const c = S.careers[type], rk = ranksOf(type)[c.rank];
   if(type === "apprentice") return `${c.org} ${rk}`;
-  return type === "fixer" ? `${c.org} 해결사 ${rk}` : type === "syndicate" ? `${c.org} ${rk}` : `${c.org} ${rk} 공무원`;
+  return type === "fixer" ? `${c.org} 해결사 ${rk}` : type === "syndicate" || type === "assoc" || type === "wing" ? `${c.org} ${rk}` : `${c.org} ${rk} 공무원`;
 }
 function addMerit(type, delta){
   const c = S.careers && S.careers[type]; if(!c || !delta) return;
@@ -4736,6 +4774,57 @@ const ACHS = [
   ["starBlade", "별벼림 칼", "별의 이름과 칼을 함께 지녔다", () => !!S.star && S.star.blade, "e", "다섯 손가락"],
   ["starFound", "빈자리의 주인", "주인을 잃은 별벼림 칼을 자기 것으로 삼았다", () => !!S.star && S.star.how === "발견", "e", "다섯 손가락"],
   ["fiveFingers", "손가락 사이에서", "손가락에 몸담은 채 해결사 1급이 되었다", () => !!fingerOf() && S.license === 1, "l", "다섯 손가락"],
+  ["officeCall", "개업 자격", "협회에서 사무소를 차릴 수 있다는 연락을 받았다", () => !!S.officeCalled, "r", "일과 신분"],
+  ["assocJob", "협회 직원", "협회 직원이 되었다", () => !!(S.careers && S.careers.assoc), "u", "일과 신분"],
+  ["assocTop", "지부장", "협회 지부장이 되었다", () => !!(S.careers && S.careers.assoc && S.careers.assoc.rank >= 4), "e", "일과 신분"],
+  ["wingJob", "날개 아래에서", "날개의 직원이 되었다", () => !!(S.careers && S.careers.wing), "r", "일과 신분"],
+  ["wingTop", "날개의 이사", "날개의 이사가 되었다", () => !!(S.careers && S.careers.wing && S.careers.wing.rank >= 6), "l", "일과 신분"],
+  ["jobless", "무직", "스물다섯 살에 아무 일도 하지 않았다", () => ageY() >= 25 && !Object.keys(S.careers || {}).length && !S.tags.some(t => /^(직업|일):/.test(t)), "c", "일과 신분"],
+  ["outlive", "평균을 넘어", "평균 수명 60세를 넘겼다", () => !isKindred() && ageY() >= 61, "u", "삶"],
+  ["dieNatural", "노환", "늙어서 조용히 세상을 떠났다", () => /노환/.test(S.dead || ""), "r", "마지막"],
+  /* ── 더 많은 업적 ── */
+  ["bornL", "L사의 아이", "L사 구역(12구역)에서 태어났다", () => S.district === 12, "u", "태생"],
+  ["bornW", "워프의 도시", "W사 구역(23구역)에서 태어났다", () => S.district === 23, "u", "태생"],
+  ["born9", "음악의 거리", "9구역에서 태어났다", () => S.district === 9, "u", "태생"],
+  ["born10", "도박의 거리", "10구역에서 태어났다", () => S.district === 10, "u", "태생"],
+  ["born14", "통조림 공장", "14구역에서 태어났다", () => S.district === 14, "u", "태생"],
+  ["born25", "혹한의 아이", "25구역에서 태어났다", () => S.district === 25, "u", "태생"],
+  ["longLife", "긴 명", "타고난 수명이 일흔다섯을 넘었다(그만큼 살았다)", () => (S.lifespan || 0) >= 75 && ageY() >= 75, "l", "삶"],
+  ["days10k", "만 일", "만 날을 살았다", () => S.days >= 10000, "r", "삶"],
+  ["days20k", "이만 일", "이만 날을 살았다", () => S.days >= 20000, "e", "삶"],
+  ["oldAge", "노년", "몸이 예전 같지 않다는 걸 느꼈다", () => !!S.oldWarn, "u", "삶"],
+  ["ahn10b", "도시를 살 돈", "백억 안을 모았다", () => S.ahn >= 10000000000, "l", "돈과 평판"],
+  ["nobody", "이름 없는 사람", "마흔이 되도록 평판이 바닥이었다", () => ageY() >= 40 && S.rep <= 5, "u", "돈과 평판"],
+  ["firstBuy", "첫 구매", "공방에서 물건을 샀다", () => cnt("buy") >= 1, "c", "장비"],
+  ["bigSpender", "큰손", "공방에서 열 번 샀다", () => cnt("buy") >= 10, "r", "장비"],
+  ["luxury", "명품 장비", "2천만 안이 넘는 장비를 샀다", () => cnt("bigBuy") >= 1, "r", "장비"],
+  ["fullGear", "완전 무장", "무기·방어구·의체를 모두 갖췄다", () => !!(S.equip && S.equip.weapon && S.equip.armor && ["arm", "leg", "eye", "body"].some(k => S.equip[k])), "r", "장비"],
+  ["inv10", "창고", "장비를 열 개 넘게 모았다", () => (S.inv || []).length >= 10, "e", "장비"],
+  ["fashion", "옷장", "옷을 열 번 갈아입었다", () => cnt("outfit") >= 10, "u", "장비"],
+  ["str80", "괴물 같은 힘", "힘이 80을 넘었다", () => eff("str") >= 80, "l", "능력"],
+  ["def40", "철갑", "방어력이 40을 넘었다", () => eff("def") >= 40, "e", "능력"],
+  ["spd40", "번개", "속도가 40을 넘었다", () => eff("spd") >= 40, "e", "능력"],
+  ["int40", "천재", "지력이 40을 넘었다", () => eff("int") >= 40, "e", "능력"],
+  ["youngParent", "젊은 부모", "스물두 살이 되기 전에 아이를 얻었다", () => S.family.some(f => f.rel === "자녀" && f.born < 22 * 365), "u", "가족과 사람"],
+  ["lateChild", "늦둥이", "마흔다섯이 넘어 아이를 얻었다", () => S.family.some(f => f.rel === "자녀" && f.born >= 45 * 365), "r", "가족과 사람"],
+  ["widow", "홀로 남은 반려", "배우자를 먼저 떠나보냈다", () => S.family.some(f => f.rel === "배우자" && f.alive === false), "r", "가족과 사람"],
+  ["outliveParents", "부모를 보내다", "어른이 되어 부모를 모두 떠나보냈다", () => ageY() >= 20 && S.family.some(f => f.rel === "아버지" || f.rel === "어머니") && !parentsAlive(), "u", "가족과 사람"],
+  ["abnoZ", "작은 환상체", "ZAYIN 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "ZAYIN"), "c", "만남"],
+  ["abnoT", "TETH", "TETH 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "TETH"), "u", "만남"],
+  ["abnoH", "HE", "HE 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "HE"), "r", "만남"],
+  ["scouted", "눈에 띄다", "스카우트 제안을 받았다", () => cnt("scout") >= 1, "u", "만남"],
+  ["scouted3", "모두가 원하는 사람", "스카우트 제안을 세 번 받았다", () => cnt("scout") >= 3, "r", "만남"],
+  ["targeted", "표적", "납치를 세 번 겪었다", () => cnt("kidnapTry") >= 3, "r", "만남"],
+  ["commission1", "첫 의뢰", "의뢰를 받았다", () => cnt("commission") >= 1, "c", "전투"],
+  ["commission10", "바쁜 해결사", "의뢰를 열 번 받았다", () => cnt("commission") >= 10, "u", "전투"],
+  ["commission50", "의뢰가 끊이지 않는다", "의뢰를 쉰 번 받았다", () => cnt("commission") >= 50, "e", "전투"],
+  ["bigHurt", "깊은 상처", "한 번에 크게 다쳤다", () => cnt("bigHurt") >= 1, "c", "몸과 마음"],
+  ["bigHurt10", "흉터투성이", "크게 다친 게 열 번", () => cnt("bigHurt") >= 10, "r", "몸과 마음"],
+  ["exhausted", "기진맥진", "기력이 바닥났다", () => S.en <= 0, "c", "몸과 마음"],
+  ["ironMind", "철의 정신", "정신력이 +45에 닿았다", () => S.sp >= 45, "e", "몸과 마음"],
+  ["sweeper", "청소부를 보다", "뒷골목의 밤, 청소부와 마주쳤다", () => cnt("sweeper") >= 1, "r", "장소와 시간"],
+  ["night30", "밤을 걷는 자", "뒷골목의 밤에 서른 번 움직였다", () => cnt("night") >= 30, "e", "장소와 시간"],
+  ["allRoads", "모든 길 위에서", "혈귀·心·발톱·손가락 중 셋을 한 삶에 겪었다", () => [isKindred(), !!S.shin, !!S.claw, !!fingerOf()].filter(Boolean).length >= 3, "l", "몸과 마음"],
   ["starve", "시든 혈귀", "혈액이 바닥났다", () => isKindred() && S.blood != null && S.blood <= 0, "r", "혈귀"],
   ["hunter", "혈귀 사냥꾼", "혈귀를 토벌했다", () => S.tags.some(t => /^토벌:.*혈귀/.test(t)), "r", "전투"],
   /* 몸 */
@@ -4904,6 +4993,8 @@ async function doAction(input, opt = {}){
   done();
   if(!actions) actions = ruleJudge(actInput || input);
   actions = sanitizeActions(actions, actInput || input);
+  /* 도시는 냉혹하다: 굴려야 하는 행동은 난이도 +2 */
+  for(const a of actions || []) if(!a.trivial && a.dc != null) a.dc = Number(a.dc) + 2;
   /* 신(心)과 망(望) */
   S._mang = !passive && S.shin ? mangUse(actInput || input) : 0;
   /* 발톱: 앰플 투여 */
@@ -4964,7 +5055,9 @@ async function doAction(input, opt = {}){
   const fin = guardNarr(n || (passive ? passiveNarr() : ruleEvent(ruleNarrate(input, results), ev)), results);
   fin.event = !!ev;
   S.awaitEvent = !!ev;
-  if(isKidnap(ev)){ fin.urgent = true; chron("납치당할 뻔했다"); }
+  if(isKidnap(ev)){ fin.urgent = true; chron("납치당할 뻔했다"); bump("kidnapTry"); }
+  if(/청소부/.test(fin.narration || "")) bump("sweeper");
+  if(fin.hp <= -15) bump("bigHurt");
   if(isDistortHunt(ev)) fin.urgent = true;
   if(ev === WARP_OFFER){ S.warpOffer = true; S.warpOffered = true; }
   if(ev === LM_INVITE){ S.lmOffer = true; S.lmInvited = true; }
@@ -5091,6 +5184,12 @@ const ITEMS = [
   {id:"stigma", slot:"weapon", name:"가열 도검", shop:"스티그마 공방", fx:{str:6}, price:28000000, age:20, look:"hotsword"},
   {id:"pistol", slot:"weapon", name:"권총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:5, int:1}, price:45000000, age:20, look:"gun"},
   {id:"wheels", slot:"weapon", name:"처형인의 대검", shop:"휠스 인더스트리", fx:{str:8, spd:-1}, price:60000000, age:20, look:"greatsword"},
+  {id:"bat", slot:"weapon", name:"나무 야구 배트", shop:"고물상", fx:{str:2}, price:30000, age:10, look:"bat"},
+  {id:"axe", slot:"weapon", name:"손도끼", shop:"뒷골목 잡화점", fx:{str:3}, price:400000, age:14, look:"axe"},
+  {id:"spear", slot:"weapon", name:"해결사 단창", shop:"리플릿 공방", fx:{str:3, spd:1}, price:2500000, age:18, look:"spear"},
+  {id:"rapier", slot:"weapon", name:"결투용 레이피어", shop:"생크 협회 납품 공방", fx:{str:3, spd:3}, price:18000000, age:18, look:"rapier"},
+  {id:"scythe", slot:"weapon", name:"큰 낫", shop:"이름난 공방", fx:{str:7, spd:-1}, price:40000000, age:20, look:"scythe"},
+  {id:"musket", slot:"weapon", name:"총검 달린 머스킷 (탄환 별도)", shop:"지하 공방", fx:{str:7, def:1}, price:55000000, age:20, look:"musket"},
   {id:"coat", slot:"armor", name:"두꺼운 외투", shop:"뒷골목 옷가게", fx:{def:1}, price:120000, age:0, look:"#5b6b4e"},
   {id:"vest", slot:"armor", name:"방검 조끼", shop:"뒷골목 잡화점", fx:{def:2}, price:700000, age:12, look:"#3d4048"},
   {id:"suit", slot:"armor", name:"사무소 제식 정장", shop:"해결사 사무소 납품처", fx:{def:3}, price:3000000, age:18, look:"suit"},
@@ -6127,20 +6226,57 @@ function drawSprite(cv, opt){
   if(tr.hood){ const hw2 = headW + 4; box(hcx - hw2 / 2, oy + B.headTop - 2, hw2, 5, outfit); box(hcx - hw2 / 2, oy + B.headTop + 3, 3, chin - oy - B.headTop - 3, outfit); box(hcx + hw2 / 2 - 3, oy + B.headTop + 3, 3, chin - oy - B.headTop - 3, shade(outfit, 0.75)); box(hcx - hw2 / 2 + 3, oy + B.headTop + 3, hw2 - 6, 1, shade(outfit, 0.7)); }
   if(armor && armor.look === "suit"){ box(hcx - 2, chin + 1, 5, 2, "#f2f0ea"); box(hcx, chin + 2, 1, 7, "#a8302c"); }
   if(eq.body) for(let yy = chin + 4; yy < oy + B.crotch - 3; yy += 3) box(hcx - 6, yy, 13, 1, "rgba(109,119,133,.85)");
-  if(y0 >= 65) box(ox - 2, oy + B.neck + 10, 1, B.h - B.neck - 10, "#7a5a3a");
+  /* 지팡이: 늙으면(평균 수명 60세 근처부터) 왼손에. 굽은 손잡이, 나무결, 고무 끝 */
+  if(y0 >= 58 && !(!o.traits && isKindred())){
+    const cx = ox - 3, top = oy + B.neck + 9, bot = oy + B.h - 1, wood = "#7a5a3a", hi = "#a07a52", dk = "#4e3622";
+    box(cx, top + 2, 2, bot - top - 3, wood); box(cx, top + 2, 1, bot - top - 3, hi);
+    for(let yy = top + 6; yy < bot - 3; yy += 7) box(cx + 1, yy, 1, 1, dk);
+    box(cx, top, 2, 2, wood); box(cx + 2, top - 1, 3, 2, wood); box(cx + 4, top, 2, 3, dk); box(cx + 2, top - 1, 2, 1, hi);
+    box(cx, bot - 2, 2, 2, "#2b2b31");
+  }
   const w = eq.weapon && itemById(eq.weapon);
   if(w && !baby){
     const hx = ox + B.w - 3, hy = oy + B.handTop + 3, L = w.look;
-    const blade = (len, wid, col) => { box(hx, hy - len, wid, len, col); box(hx, hy - len, 1, len, shade(col, 1.15)); box(hx - 1, hy, wid + 2, 1, "#c09a3a"); box(hx, hy + 1, wid, 3, "#5a3f2a"); };
-    if(L === "knife") blade(5, 1, "#dfe3ea");
-    else if(L === "pipe") box(hx, hy - 16, 2, 21, "#7d7f86");
-    else if(L === "sword" || L === "blade") blade(20, 2, "#dfe3ea");
-    else if(L === "hotsword") blade(20, 2, "#e3683a");
-    else if(L === "greatsword") blade(27, 3, "#cdd2dc");
-    else if(L === "mace"){ box(hx, hy - 12, 1, 17, "#5a3f2a"); box(hx - 2, hy - 16, 5, 4, "#8a8f99"); }
-    else if(L === "hammer"){ box(hx, hy - 12, 1, 17, "#5a3f2a"); box(hx - 4, hy - 16, 9, 4, "#8a8f99"); }
-    else if(L === "gauntlet"){ box(ox, hy - 2, 5, 4, "#c9a24a"); box(ox + B.w - 5, hy - 2, 5, 4, "#c9a24a"); }
-    else if(L === "gun"){ box(hx - 1, hy - 1, 7, 2, "#2b2b31"); box(hx - 1, hy + 1, 2, 3, "#2b2b31"); }
+    const grip = (len, col) => { box(hx, hy + 1, 2, len, col || "#5a3f2a"); box(hx, hy + 1, 1, len, "#7a5a3a"); };
+    /* 곧은 칼: 길이, 폭, 색, 날 가운데 홈, 코등이 폭 */
+    const sword = (len, wid, col, guardW, opt = {}) => {
+      const top = hy - len;
+      box(hx, top + 1, wid, len - 1, col);
+      box(hx + (opt.curve ? 1 : 0), top, Math.max(1, wid - 1), 1, shade(col, 1.25));          /* 칼끝 */
+      if(opt.curve){ box(hx + 1, top + 1, wid, Math.round(len * 0.3), col); box(hx, top + 1, 1, Math.round(len * 0.3), "rgba(0,0,0,0)"); }
+      box(hx, top + 1, 1, len - 1, shade(col, 1.2));                                          /* 날 빛 */
+      if(wid >= 2) box(hx + wid - 1, top + 2, 1, len - 3, shade(col, 0.78));
+      if(opt.fuller && wid >= 3) box(hx + 1, top + 3, 1, len - 6, shade(col, 0.82));
+      if(opt.glow){ box(hx - 1, top + 3, 1, len - 6, "rgba(255,120,40,.55)"); box(hx + wid, top + 3, 1, len - 6, "rgba(255,120,40,.55)"); }
+      const g0 = hx - Math.floor((guardW - wid) / 2);
+      box(g0, hy, guardW, 1, opt.guardCol || "#c09a3a"); box(g0, hy, 1, 1, shade(opt.guardCol || "#c09a3a", 0.7));
+      grip(3, opt.gripCol);
+      box(hx, hy + 4, Math.min(2, wid), 1, opt.guardCol || "#c09a3a");                        /* 칼자루 끝 */
+    };
+    if(L === "knife"){ box(hx, hy - 6, 1, 6, "#dfe3ea"); box(hx + 1, hy - 4, 1, 4, "#b8bec8"); box(hx, hy - 7, 1, 1, "#f4f6fa"); box(hx, hy, 2, 4, "#3b3d44"); box(hx, hy + 1, 1, 1, "#8a8f99"); }
+    else if(L === "pipe"){ box(hx, hy - 16, 2, 21, "#7d7f86"); box(hx, hy - 16, 1, 21, "#a3a6ad"); box(hx - 1, hy - 17, 4, 2, "#5f6168"); box(hx - 1, hy - 7, 4, 1, "#5f6168"); box(hx, hy - 12, 1, 2, "#8a5a3a"); }
+    else if(L === "bat"){ box(hx + 1, hy - 15, 2, 3, "#b08350"); box(hx, hy - 12, 3, 8, "#b08350"); box(hx, hy - 12, 1, 8, "#cfa06a"); box(hx, hy - 4, 2, 9, "#9a7044"); box(hx, hy + 2, 2, 1, "#2b2b31"); box(hx - 1, hy + 5, 4, 1, "#7a5a3a"); }
+    else if(L === "sword") sword(20, 2, "#dfe3ea", 6, {});
+    else if(L === "blade") sword(20, 2, "#e4e7ee", 4, {curve:true, guardCol:"#3b3d44", gripCol:"#2a2c33"});
+    else if(L === "hotsword") sword(20, 2, "#e3683a", 6, {glow:true, guardCol:"#3b3d44"});
+    else if(L === "greatsword") sword(27, 4, "#cdd2dc", 9, {fuller:true, guardCol:"#7d7f86"});
+    else if(L === "rapier"){ box(hx, hy - 22, 1, 22, "#e8ebf0"); box(hx, hy - 23, 1, 1, "#ffffff"); box(hx - 1, hy - 1, 3, 2, "#c09a3a"); box(hx - 2, hy, 1, 2, "#c09a3a"); box(hx + 2, hy - 2, 1, 3, "#c09a3a"); grip(3, "#3b3d44"); box(hx, hy + 4, 1, 1, "#c09a3a"); }
+    else if(L === "spear"){ box(hx, hy - 24, 1, 30, "#7a5a3a"); box(hx - 1, hy - 28, 3, 4, "#dfe3ea"); box(hx, hy - 30, 1, 2, "#f4f6fa"); box(hx - 1, hy - 24, 3, 1, "#c09a3a"); box(hx + 1, hy - 27, 1, 3, "#aab0bb"); }
+    else if(L === "axe"){ box(hx, hy - 12, 1, 17, "#7a5a3a"); box(hx + 1, hy - 13, 4, 5, "#9aa0aa"); box(hx + 4, hy - 14, 1, 7, "#dfe3ea"); box(hx + 1, hy - 13, 1, 5, "#6d727b"); }
+    else if(L === "scythe"){ box(hx, hy - 24, 1, 30, "#5a3f2a"); box(hx + 1, hy - 25, 8, 2, "#cdd2dc"); box(hx + 8, hy - 24, 2, 2, "#cdd2dc"); box(hx + 9, hy - 22, 2, 1, "#e8ebf0"); box(hx + 1, hy - 25, 7, 1, "#e8ebf0"); box(hx - 1, hy - 14, 3, 1, "#3b3d44"); }
+    else if(L === "mace"){ box(hx, hy - 11, 2, 16, "#5a3f2a"); box(hx, hy - 11, 1, 16, "#7a5a3a"); box(hx - 2, hy - 17, 6, 6, "#8a8f99"); box(hx - 1, hy - 16, 1, 4, "#b3b8c2"); box(hx - 3, hy - 15, 1, 2, "#6d727b"); box(hx + 4, hy - 15, 1, 2, "#6d727b"); box(hx, hy - 18, 2, 1, "#6d727b"); }
+    else if(L === "hammer"){ box(hx, hy - 12, 2, 17, "#3b3d44"); box(hx - 4, hy - 18, 10, 6, "#8a8f99"); box(hx - 4, hy - 18, 10, 1, "#b3b8c2"); box(hx - 3, hy - 16, 1, 3, "#4f9fba"); box(hx + 4, hy - 16, 1, 3, "#4f9fba"); box(hx - 4, hy - 13, 10, 1, "#6d727b"); }
+    else if(L === "gauntlet"){ for(const gx of [ox - 1, ox + B.w - 6]){ box(gx, hy - 3, 7, 6, "#c9a24a"); box(gx, hy - 3, 7, 1, "#e6c675"); box(gx + 1, hy + 1, 5, 1, "#8a6a2a"); box(gx + 1, hy - 1, 1, 1, "#4f9fba"); box(gx + 5, hy - 1, 1, 1, "#4f9fba"); } }
+    else if(L === "gun"){ box(hx - 1, hy - 2, 8, 3, "#2b2b31"); box(hx - 1, hy - 2, 8, 1, "#4a4a55"); box(hx + 7, hy - 1, 1, 1, "#16161a"); box(hx - 1, hy + 1, 3, 4, "#3a2c22"); box(hx + 2, hy + 1, 1, 2, "#16161a"); }
+    else if(L === "musket"){ box(hx, hy - 22, 2, 27, "#6a4a30"); box(hx + 1, hy - 24, 1, 20, "#3b3d44"); box(hx, hy - 22, 1, 27, "#8a6644"); box(hx + 1, hy - 30, 1, 6, "#dfe3ea"); box(hx + 1, hy - 31, 1, 1, "#f4f6fa"); box(hx - 1, hy + 2, 4, 3, "#5a3f2a"); box(hx + 2, hy - 2, 1, 2, "#c09a3a"); }
+    else sword(18, 2, "#dfe3ea", 5, {});
+  }
+  /* 발톱: 왼팔 건틀릿과 칼날 손가락 넷 */
+  if(!o.traits && S && S.claw && !baby){
+    const gx = ox - 1, gy = oy + B.handTop;
+    box(gx, gy - 4, 5, 8, "#3b3f4a"); box(gx, gy - 4, 5, 1, "#6d7380");
+    box(gx + 1, gy - 2, 1, 1, "#4f8fd6"); box(gx + 2, gy - 2, 1, 1, "#e08a3c"); box(gx + 3, gy - 2, 1, 1, "#5fb36a");
+    for(let i = 0; i < 4; i++){ box(gx + i + (i > 1 ? 1 : 0), gy + 4, 1, 6, "#dfe6f2"); box(gx + i + (i > 1 ? 1 : 0), gy + 10, 1, 1, "#ffffff"); }
   }
   cleanOutline(ctx, W, H, LINEMASK);
 }
@@ -6198,17 +6334,26 @@ function pickSmall(y){
 function oneDay(){
   const monthBefore = monthOf(S.days);
   applyDays(1);
-  S.en = Math.min(100, S.en + 3); if(S.days % 20 === 0) S.hp = Math.min(100, S.hp + 1);
+  { const rf = regenFactor(); S.enAcc = (S.enAcc || 0) + 3 * rf; const ge = Math.floor(S.enAcc); S.enAcc -= ge; S.en = Math.min(100, Math.round(S.en) + ge); S.regenAcc = (S.regenAcc || 0) + rf; if(S.regenAcc >= 20){ S.regenAcc -= 20; S.hp = Math.min(100, S.hp + 1); } }
   bloodDay(); if(monthOf(S.days) !== monthBefore){ serumMonth(); ringMonth(); }
-  prescriptDay(); starAge();
+  prescriptDay(); starAge(); ageDeath();
   /* 정신력은 시간이 지나면 0(평온) 쪽으로 아주 천천히 돌아온다 */
-  if(S.days % 24 === 0 && S.sp < 0) S.sp++; else if(S.days % 24 === 12 && S.sp > 0) S.sp--;
+  S.spAcc = (S.spAcc || 0) + regenFactor();
+  if(S.spAcc >= 24){ S.spAcc -= 24; if(S.sp < 0) S.sp++; else if(S.sp > 0) S.sp--; }
   /* 견습 수당: 13~19세 견습생은 매달 30만 안 */
   if(monthOf(S.days) !== monthBefore && apprenticeOf() && !S.license && ageY() < 20){ S.ahn += 300000; flow.ahn += 300000; }
   if(monthOf(S.days) !== monthBefore && ageY() >= 18){
-    const job = S.tags.some(t => /^(직업|소속|일|조직|공무원|자격):/.test(t)) || !!(S.careers && Object.keys(S.careers).some(k => k !== "apprentice"));
-    const income = (job ? 2500000 : 900000) * (0.9 + rand01() * 0.2);
-    const cost = (S.origin === "nest" ? 1500000 : 750000) * (0.9 + rand01() * 0.2);
+    syncCareers();
+    const C = S.careers || {};
+    /* 소속마다 월급(무직은 벌이가 없고 쓰기만 한다) */
+    const pay = {fixer:2200000, syndicate:1800000, official:2400000, assoc:2600000, wing:3400000};
+    const step = {fixer:350000, syndicate:500000, official:300000, assoc:450000, wing:700000};
+    let base = 0;
+    for(const k in pay) if(C[k]) base = Math.max(base, pay[k] + step[k] * (C[k].rank || 0));
+    if(!base && S.tags.some(t => /^(직업|일):/.test(t))) base = 1800000;
+    const income = base * (0.9 + rand01() * 0.2);
+    const withParents = ageY() < 20 && parentsAlive();
+    const cost = withParents ? 0 : (S.origin === "nest" ? 1700000 : 900000) * (0.9 + rand01() * 0.2);
     const staffCost = (S.staff || []).length * 1200000;
     const officeIncome = S.office ? (1500000 + (S.staff || []).length * 1000000) * (0.6 + S.rep / 100 * 0.8) : 0;
     const net = Math.round((income + officeIncome - cost - staffCost) / 1000) * 1000;
@@ -6231,13 +6376,13 @@ function checkBig(){
   /* 재생 중 스카우트: 1년에 (스카우트 확률 × 6)번 꼴 */
   { const sc = scoutChance(); if(sc > 0 && rand01() < sc * 6 / 365) return {kind:"event", text:scoutEvent()}; }
   /* 재생 중 의뢰: 해결사면 1년에 (2 + 평판×0.12)번 꼴 */
-  if(S.license && y >= 20 && rand01() < (2 + S.rep * 0.12) * (1 + (S.staff || []).length * 0.1) / 365) return {kind:"event", text:COMMISSIONS[rnd(COMMISSIONS.length)]};
+  if(S.license && y >= 20 && rand01() < (2 + S.rep * 0.12) * (1 + (S.staff || []).length * 0.1) / 365){ bump("commission"); return {kind:"event", text:COMMISSIONS[rnd(COMMISSIONS.length)]}; }
   const spouse = S.family.find(f => f.rel === "배우자" && f.alive);
   if(spouse && y >= 18 && y <= 45 && !S.pendingChild && rand01() < 0.3 / 365) return {kind:"child"};
   for(const f of S.family){
     if(!f.alive || (f.rel !== "아버지" && f.rel !== "어머니")) continue;
     const a = famAge(f);
-    if(a >= 60 && rand01() < (a - 55) * 0.004 / 365) return {kind:"death", f};
+    if(a >= lifeOf(f) && rand01() < 2 / 365) return {kind:"death", f};
   }
   if(rand01() < bigRate(y) / 365) return {kind:"event", text:pickEvent(y, seasonOf(S.days))};
   return null;
@@ -6322,7 +6467,7 @@ async function flowNarrate(elapsed, big){
     S.pendingChild = id;
     hint = "\n\n[사건] 방금 플레이어의 아이가 태어났다(이미 처리됨, child_born은 false). 출산 장면으로 끝내라.";
   }else if(big && big.kind === "death"){
-    big.f.alive = false; big.f.cause = big.f.cause || (famAge(big.f) >= 75 ? "노환으로 사망" : "병으로 사망"); big.f.diedAt = S.days;
+    big.f.alive = false; big.f.cause = big.f.cause || (famAge(big.f) >= 55 ? "노환으로 사망" : "병으로 사망"); big.f.diedAt = S.days;
     log({t:"sys", text:`${big.f.rel} ${big.f.name}이(가) 세상을 떠났다.`});
     hint = `\n\n[사건] 방금 ${big.f.rel} ${big.f.name}이(가) 세상을 떠났다(이미 처리됨, family_dead는 ""). 그 소식을 듣거나 마주하는 장면으로 끝내라.`;
   }else if(big) hint = eventLine(big.text);
@@ -6469,7 +6614,7 @@ $("#btnTagsFold").addEventListener("click", () => { const b = $("#btnTagsFold"),
 function buyItem(it){
   if(busy || S.dead || S.ahn < it.price || ageY() < it.age) return;
   const old = S.equip[it.slot] && itemById(S.equip[it.slot]);
-  S.ahn -= it.price;
+  S.ahn -= it.price; bump("buy"); if(it.price >= 20000000) bump("bigBuy");
   if(old && !isAug(old)){ if(!S.inv) S.inv = []; S.inv.push(old.id); log({t:"sys", text:`쓰던 ${old.name}은(는) 인벤토리에 넣었다.`}); }
   else if(old){ const back = Math.round(old.price * 0.3); S.ahn += back; applyTags("", "의체:" + old.name); log({t:"sys", text:`쓰던 ${old.name}을(를) ${fmt(back)}안에 넘겼다.`}); }
   S.equip[it.slot] = it.id;
@@ -6893,11 +7038,12 @@ async function createLife(){
   const wealth = rollWealth(origin, district);
   /* 아주 드물게 혈귀로 태어난다. 다섯 살부터 목이 마르기 시작한다 */
   const bornKindred = rand01() < 0.02;
+  const lifespan = rollLife();
   /* C사 구역에서 태어나면 드물게 머리의 발톱으로 뽑혀 스무 살부터 시작한다 */
   const bornClaw = district === 3 && rand01() < 0.2;
   /* 드물게 별의 이름을 받고 태어난다(칼은 열여섯 살에 찾아온다) */
   const bornStar = rand01() < 0.01 ? STARS[rnd(STARS.length)] : null;
-  S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, days:0, location:"",
+  S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, lifespan, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
     str:1 + rnd(3), def:1 + rnd(3), spd:1 + rnd(3), int:1 + rnd(3), log:[], dead:null,
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
