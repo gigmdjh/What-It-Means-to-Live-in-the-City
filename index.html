@@ -1002,10 +1002,10 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0205"></script>
+<script src="parts.js?v=20261108-0210"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0205";
+const BUILD = "20261108-0210";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1115,7 +1115,7 @@ const NARR_RULES = `
 
 [8. 장면 정보 칸]
 - location: 장면이 끝난 현재 장소. 구역 다음에 주인공이 실제로 있는 구체적인 곳까지 써라("L사 구역 뒷골목 집 안방", "L사 구역 동네 공원", "L사 구역 둥지 병원"처럼). 집 안에 있으면 반드시 '집'이 들어가야 하고, 그냥 "뒷골목"만 쓰지 마라. 아기·어린아이는 데리고 나가지 않는 한 집 안에 있다.
-- options: 지금 할 법한 행동 3개를 "|"로 구분(각 15자 이내, 나이에 맞게). 예: "문을 연다|숨는다|엄마를 부른다".
+- options: 항상 ""(비워 둔다. 플레이어가 직접 행동을 적는다).
 - outfit: 이 장면에서 주인공이 옷을 갈아입거나, 벗거나, 걸치거나, 옷이 찢기거나 젖어 바뀌었으면 지금 입은 옷차림 전체를 짧게("남색 코트, 흰 셔츠, 검은 치마"처럼 색+옷 이름을 쉼표로). 바뀌지 않았으면 "".
 - talk의 인물이 이 장면에서 옷을 갈아입었으면 그 talk 항목의 "outfit"에 그 인물의 새 옷차림을 같은 방식으로. 말하지 않은 인물이 옷을 바꿨으면 npc_outfit에 "이름/옷차림"(여럿이면 ;로). 없으면 "".
 - urgent: 지금 당장 대응해야 하는 위급한 순간(누가 공격해 온다, 쫓긴다, 불이 났다, 무언가 덮쳐 온다 등)으로 끝나면 true, 아니면 false.
@@ -1149,7 +1149,7 @@ const NARR_RULES = `
 - 별의 이름: [별의 이름]이 있으면 그 별의 칼이 주인공의 무기다. 다른 별의 칼을 쥐면 불길한 기운을 그려라.
 - 발톱: [발톱]이 있으면 사람들은 주인공을 두려워하고 피한다. 앰플을 쓰면 그 색의 효과를 그대로 그려라.
 
-반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","urgent":false,"shop":false,"merit":"없음","blood":"없음","outfit":"","npc_outfit":"","talk":[]}`;
+반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","urgent":false,"shop":false,"merit":"없음","blood":"없음","outfit":"","npc_outfit":"","talk":[]}`;
 
 /* 기기 AI용 짧은 규칙: 폰에서는 프롬프트가 길면 읽는 데만 수십 초가 걸린다 */
 const NARR_RULES_LOCAL = `
@@ -1163,8 +1163,8 @@ const NARR_RULES_LOCAL = `
 [대사] 짧은 구어체 1~2문장. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말).
 [외모] [외모] 글을 읽고 그 인상이 사람들의 반응과 사건에 영향을 주게 하라.
 [특별한 신분] [혈귀]·[뒤틀림]·[心]·[발톱]·[엄지]·[검지]·[중지]·[약지]·[소지]·[별의 이름]·[라만차랜드]·[워프열차] 같은 칸이 있으면 그 설정을 장면에 반영하라. 급수·계급·특색·별의 이름은 게임이 정하니 스스로 바꾸지 마라.
-[칸] 변화는 말로: hp·sp·en·rep는 "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복", ahn은 "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎", str·def·spd·int는 "없음/오름/내림", days는 "없음/하루/며칠/일주일/한 달/몇 달". options: 할 법한 행동 3개를 "|"로. tag_add/tag_remove: "분류:내용" 또는 "". shop: 공방 안에서 끝나면 true.
-JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
+[칸] 변화는 말로: hp·sp·en·rep는 "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복", ahn은 "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎", str·def·spd·int는 "없음/오름/내림", days는 "없음/하루/며칠/일주일/한 달/몇 달". options: 항상 "". tag_add/tag_remove: "분류:내용" 또는 "". shop: 공방 안에서 끝나면 true.
+JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","shop":false}`;
 
 const SUM_RULES = `
 너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 다른 AI가 읽고 이야기를 이어 갈 수 있게, 칸을 나눠 짧게 정리하라. 꾸밈말 없이 사실만.
@@ -3624,6 +3624,7 @@ function dayLabel(d){
   return `${d}일`;
 }
 
+const SHOW_OPTIONS = false;
 function appendEntry(e, live){
   const box = $("#log");
   let node;
@@ -3661,7 +3662,8 @@ function appendEntry(e, live){
       for(const t of e.tags) ts.appendChild(el("span", "tag " + (t[0] === "+" ? "add" : "del"), "#" + t.slice(1)));
       node.appendChild(ts);
     }
-    if(e.options && e.options.length && (live || (e === lastNarr() && sceneOpen(e))) && !S.dead){
+    /* 추천 답변(선택지 버튼)은 보여 주지 않는다: 하고 싶은 일은 직접 적는다 */
+    if(SHOW_OPTIONS && e.options && e.options.length && (live || (e === lastNarr() && sceneOpen(e))) && !S.dead){
       document.querySelectorAll("#log .opts").forEach(o => o.remove());
       const os = el("div", "opts");
       for(const o of e.options){
@@ -5450,8 +5452,8 @@ const TOUR = [
   [["#hGauges", "#sGauges"], "체력·정신력·기력·평판", "체력이 0이 되면 죽어요. 정신력이 바닥(−45)까지 떨어지면 뒤틀림 판정을 받아요. 기력은 움직일수록 줄고 쉬면 차요. 나이가 들수록 회복이 느려져요."],
   [["#hStats", "#sStats"], "능력치", "힘·방어력·속도·지력이에요. 아래 '+숫자'가 주사위 판정에 더해지는 보너스예요. 성인 평균은 30 정도예요."],
   [["#btnStatus"], "상세", "가족·소속·장비·인벤토리·기록 같은 자세한 정보는 여기서 봐요."],
-  [["#log"], "이야기", "당신이 한 일과 그 결과가 여기에 쌓여요. 주사위 판정 카드와, 고를 수 있는 선택지 버튼도 여기에 나와요."],
-  [["#actInput"], "행동 입력", "하고 싶은 일을 자유롭게 적어요. 선택지에 없는 행동도 괜찮아요. 여러 행동을 한 번에 적어도 돼요."],
+  [["#log"], "이야기", "당신이 한 일과 그 결과가 여기에 쌓여요. 주사위 판정 카드도 여기에 나와요."],
+  [["#actInput"], "행동 입력", "정해진 선택지는 없어요. 하고 싶은 일을 자유롭게 적어요. 여러 행동을 한 번에 적어도 돼요."],
   [["#btnQuote"], "말하기", "따옴표 버튼을 누르면 “ ”가 들어가요. 따옴표 안은 주인공이 하는 말(주사위 없음), 밖은 행동이에요."],
   [["#btnFlow", "#btnSpeed"], "시간 흘려보내기", "재생을 누르면 시간이 흘러요. 그동안 작은 일들이 생기고 아이는 자라요. 무슨 일이 생기면 저절로 멈춰요. 1×를 누르면 빨라져요."],
   [["#btnSettings"], "설정", "AI 연결·언어·소리를 바꿔요. 첫 화면에서는 업적과 지나간 삶의 전기를 볼 수 있어요."],
