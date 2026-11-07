@@ -1005,10 +1005,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0235"></script>
+<script src="parts.js?v=20261108-0240"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0235";
+const BUILD = "20261108-0240";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2001,6 +2001,7 @@ function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.cl
 /* ───────── 설정 ───────── */
 const CFG_DEFAULT = {
   provider:"auto", remember:false, lang:"ko",
+  sound:{bgmOn:true, sfxOn:true, bgmVol:60, sfxVol:80},
   anthropic:{key:"", model:"claude-haiku-5-5"},
   openai:{base:"https://api.openai.com/v1", key:"", model:""},
   gemini:{key:"", model:""},
@@ -2015,6 +2016,8 @@ function loadCfg(){
     if(typeof out[k] === "object" && c[k]) Object.assign(out[k], c[k]);
     else if(c[k] !== undefined) out[k] = c[k];
   }
+  /* 기본값에 없는 설정(나중에 생긴 칸)도 버리지 않고 불러온다 */
+  for(const k of Object.keys(c)) if(!(k in out)) out[k] = c[k];
   return out;
 }
 let CFG = loadCfg();
