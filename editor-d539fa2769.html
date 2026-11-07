@@ -804,11 +804,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1625"></script>
+<script src="parts.js?v=20261107-1630"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-1625";
+const BUILD = "20261107-1630";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1548,8 +1548,10 @@ function rand01(){
 }
 function rnd(n){ return Math.floor(rand01() * n); }
 function rndVis(n){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
-const SEED_WORDS = ["안개","녹슨","검은","잿빛","새벽","골목","날개","둥지","청소부","손가락","공방","등불","비","겨울","유리","철","종이","달"];
-function randomSeed(){ return SEED_WORDS[rndVis(SEED_WORDS.length)] + "-" + (1000 + rndVis(9000)); }
+/* 시드: 꾸미는 말 + 이름 말 + 숫자 4자리 (예: 붉은달-2810). 예전 형식이나 아무 글자도 그대로 쓸 수 있다 */
+const SEED_ADJ = ["녹슨","검은","잿빛","붉은","푸른","젖은","낡은","깨진","차가운","조용한","늦은","오래된","하얀","마른","깊은","흐린","작은","빈"];
+const SEED_NOUN = ["안개","새벽","골목","날개","둥지","공방","등불","비","겨울","유리","철","종이","달","시계","우산","열쇠","장미","계단","별","연기","기차","편지","종","창문"];
+function randomSeed(){ return SEED_ADJ[rndVis(SEED_ADJ.length)] + SEED_NOUN[rndVis(SEED_NOUN.length)] + "-" + (1000 + rndVis(9000)); }
 const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
 /* AI가 말로 준 변화("약간 감소", "많이 벎", "며칠")를 게임이 숫자로 바꾼다. 숫자를 주면 그대로 쓴다 */
 function wordLevel(v){
