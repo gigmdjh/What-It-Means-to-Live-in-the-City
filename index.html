@@ -356,11 +356,18 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .yearbar{padding:0 0 8px;margin-bottom:6px;border-bottom:1px solid var(--line)}
 .yearbar.in-card{padding:4px 0 0;margin:0;border:0}
 .yb-track{position:relative;height:6px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
-.yb-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.yb-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;transition:width .12s linear,background-color .6s}
 .yb-tick{position:absolute;top:0;bottom:0;width:1px;background:var(--line);z-index:1}
 .yb-text{display:flex;gap:10px;align-items:baseline;margin-top:4px;font:400 .74rem var(--f-mono);color:var(--muted)}
 .yb-season{font-weight:600}
 .yb-left{margin-left:auto}
+.yb-clock{font-variant-numeric:tabular-nums}
+.hud-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.hs-card{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);min-width:0}
+.hs-k{font-size:.7rem;color:var(--muted)}
+.hs-v{font:600 1.05rem var(--f-mono);line-height:1.2}
+.hs-b{font:400 .66rem var(--f-mono);color:var(--muted)}
+.hs-card.boost .hs-v{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -435,6 +442,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><b id="hName"></b><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
     <div class="hud-g" id="hGauges"></div>
     <div class="hud-career" id="hCareer" hidden></div>
+    <div class="hud-stats" id="hStats"></div>
     <div class="hud-bot"><span><b id="hAhn"></b> 안</span><span id="hEngine"></span></div>
   </div>
   <aside class="status" id="statusPanel">
@@ -639,10 +647,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1205"></script>
+<script src="parts.js?v=20261107-1230"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1205";
+const BUILD = "20261107-1230";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -693,7 +701,9 @@ const NARR_RULES = `
   hp(체력), sp(정신력), en(기력), rep(평판): "없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복" 중 하나.
   ahn(돈): "없음", "조금 씀", "씀", "많이 씀", "아주 많이 씀", "조금 벎", "벎", "많이 벎", "아주 많이 벎" 중 하나.
   str, def, spd, int(능력치): "없음", "오름", "내림" 중 하나. 대부분 "없음". 의미 있는 훈련·경험이면 "오름", 큰 부상이면 "내림".
-  days(걸린 시간): "없음"(몇 시간 이내), "하루", "며칠", "일주일", "몇 주", "한 달", "몇 달", "일 년" 중 하나.
+  days(걸린 날): "없음"(하루 안에 끝남), "하루", "며칠", "일주일", "몇 주", "한 달", "몇 달", "일 년" 중 하나.
+  time(하루 안에서 걸린 시간): "잠깐", "한 시간", "몇 시간", "반나절", "밤새"(다음 날 아침까지) 중 하나.
+- [때]의 시각(새벽·아침·낮·저녁·밤)을 장면에 반영하라: 밝기, 사람들, 문 연 가게, 위험.
 - 판단 기준: 평범한 행동은 en "약간 감소". 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 실패한 행동으로 이득을 주지 마라. 평판은 남들이 보거나 소문이 날 때만 움직인다. 아기·어린이는 스스로 돈을 벌기 어렵다.
 - location은 장면이 끝난 현재 장소(짧게).
 - tag_add: 새로 생긴 중요한 사실을 "분류:내용" 태그로(예: "부상:왼팔 골절", "빚:쥐 패거리에 30만안", "소속:하나 협회 9급", "인연:옆집 할머니"). 여러 개면 쉼표로 구분, 없으면 "".
@@ -709,7 +719,7 @@ const NARR_RULES = `
 - 플레이어가 해결사 사무소를 차리는 데 성공하면 tag_add에 "사무소:새로 차림"이라고만 적어라(이름은 플레이어가 짓는다).
 - tag_remove: 더 이상 사실이 아닌 기존 태그(나은 부상, 갚은 빚 등)를 그대로 적는다. 없으면 "".
 - 가족은 [가족] 목록을 따르고 멋대로 바꾸지 마라. 이야기 속에서 결혼하면 spouse에 "이름/성별", 플레이어의 아이가 태어나면 child_born을 true, 가족이 죽으면 family_dead에 그 이름. 해당 없으면 ""와 false.
-반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false,"merit":"없음","talk":[]}`;
+반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false,"merit":"없음","time":"한 시간","talk":[]}`;
 
 /* 기기 AI용 짧은 규칙: 폰에서는 프롬프트가 길면 읽는 데만 수십 초가 걸린다 */
 const NARR_RULES_LOCAL = `
@@ -726,7 +736,7 @@ const SUM_RULES = `
 반드시 JSON만 출력: {"summary":"요약"}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"}},required:["text","stat","difficulty","why","trivial"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},merit:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},merit:{type:"string"},time:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
 const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
 
 /* 계절 · 달력 */
@@ -734,6 +744,31 @@ const SEASONS = {봄:[3,4,5], 여름:[6,7,8], 가을:[9,10,11], 겨울:[12,1,2]}
 function monthOf(days){ return Math.floor(((S.doy0 + days) % 365) / 30.42) + 1; }
 function seasonOf(days){ const m = Math.min(12, monthOf(days)); return Object.keys(SEASONS).find(k => SEASONS[k].includes(m)); }
 function calendarText(){ const m = Math.min(12, monthOf(S.days)); return `${seasonOf(S.days)} · ${m}월`; }
+/* 하루 안의 시각(분, 0~1439). 재생 중에는 하루가 흐르는 만큼 시계도 돈다 */
+const minsNow = () => { const m = (S && typeof S.mins === "number") ? S.mins : 540; return ((Math.floor(m) % 1440) + 1440) % 1440; };
+const clockText = () => { const m = minsNow(); return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
+function dayPart(){ const h = Math.floor(minsNow() / 60); return h < 5 ? "새벽" : h < 9 ? "아침" : h < 12 ? "오전" : h < 14 ? "한낮" : h < 18 ? "오후" : h < 21 ? "저녁" : "밤"; }
+function dayOfMonth(){ const doy = (S.doy0 + S.days) % 365, m = Math.min(12, monthOf(S.days)); return Math.max(1, Math.min(31, Math.floor(doy - (m - 1) * 30.42) + 1)); }
+function timeText(){ const m = Math.min(12, monthOf(S.days)); return `${seasonOf(S.days)} · ${m}월 ${dayOfMonth()}일 ${dayPart()} ${clockText()}`; }
+/* 시간을 분 단위로 흘린다(자정을 넘으면 날도 넘어간다) */
+function advanceMins(mins){
+  if(!(mins > 0)) return;
+  let t = minsNow() + Math.round(mins), d = 0;
+  while(t >= 1440){ t -= 1440; d++; }
+  S.mins = t;
+  if(d) applyDays(d);
+}
+/* 행동에 걸린 시간: AI의 time 말 → 분. 잠은 다음 날 아침 7시까지 */
+function timeWordMins(w, input){
+  const t = String(w || "");
+  if(/(밤새|다음 날|아침까지|잠)/.test(t) || /(잠을 잔다|잔다|자러|잠든다|눈을 붙인다)/.test(input || "")) return ((7 * 60 - minsNow()) + 1440) % 1440 || 1440;
+  if(/(잠깐|몇 분|금방|순식간)/.test(t)) return 10 + rnd(20);
+  if(/(반나절)/.test(t)) return 300 + rnd(120);
+  if(/(몇 시간|두어 시간|서너 시간)/.test(t)) return 150 + rnd(120);
+  if(/(한 시간|1시간)/.test(t)) return 60;
+  if(/^\d+$/.test(t.trim())) return Number(t);
+  return 40 + rnd(40);
+}
 
 /* 돌발 상황: 어릴 땐 드물고, 6세부터 점점 잦아진다 */
 /* 조직(뒷골목 범죄 조직·패거리·손가락)에 몸담고 있으면 돌발 상황이 잦아진다 */
@@ -1604,7 +1639,7 @@ const NARR_PLAIN = `너는 소설가다. 아래 상황을 이어서, 한국어�
 function plainContext(){
   const y = ageY(), lines = [];
   lines.push(`주인공: ${S.name}, ${S.gender}, ${y}세(${stage(y)}). 외모: ${S.look || "평범함"}.`);
-  lines.push(`곳: ${corpOf(S.district)} 구역 ${S.location || originKo(S.origin)}. 때: ${calendarText()}.`);
+  lines.push(`곳: ${corpOf(S.district)} 구역 ${S.location || originKo(S.origin)}. 때: ${timeText()}.`);
   if(S.family.length) lines.push(`가족: ${familyText()}.`);
   const eqT = equipText(); if(eqT && eqT !== "없음") lines.push(`지닌 것: ${eqT}.`);
   const recent = S.log.filter(e => e.t === "narr").slice(-1);
@@ -1767,7 +1802,7 @@ function stateSummary(local){
   lines.push(`[캐릭터] 이름 ${S.name} / 성별 ${S.gender}`);
   lines.push(`[외모(플레이어가 쓴 글 그대로)] ${S.look || "특별한 설명 없음"}`);
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
-  lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [계절] ${calendarText()}`);
+  lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
   lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
   const idt = identityText(); if(idt) lines.push(`[신분·힘] ${idt}`);
@@ -1855,6 +1890,7 @@ function normalizeNarr(j, statCap){
   for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")), -statCap, statCap);
   n.ahn = num(wordAmount(j.ahn, "ahn"), -1e10, 1e10);
   n.days = num(wordDays(j.days), 0, 3650);
+  n.time = j.time == null ? "" : String(j.time);
   n.location = String(j.location || "").slice(0, 40);
   n.tag_add = String(j.tag_add || "").slice(0, 300);
   n.tag_remove = String(j.tag_remove || "").slice(0, 300);
@@ -2469,6 +2505,19 @@ function lastNarr(){ for(let i = S.log.length - 1; i >= 0; i--) if(S.log[i].t ==
 function renderLog(){ const box = $("#log"); box.replaceChildren(); for(const e of S.log) appendEntry(e, false); box.scrollTop = box.scrollHeight; }
 
 let lastSpriteKey = "";
+/* 상태창의 능력치 카드 4개: 장비·의체 포함 값, 판정 보정, 성인 평균과 비교 */
+function renderHudStats(){
+  const box = document.getElementById("hStats"); if(!box) return;
+  box.replaceChildren();
+  for(const k of STAT_KEYS){
+    const v = eff(k), b = bonus(v), base = S[k];
+    const c = el("div", "hs-card");
+    c.title = `${STAT_KO[k]} ${v}${v !== base ? ` (기본 ${base} + 장비 ${v - base})` : ""} · 판정 +${b} · ${statRel(v)}`;
+    c.append(el("span", "hs-k", STAT_KO[k]), el("b", "hs-v", String(v)), el("span", "hs-b", `+${b}`));
+    if(v !== base) c.classList.add("boost");
+    box.appendChild(c);
+  }
+}
 function renderCareers(){
   syncCareers();
   const types = Object.keys(S.careers);
@@ -2494,6 +2543,7 @@ function renderCareers(){
 function migrateSave(){
   if(!S) return;
   if(!S.v || S.v < 3){ if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45); S.v = 3; }
+  if(typeof S.mins !== "number") S.mins = 9 * 60;
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
@@ -2511,7 +2561,7 @@ function renderStatus(){
   $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#sStage").textContent = stage(ageY());
   $("#sLoc").textContent = "📍 " + (S.location || "알 수 없음");
-  $("#sSeason").textContent = "🗓 " + calendarText() + (S.seed ? ` · 시드 ${S.seed}` : "");
+  $("#sSeason").textContent = "🗓 " + timeText() + (S.seed ? ` · 시드 ${S.seed}` : "");
   $("#hName").textContent = S.name;
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()} · ${S.location || ""}`;
   $("#hAhn").textContent = fmt(S.ahn);
@@ -2532,6 +2582,7 @@ function renderStatus(){
     w.append(top, tr); g.appendChild(w);
   }
   renderCareers();
+  renderHudStats();
   $("#sAhn").textContent = fmt(S.ahn);
   const st = $("#sStats"); st.replaceChildren();
   for(const k of STAT_KEYS){
@@ -2573,10 +2624,13 @@ function renderYearBar(){
       tr.appendChild(el("div", "yb-fill"));
       box.replaceChildren(tr, el("div", "yb-text"));
     }
-    const f = tr.querySelector(".yb-fill"); f.style.width = ((doy + 1) / 365 * 100) + "%"; f.style.background = SEASON_COLOR[se] || "var(--accent)";
+    const f = tr.querySelector(".yb-fill"), w = (doy + 1) / 365 * 100;
+    /* 해가 바뀔 때는 거꾸로 줄어드는 애니메이션 없이 바로 0으로 */
+    f.style.transition = w < parseFloat(f.style.width || "0") ? "none" : "";
+    f.style.width = w + "%"; f.style.background = SEASON_COLOR[se] || "var(--accent)";
     tr.setAttribute("aria-valuenow", doy + 1); tr.setAttribute("aria-label", `올해 ${doy + 1}일째`);
     const tx = box.querySelector(".yb-text");
-    tx.replaceChildren(el("span", "yb-season", se), el("span", null, `${m}월 ${Math.max(1, Math.min(31, day))}일`), el("span", "yb-left", `올해 ${Math.round((doy + 1) / 365 * 100)}%`));
+    tx.replaceChildren(el("span", "yb-season", se), el("span", null, `${m}월 ${Math.max(1, Math.min(31, day))}일`), el("span", "yb-clock", `${dayPart()} ${clockText()}`), el("span", "yb-left", `올해 ${Math.round((doy + 1) / 365 * 100)}%`));
     tx.querySelector(".yb-season").style.color = SEASON_COLOR[se] || "";
   }
 }
@@ -2659,6 +2713,8 @@ async function doAction(input){
   if(!aiOK) ev = rollEvent(0);
   const fin = guardNarr(n || ruleEvent(ruleNarrate(input, results), ev), results);
   fin.event = !!ev;
+  if(!(fin.days > 0)) advanceMins(timeWordMins(fin.time, input));
+  else S.mins = 8 * 60 + rnd(10 * 60);
   applyNarr(fin);
   checkMilestones(input, results);
   applyMerit(input, results, fin);
@@ -3587,7 +3643,7 @@ function oneDay(){
       if(k === "ahn"){ S.ahn = Math.max(0, S.ahn + v); flow.ahn += v; deltas.push({k:"안", v}); }
       else { S[k] = gclamp(k, S[k] + v); deltas.push({k:GAUGE_KO[k], v}); }
     }
-    log({t:"small", text:`${calendarText()} · ${ev.text}`, deltas});
+    log({t:"small", text:`${Math.min(12, monthOf(S.days))}월 ${dayOfMonth()}일 · ${ev.text}`, deltas});
     flow.dirty = true;
     flow.smalls.push(ev.text); if(flow.smalls.length > 12) flow.smalls.shift();
   }
@@ -3611,22 +3667,33 @@ function checkBig(){
 function startFlow(){
   if(busy || S.dead || flow.on) return;
   resolvePendingChild();
-  Object.assign(flow, {on:true, startDays:S.days, smalls:[], ahn:0, ticks:0, dirty:false});
+  Object.assign(flow, {on:true, startDays:S.days, smalls:[], ahn:0, ticks:0, dirty:false, acc:0, last:performance.now()});
   updateFlowUI();
   flow.timer = setTimeout(flowTick, 250);
 }
+/* 시간은 배속에 비례해 일정하게 흐른다: 1배속 = 하루에 1/3초(1년 약 2분), 32배속 = 1년 약 4초.
+   짧은 간격(0.1초)으로 조금씩 진행해 1년 게이지가 끊김 없이 차오르고, 작은 상황은 그날이 되면 바로 뜬다 */
+const FLOW_DPS = 3;            /* 1배속에서 1초에 흐르는 날 수 */
+const FLOW_STEP_MS = 100;
 function flowTick(){
   if(!flow.on) return;
   let big = null;
   const ym = ageY() * 12 + monthOf(S.days);
-  for(let i = 0; i < FLOW_DAYS[flow.speed] && !big; i++){ oneDay(); big = checkBig(); }
+  const now = performance.now();
+  const dt = Math.min(0.5, (now - (flow.last || now)) / 1000) || FLOW_STEP_MS / 1000;
+  flow.last = now;
+  flow.acc = (flow.acc || 0) + FLOW_DPS * flow.speed * dt;
+  /* 시계: 지난 하루의 몇 분의 몇인지 */
+  let m = minsNow() + FLOW_DPS * flow.speed * dt * 1440;
+  while(m >= 1440 && !big){ m -= 1440; oneDay(); big = checkBig(); }
+  S.mins = Math.floor(m) % 1440; flow.acc = 0;
   if(ageY() * 12 + monthOf(S.days) !== ym || flow.dirty){ renderStatus(); flow.dirty = false; } else renderLite();
   if(S.sp <= -45) checkDeath();
   if(!flow.on) return;
   if(S.dead){ flow.on = false; updateFlowUI(); save(); return; }
   if(big){ stopFlow(big); return; }
-  if(++flow.ticks % 8 === 0) save();
-  flow.timer = setTimeout(flowTick, 700);
+  if(++flow.ticks % 50 === 0) save();
+  flow.timer = setTimeout(flowTick, FLOW_STEP_MS);
 }
 async function stopFlow(big){
   if(!flow.on) return;
@@ -3640,7 +3707,7 @@ async function stopFlow(big){
     S.flowNote = `${dayLabel(elapsed)} 동안 시간을 흘려보냈다. 그동안 작은 일들: ${sm.length ? sm.join(" / ") : "없음"}. 소지금 변화 ${fmt(flow.ahn)}안.`;
     const deltas = [{k:"경과", v:elapsed, days:true}];
     if(flow.ahn) deltas.push({k:"안", v:flow.ahn});
-    log({t:"narr", text:`⏸ 시간을 멈췄다. 지금은 ${calendarText()}, ${S.location || regionText()}.`, deltas, options: ruleOptions()});
+    log({t:"narr", text:`⏸ 시간을 멈췄다. 지금은 ${timeText()}, ${S.location || regionText()}.`, deltas, options: ruleOptions()});
   }
   save();
 }
@@ -4121,6 +4188,7 @@ async function createLife(){
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
     choice:{district:$("#cDistrict").value, origin:$("#cOrigin").value}, hairColor:swVal("hairc"), eyeColor:swVal("eyec")};
   S.doy0 = rnd(365);
+  S.mins = rnd(1440);
   S.v = 4;
   const fam = familyOf(name), famCul = fam.sur ? fam.c : pickCulture();
   S.fam = {cul:famCul.id, sur:fam.sur || surOf(famCul, famCul.sur[rnd(famCul.sur.length)], "남성")};
