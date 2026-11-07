@@ -668,14 +668,14 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
         <label class="field"><span>피부</span><select id="leSkin"><option value="">보통</option><option value="창백한 피부">밝은</option><option value="까무잡잡한 피부">까무잡잡한</option></select></label>
         <label class="field"><span>체격</span><select id="leBuild"><option value="보통 체격">보통</option><option value="마른 체격">마른</option><option value="덩치 큰 체격">덩치 큰</option></select></label>
         <label class="field"><span>안에 입은 옷</span><select id="leCloth">
-          <optgroup label="평상복"><option>셔츠</option><option>블라우스</option><option>티셔츠</option><option>민소매</option><option>니트</option><option>후드티</option><option>트레이닝복</option></optgroup>
+          <option value="없음">없음</option><optgroup label="평상복"><option>셔츠</option><option>블라우스</option><option>티셔츠</option><option>민소매</option><option>니트</option><option>후드티</option><option>트레이닝복</option></optgroup>
           <optgroup label="차려입은"><option>정장</option><option>원피스</option><option>드레스</option><option>교복</option><option>제복</option></optgroup>
           <optgroup label="일·직업"><option>작업복</option><option>간호복</option><option>사제복</option><option>로브</option></optgroup>
         </select></label>
         <label class="field"><span>옷 색</span><select id="leClothC"></select></label>
         <label class="field"><span>겉옷</span><select id="leOuter"><option value="">없음</option><option>재킷</option><option>가디건</option><option>가죽 재킷</option><option>코트</option><option>트렌치코트</option><option>조끼</option><option>망토</option><option value="가운">흰 가운</option></select></label>
         <label class="field"><span>겉옷 색</span><select id="leOuterC"></select></label>
-        <label class="field"><span>아래옷</span><select id="leBot"><option value="바지">바지</option><option value="청바지">청바지</option><option value="반바지">반바지</option><option value="치마">치마</option></select></label>
+        <label class="field"><span>아래옷</span><select id="leBot"><option value="없음">없음</option><option value="바지">바지</option><option value="청바지">청바지</option><option value="반바지">반바지</option><option value="치마">치마</option></select></label>
         <label class="field"><span>아래옷 색</span><select id="leBotC"><option value="">자동</option></select></label>
         <label class="field"><span>모자</span><select id="leHat"><option value="">없음</option><option>중절모</option><option>베레모</option><option>비니</option><option>캡</option><option>밀짚모자</option><option>왕관</option><option value="후드를 쓴">후드 쓰기</option></select></label>
         <label class="field"><span>안경</span><select id="leGlass"><option value="">없음</option><option value="안경">네모 안경</option><option value="동그란 안경">동그란 안경</option><option value="반무테 안경">반무테</option><option value="금테 안경">금테</option><option value="모노클">외알 안경</option><option value="선글라스">선글라스</option><option value="고글">고글</option></select></label>
@@ -780,10 +780,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1453"></script>
+<script src="parts.js?v=20261107-1458"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1453";
+const BUILD = "20261107-1458";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3481,8 +3481,9 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   tr.earring = /귀걸이|피어싱/.test(t);
   tr.bandage = /붕대|반창고|밴드/.test(t);
   tr.build = /마른|깡마른|가냘픈|왜소|호리호리/.test(t) ? "thin" : /덩치|뚱뚱|통통|근육|건장|거구|떡대|우람/.test(t) ? "big" : "mid";
-  tr.outer = outerTypeOf(t);
-  const innerT = innerTypeOf(t);
+  tr.outer = /겉옷 ?없|겉옷을 벗/.test(t) ? null : outerTypeOf(t);
+  const noTop = /상의 ?없|윗옷 ?없|(?<![겉아래])옷 ?없음|웃통|상반신을 드러|맨몸|상의를 벗|윗옷을 벗/.test(t);
+  const innerT = noTop ? "none" : innerTypeOf(t);
   tr.otype = innerT || "shirt";
   const colorOf = k => { const ct = CLOTH_TYPES.find(c => c[0] === k); return ct ? findColor(t, new RegExp("(" + ct[1].source + ")")) : null; };
   tr.outerColor = tr.outer ? (colorOf(tr.outer) || (tr.outer === "labcoat" ? "#efede6" : null)) : null;
@@ -3490,7 +3491,7 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   /* 겉옷만 적었으면 안에는 밝은 셔츠 */
   tr.outfit = tr.outfitMain || (tr.outer && !innerT ? "#dcd8cf" : null) || findColor(t, /(옷|코트|재킷|자켓|후드티|후드|셔츠|원피스|티셔츠|반팔|스웨터|니트|교복|드레스|외투|점퍼|조끼|정장|수트|제복|군복|유니폼|작업복|점프수트|멜빵|블라우스|민소매|나시|탱크톱|망토|케이프|로브|기모노|가운|도포|한복|트레이닝|운동복|저지|앞치마|트렌치|가죽|턱시도|사제복|수녀복|간호복|의사 가운|백의|셔츠)/);
   tr.pants = findColor(t, /(바지|치마|스커트|슬랙스|청바지|반바지|레깅스|하의|아래옷)/) || (/청바지|데님/.test(t) ? "#3d5a86" : null);
-  tr.btype = /반바지|핫팬츠|숏팬츠/.test(t) ? "shorts" : /치마|스커트/.test(t) && !/원피스|드레스/.test(t) ? "skirt" : "pants";
+  tr.btype = /하의 ?없|바지 ?없|아래옷 ?없|맨몸|바지를 벗|하의를 벗/.test(t) ? "none" : /반바지|핫팬츠|숏팬츠/.test(t) ? "shorts" : /치마|스커트/.test(t) && !/원피스|드레스/.test(t) ? "skirt" : "pants";
   tr.inner = findColor(t, /(안에 입은|속옷|이너|안쪽 셔츠|받쳐 입은)/);
   /* 흉터: 자리와 모양 */
   tr.scars = [];
@@ -3984,6 +3985,7 @@ function drawSprite(cv, opt){
     if(dress) return t < (OT === "nurse" ? 0.42 : 0.38) ? OUT : t > 0.78 ? SOCK : null;
     if(outerLen && t < outerLen){ const ax = Math.abs(x - cxB), g2 = GAP + 1 + t * 4; if(ax > g2 + 1) return OUTR; if(ax > g2) return shade3(OUTR, 0.72); }
     if(longLeg && t < longLeg) return OUT;
+    if(BT === "none") return null;
     if(BT === "skirt") return t < 0.4 ? PANT : t > 0.8 ? SOCK : null;
     if(BT === "shorts") return t < 0.32 ? PANT : null;
     if(OT === "track" && (x === (RB[8] || [0])[0] || x === (RB[9] || [0, 0, 0])[2])) return WHITE;
@@ -4006,6 +4008,8 @@ function drawSprite(cv, opt){
   };
   const innerTorso = (x, y) => {
     const ty = (y - torT) / (torB - torT), dx = x - cxB, ax = Math.abs(dx);
+    /* 상의 없음: 맨살. 여성 몸은 가슴 가리개 한 줄 */
+    if(OT === "none") return tr.gender === "여성" && stage > 0 && ty > 0.12 && ty < 0.4 ? [44, 42, 50] : null;
     switch(OT){
       case "suit": if(ty < 0.5 && ax <= (0.5 - ty) * 6 + 0.5){ if(ax < 1 && ty > 0.06) return ACC; return IN; } if(ax < 1 && ty > 0.5) return shade3(OUT, 0.7); return OUT;
       case "school": if(ty < 0.18 && ax <= 2) return ACC; if(ty < 0.3 && ax >= 3) return OUT; if(ty < 0.34 && ax >= 3) return [238, 236, 230]; return IN;
@@ -4027,6 +4031,7 @@ function drawSprite(cv, opt){
     if(OUTER === "cape" && af < 0.25) return shade3(OUTR, 0.9);
     const outer = region === 4 ? x === (RB[4] || [x])[0] : x === (RB[5] || [0, 0, x])[2];
     switch(OT){
+      case "none": return null;
       case "tank": return null;
       case "tee": case "school": case "nurse": if(af > 0.42) return null; return OT === "school" ? IN : OUT;
       case "overall": return IN;
@@ -4058,7 +4063,11 @@ function drawSprite(cv, opt){
       if((OUTER === "jacket" || OUTER === "leather") && ax12 > GAP && y <= (RB[12] || [0, 0])[1] + 1) return OUTR;
       if(tr.belt || OT === "uniform"){ const top = (RB[12] || [0, 0])[1]; if(y === top + 1) return [44, 38, 34]; }
       if(OT === "robe") return ACC;
-      return dress || OT === "priest" || OT === "overall" ? OUT : PANT;
+      if(dress || OT === "priest" || OT === "overall") return OUT;
+      /* 하의 없음: 속옷만 */
+      if(BT === "none") return [52, 50, 58];
+      if(OT === "none" && y === (RB[12] || [0, 0])[1] && BT !== "skirt") return [44, 38, 34];
+      return PANT;
     }
     if(region === 8 || region === 9) return legPaint(region, x, y);
     if(region === 10 || region === 11) return region === 11 && eq.leg ? METAL : baby ? null : SHOE;
@@ -5041,8 +5050,8 @@ function leLookText(){
   const colorable = /^(목도리|넥타이|나비넥타이|리본|머리띠|머리핀|목걸이|초커|장갑)$/;
   const acc = [...$("#leAcc").querySelectorAll("input:checked")].map(c => { const a = (LE_ACC.find(x => x[0] === c.value) || [])[1]; return a && ac && colorable.test(a) ? `${ac} ${a}` : a; }).filter(Boolean);
   const cl = $("#leCloth").value, onePiece = /원피스|드레스|간호복|사제복|로브|작업복|흰 가운/.test(cl);
-  const bot = onePiece ? "" : `${$("#leBotC").value ? $("#leBotC").value + " " : ""}${$("#leBot").value}`;
-  const top = `${$("#leClothC").value} ${cl}`;
+  const bot = onePiece ? "" : $("#leBot").value === "없음" ? "하의 없음" : `${$("#leBotC").value ? $("#leBotC").value + " " : ""}${$("#leBot").value}`;
+  const top = cl === "없음" ? "상의 없음" : `${$("#leClothC").value} ${cl}`;
   const ou = $("#leOuter").value, outer = ou ? `${$("#leOuterC").value} ${ou === "가운" ? "실험복" : ou}` : "";
   const hat = $("#leHat").value, hatTxt = hat && hat !== "후드를 쓴" ? `${ac && hat !== "왕관" && hat !== "밀짚모자" ? ac + " " : ""}${hat}` : hat === "후드를 쓴" ? "후드를 쓴" : "";
   return [hair, $("#leFringe").value, eyes, $("#leEyeS").value, $("#leSkin").value, $("#leBuild").value, outer, top, bot === "바지" ? "" : bot, hatTxt, $("#leGlass").value, $("#leScar").value, ...acc, $("#leExtra").value.trim()].filter(Boolean).join(", ");
