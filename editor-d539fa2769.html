@@ -4829,7 +4829,7 @@ $("#lookEd").addEventListener("input", e => { if(e.target.id === "leName"){ leLo
 $("#lookEd").addEventListener("change", () => leDraw());
 $("#leSeed").addEventListener("click", () => { leSeedN = (leSeedN + 1) % 12; leDraw(); });
 /* ───────── 별도 에디터: GitHub 저장소의 looks.json을 읽고 고친다 ───────── */
-const GH_DEFAULT_REPO = "gigmdjh/what-it-means-to-live-in-the-city";
+const GH_DEFAULT_REPO = "gigmdjh/What-It-Means-to-Live-in-the-City";
 const ghRepo = () => { try{ return localStorage.getItem("dosi_gh_repo") || GH_DEFAULT_REPO; }catch(e){ return GH_DEFAULT_REPO; } };
 const ghToken = () => { try{ return localStorage.getItem("dosi_gh_token") || ""; }catch(e){ return ""; } };
 const b64dec = t => decodeURIComponent(escape(atob(t.replace(/\s/g, ""))));
