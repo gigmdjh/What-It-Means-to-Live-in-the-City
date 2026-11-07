@@ -468,6 +468,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .whisper-storm .whisper{--o:.95;font-size:clamp(1rem,4.6vw,1.6rem)}
 @keyframes stormIn{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion: reduce){#smoke i{animation:none;opacity:.5}.whisper{animation-duration:.01s}}
+.serumbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:-2px 0 8px}
+.serumbar .g-top{display:flex;justify-content:space-between;font:600 .7rem var(--f-mono)}
+.serumbar .track{height:6px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
+.serumbar .fill{height:100%;transition:width .3s}
+.serumbar .ser:nth-child(1) .g-top span:first-child{color:#6aa6ec}.serumbar .ser:nth-child(2) .g-top span:first-child{color:#eb9d55}.serumbar .ser:nth-child(3) .g-top span:first-child{color:#74c47e}
 /* 업적 */
 .achs{display:grid;gap:8px;margin-top:18px}
 .achs h3{margin:0}
@@ -628,6 +633,7 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   <div class="hud" id="hud">
     <div class="yearbar" id="yearBarH" aria-label="올해 흐름"></div>
     <div class="warpbar" id="warpBar" hidden></div>
+    <div class="serumbar" id="serumBar" hidden></div>
     <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><span class="hname-wrap"><b id="hName"></b><span class="htitle" id="hTitle" hidden></span></span><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
     <div class="hud-g" id="hGauges"></div>
     <div class="hud-career" id="hCareer" hidden></div>
@@ -637,7 +643,8 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   <aside class="status" id="statusPanel">
     <div class="status-head full"><span class="label">캐릭터 상세</span><button class="btn" type="button" id="btnCloseStatus">닫기</button></div>
     <div class="card full"><div class="label">올해</div><div class="yearbar in-card" id="yearBarS"></div>
-      <div class="warpbar" id="warpBarS" hidden></div></div>
+      <div class="warpbar" id="warpBarS" hidden></div>
+      <div class="serumbar" id="serumBarS" hidden></div></div>
     <div class="card idcard full">
       <canvas class="sprite" id="sSprite" width="60" height="92" role="img" aria-label="캐릭터 모습"></canvas>
       <div class="label">시민 기록</div>
@@ -936,11 +943,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2115"></script>
+<script src="parts.js?v=20261107-2155"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-2115";
+const BUILD = "20261107-2155";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1024,6 +1031,7 @@ const NARR_RULES = `
 - 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않는다. 이미 지닌 인물(게부라 등)에게서 물려받거나 거래하거나 빼앗을 때만 tag_add에 "에고 무기:무기이름"을 적어라. 다른 방법으로는 절대 주지 마라.
 - 납치: 붙잡혀 끌려가면 tag_add에 "납치:잡혀 있음"(어디에 누구에게), 빠져나오면 tag_remove로 지우고 "탈출:납치". 몸값·노동·장기 밀매 같은 도시의 범죄로 그리고, 성적인 의미나 암시는 절대 넣지 마라.
 - 뒤틀린 주인공([뒤틀림]이 있으면): 아무도 주인공을 알아보지 못한다. 가족도 이름을 불러도 모르는 괴물로 대한다. 사람들은 도망치거나 공격하거나 해결사를 부른다. 상점·학교·사무소 같은 곳에 평범하게 들어갈 수 없다. 주인공의 대사는 사람들에게 알아듣기 힘든 소리로 들린다. 몸은 강해졌다. 속삭임을 따르는 쪽이면 충동이 서술에 스며들게 하고, 자기 나름대로 사는 쪽이면 사람이었던 습관을 붙드는 모습을 그려라. 잔혹 묘사는 절제한다.
+- 라만차랜드([라만차랜드]가 있으면): 라만차랜드의 일원이어도 바깥에서 해결사로 일할 수 있다. 다른 조직에 속해 있으면 규율 때문에 라만차랜드에 드나들기 어렵게 그려라. 주인공이 그곳에 가면 location에 "라만차랜드"와 구역 이름을 넣어라(예: "라만차랜드 3구역 퍼레이드", "라만차랜드 관람차"). 그곳의 혈귀들(이발사, 사제, 둘시네아, 안내원, 다른 권속들)과 인연을 맺으면 tag_add에 "인연:이름/라만차랜드 ○○". 지위가 오를수록 그들은 주인공을 더 가족처럼, 장로면 윗사람으로 대한다. 사람 손님을 해치는 장면은 짧고 절제해서.
 - 혈귀인 주인공: 보통 사람보다 몇 배 강하고 빠르고 단단하다(맨손으로 강철을 구기고, 평범한 해결사 여럿을 혼자 상대할 만큼). 혈액 게이지가 있다. 사람의 피만 갈증을 채운다(밥·동물 피·다른 혈귀의 피로는 안 된다). 혈액바(사람과 동물의 피를 눌러 굳힌 막대, 묽다)는 blood "약간 회복", 혈액팩은 "회복", 사람에게서 직접 마시면 "크게 회복". 피를 마시지 않았으면 blood는 "없음". 혈액바·혈액팩은 혈귀 가문이 쥔 가게나 암시장에서 비싸게 판다. 피가 모자라면 미쳐 가고 시든다. 물을 두려워한다. 어린 혈귀는 보호자가 혈액팩·혈액바를 구해다 주는 식으로 그리고, 아이가 사람을 무는 장면은 그리지 마라.
 - 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀". 권속은 피를 마셔야 하고 물을 두려워한다.
 
@@ -1415,7 +1423,7 @@ function scoutEvent(){ const y = ageY(); const l = y < 13 ? SCOUTS.child : y < 2
 /* 납치: 외모가 눈에 띄는 사람이 혼자 인적 드문 곳을 다니면 노리는 자가 있다 */
 const LONELY_RE = /(혼자|홀로|아무도 없|인적(이)? 드문|인적 없|외진|으슥|빈 골목|버려진|폐건물|폐공장|공사장|뒷길|밤길|골목 깊|지름길|어두운 골목|후미진|막다른)/;
 function kidnapChance(input){
-  if(S.distorted) return 0;
+  if(S.distorted || S.claw) return 0;
   const y = ageY(); if(y < 4) return 0;
   const here = String(input || "") + " " + (S.location || "") + " " + String((lastNarr() || {}).text || "").slice(-200);
   if(!LONELY_RE.test(here)) return 0;
@@ -1432,6 +1440,8 @@ const isKidnap = ev => /^납치:/.test(String(ev || ""));
 function rollEvent(daysAhead){
   if(!daysAhead && S.distorted && !S.dead && rand01() < 0.28){ S.distortHunts = (S.distortHunts || 0) + 1; return DISTORT_HUNTS[rnd(DISTORT_HUNTS.length)]; }
   if(!daysAhead && warpEligible() && rand01() < 0.03) return WARP_OFFER;
+  if(!daysAhead && lmEligible() && rand01() < 0.05) return LM_INVITE;
+  if(!daysAhead && S.claw && !S.distorted && rand01() < 0.08){ bump("order"); return CLAW_ORDERS[rnd(CLAW_ORDERS.length)]; }
   if(!daysAhead && rand01() < scoutChance()) return scoutEvent();
   if(!daysAhead && rand01() < commissionChance()) return COMMISSIONS[rnd(COMMISSIONS.length)];
   const y = Math.floor((S.days + (daysAhead || 0)) / 365);
@@ -1479,7 +1489,7 @@ function prodigyRatio(){
   return avg / expect;
 }
 function scoutChance(){
-  if(S.distorted) return 0;
+  if(S.distorted || S.claw) return 0;
   const y = ageY(); if(y < 6) return 0;
   const over = prodigyRatio() - 1.2; if(over <= 0) return 0;
   const ageF = y < 13 ? 3 : y < 20 ? 2 : 1;        /* 어릴수록 크게 */
@@ -1564,6 +1574,7 @@ function plainEvent(ev){
   return `\n그리고 장면 끝에 갑작스러운 일이 생긴다. 지금 상황에 맞게 구체적으로 지어내라(무엇을 하던 중 무엇을 마주쳤는지). 예: "${evText(ev)}"`;
 }
 function eventLine(ev){
+  if(ev === LM_INVITE) return `\n\n[라만차랜드 초대] 장면 끝에 주인공(혈귀)에게 라만차랜드의 초대장이 온다: 굳은 피처럼 매끈한 붉은 종이, "같은 피를 나눈 이여, 라만차랜드에서 꿈을 꾸러 오세요", 16구역 뒷골목에 오후 4시에 문이 열린다. 응할지 고르는 순간에서 멈춰라. 아직 가지 마라.`;
   if(isDistortHunt(ev)) return `\n\n[뒤틀림 토벌] 장면 끝에 이 일이 닥친다: ${String(ev).split("|")[0]} 상대는 주인공을 사람으로 알아보지 못하고 괴물로 대한다. 주인공이 어떻게 할지 고르는 순간에서 멈춰라. urgent는 true.`;
   if(ev === WARP_OFFER) return `\n\n[W사 의뢰] 장면 끝에 W사(워프열차 회사, 23구역) 쪽에서 의뢰가 들어온다: 도착한 워프열차 한 대가 '정체' 등급이 되었으니(오래 갇혀 미친 승객들), 맨 앞 칸부터 8칸 끝까지 승객을 제압하며 돌파해 달라는 것. 끝나면 W사가 '불러오기'로 몸과 기억을 들어가기 전으로 되돌려 준다고 한다. 주인공이 받을지 거절할지 고르는 순간에서 멈춰라. 아직 열차에 들어가지 마라.`;
   if(!ev) return "";
@@ -2453,6 +2464,8 @@ function stateSummary(local){
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
   if(S.warp) lines.push(warpState());
+  if(S.lm) lines.push(lmState());
+  if(S.claw) lines.push(clawState());
   if(S.distorted) lines.push(`[뒤틀림] 주인공은 ${S.distorted.age}세에 감정에 삼켜져 뒤틀림이 되었고, 뒤틀린 채 살아가고 있다(${S.distorted.path === "follow" ? "머릿속 여자의 속삭임을 따르며 충동대로 산다" : S.distorted.path === "self" ? "속삭임을 밀어내고 자기 나름대로 살려 애쓴다" : "아직 속삭임을 따를지 정하지 않았다"}). 겉모습은 괴물로 변해, 가족과 지인을 포함한 누구도 주인공을 알아보지 못한다. 주인공이 말을 걸어도 사람들은 괴물이 내는 소리로 듣고 겁먹거나 공격한다. 해결사·협회 토벌대·조직·날개 보안 부대가 곳곳에서 노린다. 머릿속에는 늘 낯선 여자의 목소리가 속삭인다.`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
   lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
@@ -2551,6 +2564,10 @@ function rollCheck(a){
   const yy = ageY();
   if(a.stat !== "int" && yy >= 60 && !isKindred()) mods.push({label:"노쇠", v:-Math.min(3, Math.floor((yy - 50) / 10))});
   if(S.hp < 25) mods.push({label:"부상", v:-2});
+  if(S._serum && S._serum.length){
+    if(S._serum.length === 3) mods.push({label:"세럼 칵테일", v:8});
+    else for(const k of S._serum) if(k !== "K") mods.push({label:SERUMS[k].ko, v:4});
+  }
   /* 혈귀: 피가 모자라면 시들고, 넉넉하면 강해진다 */
   if(isKindred() && S.blood != null){
     if(S.blood <= 0) mods.push({label:"시듦", v:-4});
@@ -3440,7 +3457,7 @@ function migrateSave(){
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
-  renderYearBar(); renderWarpBar(); renderDistort();
+  renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar();
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
   const spriteKey = [S.name, S.look, S.outfit || "", S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
@@ -3462,6 +3479,8 @@ function renderStatus(){
     if(S.color){ const sp = el("span", null, "특색 · " + S.color); sp.style.color = colorOfName(S.color); ht.appendChild(sp); }
     if(S.ego){ const sp = el("span", null, "E.G.O · " + S.ego); sp.style.color = colorOfName(S.ego); ht.appendChild(sp); }
     if(S.distorted){ const sp = el("span", null, "뒤틀림"); sp.style.color = "#ff4a55"; ht.appendChild(sp); }
+    if(S.claw){ const sp = el("span", null, "머리의 발톱"); sp.style.color = "#cfd6e6"; ht.appendChild(sp); }
+    if(S.lm && S.lm.rank >= 1){ const sp = el("span", null, "라만차랜드 " + LM_RANKS[S.lm.rank]); sp.style.color = "#e0455a"; ht.appendChild(sp); }
     ht.hidden = !ht.children.length; }
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
   $("#hAhn").textContent = fmt(S.ahn);
@@ -3565,7 +3584,7 @@ function renderYearBar(){
   }
 }
 /* 위쪽 줄에 쓰는 짧은 장소 이름: "L사 구역 뒷골목 2층집" → "집" (전체는 상세에) */
-const PLACE_SHORT = [[/워프열차/, "워프열차"], [/(집|단칸방|저택|자택|아파트|숙소|하숙|내 방|방 안)/, "집"], [/병원|진료소|의원/, "병원"], [/학교|교실|학원/, "학교"], [/공원|놀이터/, "공원"], [/시장|장터/, "시장"], [/도서관/, "도서관"], [/사무소|사무실/, "사무소"], [/공방/, "공방"], [/식당|가게|상점|카페|빵집|술집|편의점|마트|바$/, "가게"], [/폐건물|폐공장|공사장/, "폐건물"], [/골목/, "골목"], [/거리|길|광장/, "거리"], [/둥지/, "둥지"]];
+const PLACE_SHORT = [[/워프열차/, "워프열차"], [/라만차/, "라만차랜드"], [/(집|단칸방|저택|자택|아파트|숙소|하숙|내 방|방 안)/, "집"], [/병원|진료소|의원/, "병원"], [/학교|교실|학원/, "학교"], [/공원|놀이터/, "공원"], [/시장|장터/, "시장"], [/도서관/, "도서관"], [/사무소|사무실/, "사무소"], [/공방/, "공방"], [/식당|가게|상점|카페|빵집|술집|편의점|마트|바$/, "가게"], [/폐건물|폐공장|공사장/, "폐건물"], [/골목/, "골목"], [/거리|길|광장/, "거리"], [/둥지/, "둥지"]];
 function shortPlace(loc){
   const t = String(loc || "").trim(); if(!t) return "알 수 없음";
   const rest = t.replace(/^[A-Z]사\s*구역\s*/, "").replace(/^\d+\s*구역\s*/, "").trim() || t;
@@ -3575,7 +3594,7 @@ function shortPlace(loc){
   return (ws[ws.length - 1] || rest).slice(0, 6);
 }
 function renderLite(){
-  renderYearBar(); renderWarpBar(); renderDistort();
+  renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar();
   $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
   $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
@@ -3897,9 +3916,12 @@ const isDistortHunt = ev => DISTORT_HUNTS.includes(ev);
    설정: 혈귀는 사람의 피만으로 갈증을 채운다. 피가 모자라면 이성을 잃고 시들며, 넉넉하면 강해진다.
    혈액바(라만차랜드 '이발사'의 압축 혈액 막대)는 묽고, 혈액팩은 오래 두면 신선하지 않다.
    게임에서는 아주 드물게 혈귀로 태어나고, 다섯 살부터 목이 마르기 시작한다. */
-function ensureBlood(){ if(isKindred() && S.blood == null && (!S.bornKindred || S.kindredAwake)) S.blood = 60; }
+function ensureBlood(){
+  if(isKindred() && S.blood == null && (!S.bornKindred || S.kindredAwake)) S.blood = 60;
+  if(isKindred() && S.kinSince == null && (!S.bornKindred || S.kindredAwake)) S.kinSince = S.days;
+}
 function awakenKindred(){
-  S.kindredAwake = true;
+  S.kindredAwake = true; S.kinSince = S.days;
   if(!isKindred()) S.tags.push("혈귀:권속(타고남)");
   S.blood = 45;
   if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); try{ updateFlowUI(); }catch(e){} }
@@ -3938,6 +3960,147 @@ function bloodFromInput(input, results){
   if(/(혈액 ?바|헤모 ?바|피 ?막대)/.test(t)) return 25;
   if(/(목덜미|목을 물|피를 빨|사람의 피|사람 피|물어서 피)/.test(t)) return 60;
   return 0;
+}
+
+/* ───────── 라만차랜드 ─────────
+   설정: 16구역 뒷골목에 나타나는 놀이공원. 첫째 권속(장로) 돈키호테의 가문, 라만차 혈귀들이 세우고 운영한다.
+   굳힌 사람의 피로 지어졌고, 매일 오후 4시쯤 나타나 밤 10시에 폐장 음악이 울리고 10시 30분에 사라진다.
+   구역: 1구역 '예쁘고 멋져요'(이발사), 2구역 '정신 건강을 위하여'(사제), 3구역 '영원한 카니발'(둘시네아의 퍼레이드), 4구역 라만차랜드 관람차.
+   이 게임에서는 혈귀가 초대장을 받아 손님 → 가족 → 관리인 → 장로로 올라갈 수 있다. */
+const LM_RANKS = ["손님", "가족", "관리인", "장로"];
+const LM_NEED = [0, 10, 30, 70];          /* 다음 지위에 필요한 공로 */
+const LM_AGE = [0, 13, 18, 25];
+const LM_INVITE = "문틈에 붉은 초대장이 끼워져 있다. 종이는 굳은 피처럼 매끈하다. \"꿈을 꾸러 오세요, 같은 피를 나눈 이여. 라만차랜드에서 기다리겠습니다.\" 16구역 뒷골목, 오후 4시에 문이 열린다고 적혀 있다.|초대에 응한다/초대장을 숨긴다/찢어 버린다";
+const LM_YES = /(응한|응하|간다|가겠|가볼|가 본|가본|받아들|갈게|가자|향한|찾아간)/;
+function lmEligible(){
+  if(!isKindred() || S.lmInvited || S.distorted || S.warp || ageY() < 13) return false;
+  if(S.bornKindred && !S.kindredAwake) return false;
+  return S.kinSince != null && S.days - S.kinSince >= 365;
+}
+const atLM = () => /라만차/.test(S.location || "");
+function lmState(){
+  const L = S.lm; if(!L) return "";
+  const r = LM_RANKS[L.rank];
+  return `[라만차랜드] 주인공은 라만차랜드(16구역 뒷골목에 매일 오후 4시쯤 나타나 밤 10시 30분에 사라지는 혈귀들의 놀이공원, 굳힌 사람 피로 지어짐. 첫째 권속 돈키호테의 가문인 라만차 혈귀들이 운영. 1구역 '예쁘고 멋져요'는 이발사, 2구역 '정신 건강을 위하여'는 사제, 3구역 '영원한 카니발'은 둘시네아의 퍼레이드, 한가운데 4구역은 관람차)에 초대받은 혈귀다. 지금 지위: ${r}${L.rank < 3 ? ` (공로 ${L.merit}/${LM_NEED[L.rank + 1]})` : `, 자기 가문 「${L.family}」을 이끄는 장로`}. 라만차 혈귀들은 같은 피를 가진 주인공을 가족처럼 맞지만, 사람 손님은 피주머니로 만든다. 폐장 뒤 안에 남으면 다음 날 다시 열릴 때까지 나갈 수 없다. 라만차랜드의 일원이어도 바깥에서 해결사로 일할 수 있다(정체는 숨기는 편이 낫다).${lmOtherOrg() ? " 다만 주인공은 다른 조직에 몸담고 있어, 조직의 규율 때문에 라만차랜드에 드나들기가 어렵다: 몰래 빠져나와야 하고, 들키면 문책당하거나 의심받는다." : ""}${atLM() ? " 지금 라만차랜드 안에 있다." : ""}`;
+}
+/* 라만차랜드 말고 다른 조직(뒷골목 조직·협회·날개 등)에 속해 있는가 */
+const lmOtherOrg = () => S.tags.some(t => /^(조직|소속|협회|공무원):/.test(t) && !/라만차/.test(t)) || !!S.claw;
+function lmAccept(input){
+  log({t:"me", text:input});
+  S.lm = {rank:0, merit:0, visits:0, since:S.days, spots:[]};
+  S.lmInvited = true;
+  if(!S.tags.some(t => /^라만차랜드:/.test(t))) S.tags.push("라만차랜드:손님");
+  S.location = "16구역 뒷골목 라만차랜드 입구";
+  S.mins = 16 * 60 + 5;
+  S.lm.visits = 1; S.lm.inside = true;
+  sfx("event");
+  log({t:"narr", text:"오후 4시. 16구역 뒷골목, 아무것도 없던 공터에 카니발 음악이 흘러나온다. 핏빛 아치 위로 'LA MANCHALAND'라는 글자가 반짝이고, 굳은 피로 쌓은 담장 너머에서 관람차가 천천히 돈다.\n\n입구에 선 안내원이 당신의 냄새를 맡고는 활짝 웃는다. \"같은 피의 손님이시군요! 어서 오세요. 이곳에서는 누구도 목마를 일이 없답니다.\"",
+    deltas:[{k:"돌발", v:0, event:true}], options:["1구역 '예쁘고 멋져요'로 간다", "퍼레이드 소리를 따라간다", "안내원에게 이곳에 대해 묻는다"]});
+  chron("라만차랜드의 초대에 응했다");
+  checkAch(); save(); renderStatus();
+}
+/* 라만차랜드 안에서 한 일이 공로가 되고, 공로가 차면 지위가 오른다 */
+function lmAfter(results){
+  const L = S.lm; if(!L) return;
+  const inside = atLM();
+  if(inside && !L.inside) L.visits++;
+  L.inside = inside;
+  if(!inside) return;
+  /* 다른 조직에 몸담고 있으면 규율 때문에 마음대로 드나들 수 없어 공로가 반만 쌓인다 */
+  const half = lmOtherOrg() ? 0.5 : 1;
+  for(const r of results){ if(r.cls === "crit") L.merit += 3 * half; else if(r.cls === "ok" || r.auto) L.merit += 1 * half; }
+  for(const [re, k] of [[/퍼레이드|카니발|3구역/, "parade"], [/관람차|4구역/, "wheel"], [/사격|1구역|예쁘고 멋져요|이발/, "shoot"], [/유령의 집|블러디 메리|2구역|정신 건강|고해|사제/, "haunt"]]) if(re.test(S.location || "") && !L.spots.includes(k)) L.spots.push(k);
+  if(L.rank < 3 && L.merit >= LM_NEED[L.rank + 1] && ageY() >= LM_AGE[L.rank + 1]) lmPromote();
+}
+function lmPromote(){
+  const L = S.lm; L.rank++;
+  S.tags = S.tags.filter(t => !/^라만차랜드:/.test(t)); S.tags.push("라만차랜드:" + LM_RANKS[L.rank]);
+  sfx("good");
+  if(L.rank === 1){
+    log({t:"narr", text:"폐장 음악이 울리기 전, 라만차의 혈귀들이 당신을 둘러싼다. 누군가 당신의 손등에 자기 피 한 방울을 떨어뜨린다. \"이제 손님이 아니야. 우리 가족이지.\" 퍼레이드의 북소리가 당신의 이름을 부르듯 울린다.", deltas:[], options:ruleOptions()});
+  }else if(L.rank === 2){
+    S.str += 2; S.def += 2;
+    log({t:"narr", text:"당신에게 라만차랜드의 한 구역이 맡겨졌다. 손님을 맞는 일도, 굳힌 피로 무너진 담을 다시 세우는 일도 이제 당신 몫이다. 관리인의 붉은 휘장이 어깨에 걸린다.", deltas:[{k:"힘", v:2}, {k:"방어력", v:2}], options:ruleOptions()});
+  }else{
+    L.family = `${S.name} 가문`; L.elderAt = S.days;
+    for(const k of ["str", "def", "spd"]) S[k] += 4;
+    S.blood = 100; S.rep = gclamp("rep", S.rep + 20);
+    log({t:"narr", text:`관람차 꼭대기, 도시의 불빛이 발아래 깔린다. 라만차의 혈귀들이 무릎을 꿇는다. 이제 당신은 누군가의 권속이 아니라, 권속을 이끄는 쪽이다. 「${L.family}」의 장로로서, 당신의 피가 새 가문의 첫 피가 된다.`, deltas:[{k:"힘", v:4}, {k:"방어력", v:4}, {k:"속도", v:4}, {k:"평판", v:20}], options:ruleOptions()});
+  }
+  log({t:"sys", text:`라만차랜드 지위가 올랐다: ${LM_RANKS[L.rank]}`});
+  chron(`라만차랜드의 ${LM_RANKS[L.rank]}이 되었다`);
+  checkAch();
+}
+
+/* ───────── 발톱 (머리의 집행관) ─────────
+   설정: 도시를 다스리는 '머리'의 발톱. 금기를 어긴 자를 처리한다. 몸에 세 가지 세럼을 지닌다:
+   세럼 W(파랑, W사 계열로 보이는 공간 이동), 세럼 R(주황, 몸을 끌어올리는 힘), 세럼 K(초록, K사 계열 재생).
+   이 게임에서는 C사 구역에서 태어나면 드물게 발톱으로 뽑혀, 스무 살의 집행관으로 삶이 시작된다. */
+const SERUMS = {W:{ko:"세럼 W", col:"#4f8fd6", desc:"공간을 찢고 순간 이동"}, R:{ko:"세럼 R", col:"#e08a3c", desc:"몸을 한계까지 끌어올림"}, K:{ko:"세럼 K", col:"#5fb36a", desc:"상처를 재생"}};
+const SERUM_COST = 34;
+function serumUse(t){
+  t = String(t || "");
+  if(!S.claw || !/(세럼|serum|순간 ?이동|공간을 찢|워프|재생|칵테일)/i.test(t)) return null;
+  if(/(칵테일|세 ?가지|세 ?개|트리|전부|모든 세럼)/.test(t)) return ["W", "R", "K"];
+  const out = [];
+  if(/(세럼 ?W|W ?세럼|순간 ?이동|공간을 찢|워프|공간 ?이동)/i.test(t)) out.push("W");
+  if(/(세럼 ?R|R ?세럼|힘을 끌어|강화)/i.test(t)) out.push("R");
+  if(/(세럼 ?K|K ?세럼|재생|회복)/i.test(t)) out.push("K");
+  if(!out.length && /세럼/.test(t)) out.push("R");
+  return out;
+}
+function applySerums(list){
+  const used = [], short = [];
+  for(const k of list){ if(S.claw[k] >= SERUM_COST){ S.claw[k] -= SERUM_COST; used.push(k); } else short.push(k); }
+  if(short.length) log({t:"sys", text:`💉 ${short.map(k => SERUMS[k].ko).join("·")}이(가) 부족하다. 보급을 기다려야 한다.`});
+  if(!used.length) return null;
+  bump("serum"); for(const k of used) bump("serum" + k);
+  if(used.length === 3) bump("cocktail");
+  log({t:"sys", text:`💉 ${used.map(k => SERUMS[k].ko).join(" + ")} 투여${used.includes("K") ? " · 체력 +25" : ""}`});
+  if(used.includes("K")) S.hp = Math.min(100, S.hp + 25);
+  try{ for(const k of used) setTimeout(() => fxAdd(`<div class="fx-flash" style="--c:${SERUMS[k].col};--a:.35"></div>`, 450), 120); sfx(used.includes("W") ? "elec" : "heavy"); }catch(e){}
+  return used;
+}
+function serumDay(){ if(!S.claw) return; for(const k of ["W", "R", "K"]) S.claw[k] = Math.min(100, S.claw[k] + 6); }
+function renderSerumBar(){
+  for(const id of ["serumBar", "serumBarS"]){
+    const b = document.getElementById(id); if(!b) continue;
+    b.hidden = !(S && S.claw); if(b.hidden) continue;
+    b.replaceChildren();
+    for(const k of ["W", "R", "K"]){
+      const w = el("div", "ser"); w.title = `${SERUMS[k].ko}: ${SERUMS[k].desc}`;
+      const top = el("div", "g-top"); top.append(el("span", null, SERUMS[k].ko), el("span", null, String(Math.round(S.claw[k]))));
+      const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = S.claw[k] + "%"; f.style.background = SERUMS[k].col; tr.appendChild(f);
+      w.append(top, tr); b.appendChild(w);
+    }
+  }
+}
+function clawState(){
+  const c = S.claw;
+  return `[발톱] 주인공은 도시를 다스리는 '머리'의 발톱(집행관)이다. 머리의 명령에 따라 금기를 어긴 자를 처리한다. 사람들은 발톱을 두려워하고, 해결사·조직도 맞서려 하지 않는다. 몸에 세 가지 세럼이 있다: 세럼 W(파랑, 공간을 찢고 순간 이동) ${Math.round(c.W)}/100, 세럼 R(주황, 몸을 한계까지 끌어올림) ${Math.round(c.R)}/100, 세럼 K(초록, 상처 재생) ${Math.round(c.K)}/100. 세럼은 게임이 투여량을 정하니, 플레이어가 세럼을 쓰면 그 효과(푸른 균열, 주황빛 폭발적인 힘, 초록빛 재생)를 그대로 그려라.`;
+}
+const CLAW_ORDERS = [
+  "머리에서 명령이 내려왔다. 한 구역의 연구소가 금기에 손을 댔다고 한다. 관련자를 모두 처리하라는 내용이다.|명령을 수행한다/자료부터 확인한다/동행할 발톱을 찾는다",
+  "날개 하나가 머리의 허가 없이 특이점을 시험했다는 보고가 들어왔다. 발톱이 직접 가서 정리하라는 명령이다.|곧장 간다/심판관에게 연락한다/조용히 정찰한다",
+  "도시를 떠나려던 이들이 붙잡혔다. 머리는 발톱에게 처분을 맡겼다.|명령대로 처리한다/사정을 들어 본다/보고를 미룬다"];
+const isClawOrder = ev => CLAW_ORDERS.includes(ev);
+async function clawStart(){
+  S.days = 20 * 365;
+  for(const f of S.family) if(f.diedAt != null && f.diedAt < 0) f.diedAt = S.days - 2000;
+  S.claw = {W:100, R:100, K:100, since:S.days};
+  S.origin = "nest";
+  S.str = 22 + rnd(5); S.def = 20 + rnd(5); S.spd = 22 + rnd(5); S.int = 16 + rnd(4);
+  S.rep = 60; S.ahn = 50000000 + rnd(50) * 1000000;
+  S.tags.push("소속:머리의 발톱", "출신:C사 구역 둥지");
+  S.location = "C사 구역 둥지 머리의 시설";
+  S.mins = 9 * 60;
+  showGame();
+  log({t:"narr", text:`스무 살. 기억나는 어린 시절은 많지 않다. C사 구역 둥지의 하얀 시설, 숫자로 불리던 날들, 그리고 오늘 아침 등에 꽂힌 세 개의 주사기.\n\n파랑, 주황, 초록. 세럼이 핏줄을 타고 퍼지는 감각과 함께 당신은 '머리'의 발톱이 되었다. 도시의 금기를 어긴 자를 지우는 집행관. 문이 열리고, 첫 명령서가 당신 손에 쥐어진다.`,
+    deltas:[{k:"돌발", v:0, event:true}], options:["명령서를 읽는다", "세럼을 시험해 본다", "시설 밖으로 나간다"]});
+  log({t:"sys", text:"발톱으로 삶이 시작되었다(20세). 세럼 W·R·K 게이지가 보인다. 행동에 '세럼 W/R/K'를 쓰면 한 번에 34씩 줄고, 하루에 6씩 보급된다."});
+  chron("머리의 발톱이 되었다");
+  S.awaitEvent = true;
+  checkAch(); save(); renderStatus();
 }
 
 /* ───────── 워프열차 (W사 의뢰, 인생에 한 번) ─────────
@@ -4052,7 +4215,7 @@ function renderWarpBar(){
 /* ───────── 업적 ─────────
    한 삶에서 이룬 것(S.ach)은 전기에, 모든 삶을 합친 것은 첫 화면에 남는다 */
 const ACH_KEY = "dosi_ach";
-const ACH_CATS = ["삶", "태생", "일과 신분", "돈과 평판", "능력", "장비", "가족과 사람", "만남", "전투", "장소와 시간", "몸과 마음", "혈귀", "뒤틀림", "워프열차", "마지막"];
+const ACH_CATS = ["삶", "태생", "일과 신분", "돈과 평판", "능력", "장비", "가족과 사람", "만남", "전투", "장소와 시간", "몸과 마음", "혈귀", "라만차랜드", "발톱", "뒤틀림", "워프열차", "마지막"];
 const cnt = k => (S.cnt && S.cnt[k]) || 0;
 function bump(k, n){ S.cnt = S.cnt || {}; S.cnt[k] = (S.cnt[k] || 0) + (n || 1); }
 const RARITY = {c:{ko:"흔함", col:"#8b8f9c"}, u:{ko:"고급", col:"#5fb36a"}, r:{ko:"희귀", col:"#4f8fd6"}, e:{ko:"영웅", col:"#a86be0"}, l:{ko:"전설", col:"#e0a83c"}};
@@ -4170,6 +4333,34 @@ const ACHS = [
   ["kinFamily", "혈귀의 가족", "혈귀로 살며 아이를 얻었다", () => isKindred() && famN() >= 1, "e", "혈귀"],
   ["kinWarp", "열차 위의 혈귀", "혈귀로 워프열차를 완주했다", () => isKindred() && (S.warpBest || 0) >= WARP_CARS, "l", "혈귀"],
   ["kinDistort", "피에 미친", "혈귀로 뒤틀렸다", () => isKindred() && !!S.distorted, "l", "혈귀"],
+  ["lmInvite", "붉은 초대장", "라만차랜드의 초대장을 받았다", () => !!S.lmInvited, "u", "라만차랜드"],
+  ["lmVisit", "꿈의 놀이공원", "라만차랜드에 들어갔다", () => !!S.lm && S.lm.visits >= 1, "r", "라만차랜드"],
+  ["lmVisit10", "연간 회원", "라만차랜드에 열 번 찾아갔다", () => !!S.lm && S.lm.visits >= 10, "e", "라만차랜드"],
+  ["lmShoot", "피의 사격장", "1구역 '예쁘고 멋져요'에 가 보았다", () => !!S.lm && S.lm.spots.includes("shoot"), "u", "라만차랜드"],
+  ["lmHaunt", "유령의 집", "2구역 '정신 건강을 위하여'에 가 보았다", () => !!S.lm && S.lm.spots.includes("haunt"), "u", "라만차랜드"],
+  ["lmParade", "영원한 카니발", "3구역 퍼레이드에 섞였다", () => !!S.lm && S.lm.spots.includes("parade"), "u", "라만차랜드"],
+  ["lmWheel", "관람차 꼭대기", "4구역 관람차에 올랐다", () => !!S.lm && S.lm.spots.includes("wheel"), "e", "라만차랜드"],
+  ["lmAll", "모든 구역", "라만차랜드의 네 구역을 모두 가 보았다", () => !!S.lm && S.lm.spots.length >= 4, "l", "라만차랜드"],
+  ["lmBond", "라만차의 인연", "라만차랜드에서 인연을 맺었다", () => S.tags.some(t => /^인연:.*라만차/.test(t)), "r", "라만차랜드"],
+  ["lmBond3", "같은 피의 친구들", "라만차랜드에서 인연 셋을 맺었다", () => S.tags.filter(t => /^인연:.*라만차/.test(t)).length >= 3, "e", "라만차랜드"],
+  ["lmFamily", "라만차의 가족", "라만차랜드의 가족으로 받아들여졌다", () => !!S.lm && S.lm.rank >= 1, "r", "라만차랜드"],
+  ["lmKeeper", "구역 관리인", "라만차랜드의 한 구역을 맡았다", () => !!S.lm && S.lm.rank >= 2, "e", "라만차랜드"],
+  ["lmElder", "장로", "자기 가문을 이끄는 장로가 되었다", () => !!S.lm && S.lm.rank >= 3, "l", "라만차랜드"],
+  ["lmElder10", "오래된 피", "장로로 10년을 지냈다", () => !!S.lm && S.lm.rank >= 3 && S.lm.elderAt != null && S.days - S.lm.elderAt >= 3650, "l", "라만차랜드"],
+  ["lmOrg", "두 집 살림", "다른 조직에 몸담은 채 라만차랜드의 가족이 되었다", () => !!S.lm && S.lm.rank >= 1 && lmOtherOrg(), "e", "라만차랜드"],
+  ["lmFixer", "피의 해결사", "라만차랜드의 일원이면서 해결사로 일했다", () => !!S.lm && S.lm.rank >= 1 && !!S.license, "r", "라만차랜드"],
+  ["claw", "머리의 발톱", "발톱으로 뽑혔다", () => !!S.claw, "e", "발톱"],
+  ["serum1", "첫 투여", "세럼을 처음 썼다", () => cnt("serum") >= 1, "u", "발톱"],
+  ["serumW", "푸른 균열", "세럼 W를 썼다", () => cnt("serumW") >= 1, "u", "발톱"],
+  ["serumR", "주황빛 힘", "세럼 R을 썼다", () => cnt("serumR") >= 1, "u", "발톱"],
+  ["serumK", "초록빛 재생", "세럼 K를 썼다", () => cnt("serumK") >= 1, "u", "발톱"],
+  ["cocktail", "세럼 칵테일", "세 가지 세럼을 한꺼번에 썼다", () => cnt("cocktail") >= 1, "r", "발톱"],
+  ["serum30", "주사 자국", "세럼을 서른 번 썼다", () => cnt("serum") >= 30, "e", "발톱"],
+  ["order1", "첫 명령", "머리의 명령을 받았다", () => cnt("order") >= 1, "u", "발톱"],
+  ["order10", "충실한 집행관", "머리의 명령을 열 번 받았다", () => cnt("order") >= 10, "e", "발톱"],
+  ["clawYear10", "오래된 발톱", "발톱으로 10년을 살았다", () => !!S.claw && S.days - S.claw.since >= 3650, "l", "발톱"],
+  ["clawKin", "피를 마시는 발톱", "발톱이면서 혈귀가 되었다", () => !!S.claw && isKindred(), "l", "발톱"],
+  ["clawDistort", "고장 난 집행관", "발톱이면서 뒤틀렸다", () => !!S.claw && !!S.distorted, "l", "발톱"],
   ["starve", "시든 혈귀", "혈액이 바닥났다", () => isKindred() && S.blood != null && S.blood <= 0, "r", "혈귀"],
   ["hunter", "혈귀 사냥꾼", "혈귀를 토벌했다", () => S.tags.some(t => /^토벌:.*혈귀/.test(t)), "r", "전투"],
   /* 몸 */
@@ -4285,6 +4476,11 @@ async function doAction(input, opt = {}){
   if(busy || S.dead) return;
   /* 뒤틀린 직후: 속삭임을 따를지 */
   if(S.distortPending && S.distorted && !opt.passive){ resolveDistortChoice(input); return; }
+  /* 라만차랜드 초대장에 대한 대답 */
+  if(S.lmOffer){
+    S.lmOffer = false;
+    if(!opt.passive && LM_YES.test(input) && !/(숨기|찢|버린|안 ?가|무시|거절)/.test(input)){ lmAccept(input); return; }
+  }
   /* W사 워프열차 의뢰에 대한 대답 */
   if(S.warpOffer){
     S.warpOffer = false;
@@ -4317,9 +4513,13 @@ async function doAction(input, opt = {}){
   done();
   if(!actions) actions = ruleJudge(actInput || input);
   actions = sanitizeActions(actions, actInput || input);
+  /* 발톱: 세럼 투여 */
+  S._serum = !passive && S.claw ? (serumUse(actInput || input) || []) : [];
+  if(S._serum.length) S._serum = applySerums(S._serum) || [];
   /* 워프열차: 뒤쪽 칸일수록 어렵다 */
   if(S.warp) for(const a of actions) if(!a.trivial && a.dc != null) a.dc = Number(a.dc) + Math.floor(S.warp.car * 0.8);
   const results = actions.map(a => Object.assign({}, a, rollCheck(a)));
+  S._serum = [];
   if(passive) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
   else for(const r of results){
     /* 굴릴 필요 없는 행동은 주사위를 보여 주지 않는다 */
@@ -4359,6 +4559,7 @@ async function doAction(input, opt = {}){
   if(isKidnap(ev)){ fin.urgent = true; chron("납치당할 뻔했다"); }
   if(isDistortHunt(ev)) fin.urgent = true;
   if(ev === WARP_OFFER){ S.warpOffer = true; S.warpOffered = true; }
+  if(ev === LM_INVITE){ S.lmOffer = true; S.lmInvited = true; }
   if(wo) warpFin(fin, wo, !!n);
   /* 그냥 넘긴 결과는 그 일이 끝난 것으로 본다(다시 위급 판정을 하지 않는다) */
   if(passive){ fin.urgent = false; fin.passiveDone = true; }
@@ -4371,7 +4572,7 @@ async function doAction(input, opt = {}){
   /* 다친 연출은 싸우던 중일 때만 */
   if(wo || results.some(r => !r.auto && inCombat(r, input)) || (fin.event && FIGHT_RE.test(fin.narration || ""))) fxAfter(fin);
   if(wo) warpAfter(wo);
-  else { checkMilestones(input, results); applyMerit(input, results, fin); notePlace(); }
+  else { checkMilestones(input, results); applyMerit(input, results, fin); notePlace(); lmAfter(results); }
   checkAch();
   save(); setBusy(false);
   memoryTick();
@@ -5578,7 +5779,7 @@ function oneDay(){
   const monthBefore = monthOf(S.days);
   applyDays(1);
   S.en = Math.min(100, S.en + 3); if(S.days % 3 === 0) S.hp = Math.min(100, S.hp + 1);
-  bloodDay();
+  bloodDay(); serumDay();
   /* 정신력은 시간이 지나면 0(평온) 쪽으로 아주 천천히 돌아온다 */
   if(S.days % 5 === 0 && S.sp < 0) S.sp++; else if(S.days % 6 === 0 && S.sp > 0) S.sp--;
   /* 견습 수당: 13~19세 견습생은 매달 30만 안 */
@@ -5907,8 +6108,9 @@ function ruleBio(){
 /* 생전 마지막 상태창 */
 function lastStatus(){
   const g = shownGauges().map(k => ({k, ko:GAUGE_KO[k], v:Math.round(S[k] || 0), pct:Math.max(0, Math.min(100, k === "sp" ? (S.sp + 45) / 90 * 100 : (S[k] || 0)))}));
+  if(S.claw) for(const k of ["W", "R", "K"]) g.push({k:"ser" + k, ko:SERUMS[k].ko, v:Math.round(S.claw[k]), pct:S.claw[k], col:SERUMS[k].col});
   return {gauges:g, stats:STAT_KEYS.map(k => [STAT_KO[k], eff(k)]), ahn:S.ahn, time:timeText(), loc:S.location || "", equip:equipText(),
-    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : "", S.distorted ? "뒤틀림" : ""].filter(Boolean)};
+    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : "", S.distorted ? "뒤틀림" : "", S.lm ? "라만차랜드 " + LM_RANKS[S.lm.rank] : "", S.claw ? "머리의 발톱" : ""].filter(Boolean)};
 }
 let ending = false;
 async function endLife(){
@@ -5968,7 +6170,7 @@ function openBio(id){
     lb.appendChild(el("div", "bl-time", `🗓 ${L.time}${L.loc ? " · 📍 " + L.loc : ""}`));
     if(L.titles && L.titles.length) lb.appendChild(el("div", "bl-row", L.titles.join(" · ")));
     const gg = el("div", "bl-g");
-    for(const g of L.gauges){ const w = el("div", "g-" + g.k); const top = el("div", "g-top"); top.append(el("span", null, g.ko), el("span", null, g.k === "sp" && g.v > 0 ? "+" + g.v : String(g.v))); const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = g.pct + "%"; tr.appendChild(f); w.append(top, tr); gg.appendChild(w); }
+    for(const g of L.gauges){ const w = el("div", "g-" + g.k); const top = el("div", "g-top"); top.append(el("span", null, g.ko), el("span", null, g.k === "sp" && g.v > 0 ? "+" + g.v : String(g.v))); const tr = el("div", "track"); const f = el("div", "fill"); f.style.width = g.pct + "%"; if(g.col) f.style.background = g.col; tr.appendChild(f); w.append(top, tr); gg.appendChild(w); }
     lb.appendChild(gg);
     const st = el("div", "bl-stats");
     for(const [ko, v] of L.stats){ const d = el("div"); d.append(el("span", null, ko), el("b", null, String(v))); st.appendChild(d); }
@@ -6270,6 +6472,8 @@ async function createLife(){
   const wealth = rollWealth(origin, district);
   /* 아주 드물게 혈귀로 태어난다. 다섯 살부터 목이 마르기 시작한다 */
   const bornKindred = rand01() < 0.02;
+  /* C사 구역에서 태어나면 드물게 머리의 발톱으로 뽑혀 스무 살부터 시작한다 */
+  const bornClaw = district === 3 && rand01() < 0.2;
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
     str:1 + rnd(3), def:1 + rnd(3), spd:1 + rnd(3), int:1 + rnd(3), log:[], dead:null,
@@ -6289,6 +6493,7 @@ async function createLife(){
   for(const f of S.family) f.look = randLook(f.gender);
   showGame();
   log({t:"sys", text:`시드 ${seed} · ${corpOf(S.district)} 구역 ${originKo(origin)}. 출생 능력치: ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${S[k]}`).join(", ")});
+  if(bornClaw){ await clawStart(); return; }
   await birth();
 }
 
