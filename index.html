@@ -1005,10 +1005,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0250"></script>
+<script src="parts.js?v=20261108-0255"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0250";
+const BUILD = "20261108-0255";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -7916,12 +7916,14 @@ const BGM_CHORDS = {calm:[[220, 261.6, 329.6], [174.6, 220, 261.6], [196, 246.9,
   warp:[[164.8, 207.7, 246.9], [155.6, 196, 233.1], [174.6, 220, 261.6], [146.8, 185, 220]],
   distort:[[98, 103.8, 146.8], [92.5, 98, 138.6], [87.3, 103.8, 130.8], [98, 116.5, 123.5]],
   lmland:[[261.6, 311.1, 392], [233.1, 293.7, 349.2], [196, 233.1, 293.7], [207.7, 261.6, 311.1]]};
+const BGM_FIGHT_RE = /(공격|덤벼|덤빈|달려든|달려들|덮친|덮쳐|습격|칼을 (뽑|휘|겨)|총을 (뽑|겨|쏘)|겨눈|겨누|휘두|주먹을|싸움|싸우|전투|결투|맞서|베어|찌르|쏘아|사격|난투|칼날|총구|피가 튀|청소부|사냥|노리고 달려|붙잡으려|목을 조)/;
 function bgmMode(){
   if(!S || !S.name || S.dead) return "calm";
   if(S.warp) return "warp";
   if(S.distorted) return "distort";
   if(S.lm && atLM()) return "lmland";
-  if(S.urgent || (S.awaitEvent && /(환상체|혈귀|공격|습격|청소부)/.test((lastNarr() || {}).text || ""))) return "tense";
+  /* 긴박한 음악은 싸움이 벌어졌거나 막 벌어지려 할 때만(돌발 상황이라도 싸움이 아니면 평소 음악) */
+  if((S.urgent || S.awaitEvent) && BGM_FIGHT_RE.test(String((lastNarr() || {}).text || "").slice(-260))) return "tense";
   const h = Math.floor(minsNow() / 60); return h < 5 || h >= 21 ? "night" : "calm";
 }
 function bgmBar(){
