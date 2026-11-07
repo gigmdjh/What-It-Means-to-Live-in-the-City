@@ -471,6 +471,8 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .achs{display:grid;gap:8px;margin-top:18px}
 .achs h3{margin:0}
 #btnAch{justify-self:start}
+.ach-cat{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;padding:8px 2px 4px;border-top:1px solid var(--line);font:600 .8rem var(--f-mono);color:var(--accent);letter-spacing:.04em}
+.ach-cat:first-child{margin-top:0;border-top:0}
 .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .ach{display:flex;flex-direction:column;gap:1px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);min-width:0}
 .ach b{font-size:.86rem}
@@ -933,10 +935,10 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2050"></script>
+<script src="parts.js?v=20261107-2115"></script>
 <script>
 "use strict";
-const BUILD = "20261107-2050";
+const BUILD = "20261107-2115";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -2949,6 +2951,7 @@ function applyNarr(n, forcedDays, shownDays){
   const deltas = [];
   for(const k of GAUGE_KEYS) if(n[k]) deltas.push({k:GAUGE_KO[k], v:n[k]});
   if(n.ahn) deltas.push({k:"안", v:n.ahn});
+  if(n.blood > 0 && isKindred() && (!S.bornKindred || S.kindredAwake)){ bump("bloodDrink"); bump(n.blood >= 60 ? "bloodHuman" : n.blood >= 35 ? "bloodPack" : "bloodBar"); }
   if(n.blood && isKindred() && (!S.bornKindred || S.kindredAwake)){ ensureBlood(); const b0 = S.blood; S.blood = clamp(Math.round(S.blood + n.blood), 0, 100); if(S.blood !== b0) deltas.push({k:"혈액", v:S.blood - b0}); if(S.blood >= 30) S.bloodWarn = 0; }
   for(const k of STAT_KEYS) if(n[k]) deltas.push({k:STAT_KO[k], v:n[k]});
   const days = forcedDays != null ? forcedDays : n.days;
@@ -3912,6 +3915,7 @@ function bloodDay(){
   const before = S.blood;
   S.blood = Math.max(0, S.blood - (ageY() < 13 ? 2 : 3));
   if(S.blood <= 0){
+    bump("starveDays");
     if(S.hp > 15) S.hp = Math.max(15, S.hp - 2);           /* 굶어서 바로 죽지는 않지만 시들어 간다 */
     if(S.days % 2 === 0) S.sp = gclamp("sp", S.sp - 1);
   }
@@ -4004,7 +4008,7 @@ function enterWarp(input){
 }
 function exitWarp(cleared){
   const best = cleared ? WARP_CARS : Math.max(0, S.warp.car - 1);
-  const keep = {log:S.log, ach:S.ach || [], rng:S.rng, turn:S.turn, warpBest:Math.max(S.warpBest || 0, best)};
+  const keep = {log:S.log, ach:S.ach || [], cnt:S.cnt, rng:S.rng, turn:S.turn, warpBest:Math.max(S.warpBest || 0, best)};
   let back; try{ back = JSON.parse(S.warp.snap); }catch(e){ back = null; }
   if(back){ S = Object.assign(back, keep); } else { delete S.warp; Object.assign(S, keep); }
   delete S.warp; S.warpOffered = true; S.warpTried = true; S.warpOffer = false;
@@ -4024,6 +4028,7 @@ function exitWarp(cleared){
 function warpAfter(w){
   if(!S.warp) return;
   if(w.pass){
+    S.warpBest = Math.max(S.warpBest || 0, w.car); checkAch();
     if(w.last){ exitWarp(true); return; }
     S.warp.car++;
     log({t:"sys", text:`🚆 ${w.car}칸 돌파 · ${S.warp.car} / ${WARP_CARS}칸`});
@@ -4045,131 +4050,176 @@ function renderWarpBar(){
 /* ───────── 업적 ─────────
    한 삶에서 이룬 것(S.ach)은 전기에, 모든 삶을 합친 것은 첫 화면에 남는다 */
 const ACH_KEY = "dosi_ach";
+const ACH_CATS = ["삶", "태생", "일과 신분", "돈과 평판", "능력", "장비", "가족과 사람", "만남", "전투", "장소와 시간", "몸과 마음", "혈귀", "뒤틀림", "워프열차", "마지막"];
+const cnt = k => (S.cnt && S.cnt[k]) || 0;
+function bump(k, n){ S.cnt = S.cnt || {}; S.cnt[k] = (S.cnt[k] || 0) + (n || 1); }
 const RARITY = {c:{ko:"흔함", col:"#8b8f9c"}, u:{ko:"고급", col:"#5fb36a"}, r:{ko:"희귀", col:"#4f8fd6"}, e:{ko:"영웅", col:"#a86be0"}, l:{ko:"전설", col:"#e0a83c"}};
 const famN = () => S.family.filter(f => f.rel === "자녀").length;
 const ACHS = [
-  ["born", "첫 울음", "도시에 태어났다", () => true, "c"],
-  ["age1", "첫돌", "한 살이 되었다", () => ageY() >= 1, "c"],
-  ["age18", "어른이 되다", "열여덟 살이 되었다", () => ageY() >= 18, "c"],
-  ["age40", "불혹", "마흔 살까지 살았다", () => ageY() >= 40, "u"],
-  ["age70", "장수", "일흔 살까지 살았다", () => ageY() >= 70, "r"],
-  ["age90", "도시의 노인", "아흔 살까지 살았다", () => ageY() >= 90, "e"],
-  ["head", "머리 아래에서", "A~C사 구역에서 태어났다", () => S.district >= 1 && S.district <= 3, "r"],
-  ["nest", "둥지의 아이", "둥지에서 태어났다", () => S.origin === "nest", "u"],
-  ["license", "해결사", "해결사 자격을 땄다", () => !!S.license, "u"],
-  ["color", "특색", "특색으로 불리게 되었다", () => !!S.color, "l"],
-  ["ego", "E.G.O", "뒤틀림을 이겨내고 에고를 발현했다", () => !!S.ego, "e"],
-  ["married", "반려", "결혼했다", () => S.family.some(f => f.rel === "배우자"), "u"],
-  ["parent", "부모가 되다", "아이가 태어났다", () => famN() >= 1, "u"],
-  ["kids3", "대가족", "아이가 셋 이상", () => famN() >= 3, "r"],
-  ["rich", "부자", "1억 안을 모았다", () => S.ahn >= 100000000, "r"],
-  ["tycoon", "거부", "10억 안을 모았다", () => S.ahn >= 1000000000, "e"],
-  ["rep", "이름난 사람", "평판 80 이상", () => S.rep >= 80, "r"],
-  ["strong", "단련된 몸", "힘이 20을 넘었다", () => eff("str") >= 20, "r"],
-  ["abno", "환상체 목격", "환상체와 마주쳤다", () => (S.abnos || []).length >= 1, "u"],
-  ["abno5", "환상체 수집가", "환상체 다섯과 마주쳤다", () => (S.abnos || []).length >= 5, "e"],
-  ["famous", "전설과의 만남", "원작 인물을 만났다", () => (S.met || []).length >= 1, "u"],
-  ["famous10", "도시의 인맥", "원작 인물 열 명을 만났다", () => (S.met || []).length >= 10, "e"],
-  ["kidnap", "빠져나오다", "납치에서 벗어났다", () => S.tags.some(t => /^탈출:.*납치/.test(t)), "r"],
-  ["kindred", "피의 아이", "혈귀가 되었다", () => isKindred(), "e"],
-  ["warpIn", "W사의 의뢰", "워프열차 의뢰를 받아 열차에 올랐다", () => !!S.warpTried, "r"],
-  ["warp4", "절반의 돌파", "워프열차 4칸 이상 돌파", () => (S.warpBest || 0) >= 4, "e"],
-  ["warp8", "워프열차 완주", "워프열차 8칸을 모두 돌파했다", () => (S.warpBest || 0) >= WARP_CARS, "l"],
+  ["born", "첫 울음", "도시에 태어났다", () => true, "c", "삶"],
+  ["age1", "첫돌", "한 살이 되었다", () => ageY() >= 1, "c", "삶"],
+  ["age18", "어른이 되다", "열여덟 살이 되었다", () => ageY() >= 18, "c", "삶"],
+  ["age40", "불혹", "마흔 살까지 살았다", () => ageY() >= 40, "u", "삶"],
+  ["age70", "장수", "일흔 살까지 살았다", () => ageY() >= 70, "r", "삶"],
+  ["age90", "도시의 노인", "아흔 살까지 살았다", () => ageY() >= 90, "e", "삶"],
+  ["head", "머리 아래에서", "A~C사 구역에서 태어났다", () => S.district >= 1 && S.district <= 3, "r", "태생"],
+  ["nest", "둥지의 아이", "둥지에서 태어났다", () => S.origin === "nest", "u", "태생"],
+  ["license", "해결사", "해결사 자격을 땄다", () => !!S.license, "u", "일과 신분"],
+  ["color", "특색", "특색으로 불리게 되었다", () => !!S.color, "l", "일과 신분"],
+  ["ego", "E.G.O", "뒤틀림을 이겨내고 에고를 발현했다", () => !!S.ego, "e", "몸과 마음"],
+  ["married", "반려", "결혼했다", () => S.family.some(f => f.rel === "배우자"), "u", "가족과 사람"],
+  ["parent", "부모가 되다", "아이가 태어났다", () => famN() >= 1, "u", "가족과 사람"],
+  ["kids3", "대가족", "아이가 셋 이상", () => famN() >= 3, "r", "가족과 사람"],
+  ["rich", "부자", "1억 안을 모았다", () => S.ahn >= 100000000, "r", "돈과 평판"],
+  ["tycoon", "거부", "10억 안을 모았다", () => S.ahn >= 1000000000, "e", "돈과 평판"],
+  ["rep", "이름난 사람", "평판 80 이상", () => S.rep >= 80, "r", "돈과 평판"],
+  ["strong", "단련된 몸", "힘이 20을 넘었다", () => eff("str") >= 20, "r", "능력"],
+  ["abno", "환상체 목격", "환상체와 마주쳤다", () => (S.abnos || []).length >= 1, "u", "만남"],
+  ["abno5", "환상체 수집가", "환상체 다섯과 마주쳤다", () => (S.abnos || []).length >= 5, "e", "만남"],
+  ["famous", "전설과의 만남", "원작 인물을 만났다", () => (S.met || []).length >= 1, "u", "만남"],
+  ["famous10", "도시의 인맥", "원작 인물 열 명을 만났다", () => (S.met || []).length >= 10, "e", "만남"],
+  ["kidnap", "빠져나오다", "납치에서 벗어났다", () => S.tags.some(t => /^탈출:.*납치/.test(t)), "r", "만남"],
+  ["kindred", "피의 아이", "혈귀가 되었다", () => isKindred(), "e", "혈귀"],
+  ["warpIn", "W사의 의뢰", "워프열차 의뢰를 받아 열차에 올랐다", () => !!S.warpTried, "r", "워프열차"],
+  ["warpc1", "워프열차 1칸", "워프열차 1칸을 돌파했다", () => (S.warpBest || 0) >= 1, "u", "워프열차"],
+  ["warpc2", "워프열차 2칸", "워프열차 2칸을 돌파했다", () => (S.warpBest || 0) >= 2, "u", "워프열차"],
+  ["warpc3", "워프열차 3칸", "워프열차 3칸을 돌파했다", () => (S.warpBest || 0) >= 3, "r", "워프열차"],
+  ["warpc4", "워프열차 4칸", "워프열차 4칸을 돌파했다", () => (S.warpBest || 0) >= 4, "r", "워프열차"],
+  ["warpc5", "워프열차 5칸", "워프열차 5칸을 돌파했다", () => (S.warpBest || 0) >= 5, "e", "워프열차"],
+  ["warpc6", "워프열차 6칸", "워프열차 6칸을 돌파했다", () => (S.warpBest || 0) >= 6, "e", "워프열차"],
+  ["warpc7", "워프열차 7칸", "워프열차 7칸을 돌파했다", () => (S.warpBest || 0) >= 7, "e", "워프열차"],
+  ["warp8", "워프열차 완주", "워프열차 8칸을 모두 돌파했다", () => (S.warpBest || 0) >= WARP_CARS, "l", "워프열차"],
   /* 나이 */
-  ["age5", "다섯 살", "다섯 살이 되었다", () => ageY() >= 5, "c"],
-  ["age10", "열 살", "열 살이 되었다", () => ageY() >= 10, "c"],
-  ["age13", "사춘기", "열세 살이 되었다", () => ageY() >= 13, "c"],
-  ["age20", "스무 살", "스무 살이 되었다", () => ageY() >= 20, "c"],
-  ["age30", "서른", "서른 살이 되었다", () => ageY() >= 30, "c"],
-  ["age50", "지천명", "쉰 살까지 살았다", () => ageY() >= 50, "u"],
-  ["age60", "환갑", "예순 살까지 살았다", () => ageY() >= 60, "u"],
-  ["age80", "팔순", "여든 살까지 살았다", () => ageY() >= 80, "r"],
-  ["age100", "백 년", "백 살까지 살았다", () => ageY() >= 100, "l"],
+  ["age5", "다섯 살", "다섯 살이 되었다", () => ageY() >= 5, "c", "삶"],
+  ["age10", "열 살", "열 살이 되었다", () => ageY() >= 10, "c", "삶"],
+  ["age13", "사춘기", "열세 살이 되었다", () => ageY() >= 13, "c", "삶"],
+  ["age20", "스무 살", "스무 살이 되었다", () => ageY() >= 20, "c", "삶"],
+  ["age30", "서른", "서른 살이 되었다", () => ageY() >= 30, "c", "삶"],
+  ["age50", "지천명", "쉰 살까지 살았다", () => ageY() >= 50, "u", "삶"],
+  ["age60", "환갑", "예순 살까지 살았다", () => ageY() >= 60, "u", "삶"],
+  ["age80", "팔순", "여든 살까지 살았다", () => ageY() >= 80, "r", "삶"],
+  ["age100", "백 년", "백 살까지 살았다", () => ageY() >= 100, "l", "삶"],
   /* 태생 */
-  ["poorBorn", "맨바닥에서", "가장 가난한 집에서 태어났다", () => S.wealth === 0, "u"],
-  ["richBorn", "은수저", "가장 부유한 집에서 태어났다", () => S.wealth === 4, "r"],
-  ["headNest", "머리의 둥지", "A~C사 구역 둥지에서 태어났다", () => S.district >= 1 && S.district <= 3 && S.origin === "nest", "e"],
-  ["poorToRich", "자수성가", "가난하게 태어나 1억 안을 모았다", () => S.wealth <= 1 && S.ahn >= 100000000, "e"],
+  ["poorBorn", "맨바닥에서", "가장 가난한 집에서 태어났다", () => S.wealth === 0, "u", "태생"],
+  ["richBorn", "은수저", "가장 부유한 집에서 태어났다", () => S.wealth === 4, "r", "태생"],
+  ["headNest", "머리의 둥지", "A~C사 구역 둥지에서 태어났다", () => S.district >= 1 && S.district <= 3 && S.origin === "nest", "e", "태생"],
+  ["poorToRich", "자수성가", "가난하게 태어나 1억 안을 모았다", () => S.wealth <= 1 && S.ahn >= 100000000, "e", "돈과 평판"],
   /* 일과 신분 */
-  ["apprentice", "견습생", "사무소에서 견습을 했다", () => S.tags.some(t => /^견습:/.test(t)) || !!(S.careers && S.careers.apprentice), "u"],
-  ["lic5", "중견 해결사", "해결사 5급 이상이 되었다", () => !!S.license && S.license <= 5, "r"],
-  ["lic3", "베테랑", "해결사 3급 이상이 되었다", () => !!S.license && S.license <= 3, "e"],
-  ["lic1", "1급 해결사", "해결사 1급이 되었다", () => S.license === 1, "l"],
-  ["office", "사무소 대표", "자기 해결사 사무소를 차렸다", () => !!S.office, "r"],
-  ["staff3", "작은 사무소", "직원 셋을 두었다", () => (S.staff || []).length >= 3, "e"],
-  ["staff8", "북적이는 사무소", "직원 여덟을 두었다", () => (S.staff || []).length >= 8, "l"],
-  ["syndicate", "조직원", "조직에 몸담았다", () => S.tags.some(t => /^조직:/.test(t)), "u"],
-  ["assoc", "협회 사람", "협회에 들어갔다", () => S.tags.some(t => /^(협회|소속):.*협회/.test(t) || /^협회/.test(t)), "r"],
-  ["civil", "공무원", "공무원이 되었다", () => S.tags.some(t => /^공무원/.test(t)), "u"],
+  ["apprentice", "견습생", "사무소에서 견습을 했다", () => S.tags.some(t => /^견습:/.test(t)) || !!(S.careers && S.careers.apprentice), "u", "일과 신분"],
+  ["lic5", "중견 해결사", "해결사 5급 이상이 되었다", () => !!S.license && S.license <= 5, "r", "일과 신분"],
+  ["lic3", "베테랑", "해결사 3급 이상이 되었다", () => !!S.license && S.license <= 3, "e", "일과 신분"],
+  ["lic1", "1급 해결사", "해결사 1급이 되었다", () => S.license === 1, "l", "일과 신분"],
+  ["office", "사무소 대표", "자기 해결사 사무소를 차렸다", () => !!S.office, "r", "일과 신분"],
+  ["staff3", "작은 사무소", "직원 셋을 두었다", () => (S.staff || []).length >= 3, "e", "일과 신분"],
+  ["staff8", "북적이는 사무소", "직원 여덟을 두었다", () => (S.staff || []).length >= 8, "l", "일과 신분"],
+  ["syndicate", "조직원", "조직에 몸담았다", () => S.tags.some(t => /^조직:/.test(t)), "u", "일과 신분"],
+  ["assoc", "협회 사람", "협회에 들어갔다", () => S.tags.some(t => /^(협회|소속):.*협회/.test(t) || /^협회/.test(t)), "r", "일과 신분"],
+  ["civil", "공무원", "공무원이 되었다", () => S.tags.some(t => /^공무원/.test(t)), "u", "일과 신분"],
   /* 돈과 평판 */
-  ["ahn1m", "첫 백만 안", "백만 안을 모았다", () => S.ahn >= 1000000, "c"],
-  ["ahn10m", "천만 안", "천만 안을 모았다", () => S.ahn >= 10000000, "u"],
-  ["broke", "빈털터리", "어른이 되어 한 푼도 없었다", () => ageY() >= 20 && S.ahn <= 0, "c"],
-  ["debt", "빚쟁이", "빚을 졌다", () => S.tags.some(t => /^빚/.test(t)), "c"],
-  ["rep50", "알려진 사람", "평판 50 이상", () => S.rep >= 50, "u"],
-  ["rep100", "도시의 이름", "평판 100", () => S.rep >= 100, "e"],
+  ["ahn1m", "첫 백만 안", "백만 안을 모았다", () => S.ahn >= 1000000, "c", "돈과 평판"],
+  ["ahn10m", "천만 안", "천만 안을 모았다", () => S.ahn >= 10000000, "u", "돈과 평판"],
+  ["broke", "빈털터리", "어른이 되어 한 푼도 없었다", () => ageY() >= 20 && S.ahn <= 0, "c", "돈과 평판"],
+  ["debt", "빚쟁이", "빚을 졌다", () => S.tags.some(t => /^빚/.test(t)), "c", "돈과 평판"],
+  ["rep50", "알려진 사람", "평판 50 이상", () => S.rep >= 50, "u", "돈과 평판"],
+  ["rep100", "도시의 이름", "평판 100", () => S.rep >= 100, "e", "돈과 평판"],
   /* 능력 */
-  ["str40", "괴력", "힘이 40을 넘었다", () => eff("str") >= 40, "e"],
-  ["def20", "철벽", "방어력이 20을 넘었다", () => eff("def") >= 20, "r"],
-  ["spd20", "질풍", "속도가 20을 넘었다", () => eff("spd") >= 20, "r"],
-  ["int20", "명석", "지력이 20을 넘었다", () => eff("int") >= 20, "r"],
-  ["all15", "만능", "모든 능력치가 15를 넘었다", () => STAT_KEYS.every(k => eff(k) >= 15), "e"],
-  ["all30", "완성된 사람", "모든 능력치가 30을 넘었다", () => STAT_KEYS.every(k => eff(k) >= 30), "l"],
+  ["str40", "괴력", "힘이 40을 넘었다", () => eff("str") >= 40, "e", "능력"],
+  ["def20", "철벽", "방어력이 20을 넘었다", () => eff("def") >= 20, "r", "능력"],
+  ["spd20", "질풍", "속도가 20을 넘었다", () => eff("spd") >= 20, "r", "능력"],
+  ["int20", "명석", "지력이 20을 넘었다", () => eff("int") >= 20, "r", "능력"],
+  ["all15", "만능", "모든 능력치가 15를 넘었다", () => STAT_KEYS.every(k => eff(k) >= 15), "e", "능력"],
+  ["all30", "완성된 사람", "모든 능력치가 30을 넘었다", () => STAT_KEYS.every(k => eff(k) >= 30), "l", "능력"],
   /* 장비 */
-  ["weapon", "첫 무기", "무기를 손에 넣었다", () => !!(S.equip && S.equip.weapon), "c"],
-  ["armor", "몸을 지키는 것", "방어구를 갖췄다", () => !!(S.equip && S.equip.armor), "c"],
-  ["aug", "의체", "의체를 이식했다", () => !!(S.equip && ["arm", "leg", "eye", "body"].some(k => S.equip[k])), "u"],
-  ["augFull", "반쯤은 기계", "의수·의족·의안·신체 장갑을 모두 이식했다", () => !!(S.equip && ["arm", "leg", "eye", "body"].every(k => S.equip[k])), "e"],
-  ["egoWeapon", "추출 E.G.O", "추출 E.G.O 무기를 들었다", () => /^ego:/.test((S.equip || {}).weapon || "") || (S.inv || []).some(i => /^ego:/.test(i)), "e"],
-  ["inv5", "가방이 무겁다", "장비를 다섯 개 넘게 모았다", () => (S.inv || []).length >= 5, "u"],
-  ["outfit", "옷을 갈아입다", "옷을 갈아입었다", () => !!S.outfit, "c"],
+  ["weapon", "첫 무기", "무기를 손에 넣었다", () => !!(S.equip && S.equip.weapon), "c", "장비"],
+  ["armor", "몸을 지키는 것", "방어구를 갖췄다", () => !!(S.equip && S.equip.armor), "c", "장비"],
+  ["aug", "의체", "의체를 이식했다", () => !!(S.equip && ["arm", "leg", "eye", "body"].some(k => S.equip[k])), "u", "장비"],
+  ["augFull", "반쯤은 기계", "의수·의족·의안·신체 장갑을 모두 이식했다", () => !!(S.equip && ["arm", "leg", "eye", "body"].every(k => S.equip[k])), "e", "장비"],
+  ["egoWeapon", "추출 E.G.O", "추출 E.G.O 무기를 들었다", () => /^ego:/.test((S.equip || {}).weapon || "") || (S.inv || []).some(i => /^ego:/.test(i)), "e", "장비"],
+  ["inv5", "가방이 무겁다", "장비를 다섯 개 넘게 모았다", () => (S.inv || []).length >= 5, "u", "장비"],
+  ["outfit", "옷을 갈아입다", "옷을 갈아입었다", () => !!S.outfit, "c", "장비"],
   /* 가족과 사람 */
-  ["kids5", "대가문", "아이가 다섯 이상", () => famN() >= 5, "e"],
-  ["orphan", "홀로 남다", "어른이 되기 전에 부모를 모두 잃었다", () => ageY() < 18 && S.family.some(f => f.rel === "아버지" || f.rel === "어머니") && !parentsAlive(), "r"],
-  ["bond1", "첫 인연", "인연을 맺었다", () => S.tags.some(t => /^인연:/.test(t)), "c"],
-  ["bond5", "마당발", "인연 다섯을 맺었다", () => S.tags.filter(t => /^인연:/.test(t)).length >= 5, "u"],
-  ["bond10", "모두의 친구", "인연 열을 맺었다", () => S.tags.filter(t => /^인연:/.test(t)).length >= 10, "r"],
-  ["loss", "떠나보내다", "가까운 사람을 잃었다", () => S.tags.some(t => /^사망:/.test(t)) || S.family.some(f => f.alive === false), "c"],
-  ["famous3", "소문 속의 사람들", "원작 인물 셋을 만났다", () => (S.met || []).length >= 3, "u"],
-  ["famous25", "도시의 전설들", "원작 인물 스물다섯을 만났다", () => (S.met || []).length >= 25, "l"],
+  ["kids5", "대가문", "아이가 다섯 이상", () => famN() >= 5, "e", "가족과 사람"],
+  ["orphan", "홀로 남다", "어른이 되기 전에 부모를 모두 잃었다", () => ageY() < 18 && S.family.some(f => f.rel === "아버지" || f.rel === "어머니") && !parentsAlive(), "r", "가족과 사람"],
+  ["bond1", "첫 인연", "인연을 맺었다", () => S.tags.some(t => /^인연:/.test(t)), "c", "가족과 사람"],
+  ["bond5", "마당발", "인연 다섯을 맺었다", () => S.tags.filter(t => /^인연:/.test(t)).length >= 5, "u", "가족과 사람"],
+  ["bond10", "모두의 친구", "인연 열을 맺었다", () => S.tags.filter(t => /^인연:/.test(t)).length >= 10, "r", "가족과 사람"],
+  ["loss", "떠나보내다", "가까운 사람을 잃었다", () => S.tags.some(t => /^사망:/.test(t)) || S.family.some(f => f.alive === false), "c", "가족과 사람"],
+  ["famous3", "소문 속의 사람들", "원작 인물 셋을 만났다", () => (S.met || []).length >= 3, "u", "만남"],
+  ["famous25", "도시의 전설들", "원작 인물 스물다섯을 만났다", () => (S.met || []).length >= 25, "l", "만남"],
   /* 환상체 */
-  ["abnoWaw", "WAW", "WAW 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "WAW"), "r"],
-  ["abnoAleph", "재앙과 마주하다", "ALEPH 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "ALEPH"), "e"],
-  ["abno10", "환상체 도감", "환상체 열과 마주쳤다", () => (S.abnos || []).length >= 10, "l"],
+  ["abnoWaw", "WAW", "WAW 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "WAW"), "r", "만남"],
+  ["abnoAleph", "재앙과 마주하다", "ALEPH 등급 환상체와 마주쳤다", () => (S.abnos || []).some(a => a.g === "ALEPH"), "e", "만남"],
+  ["abno10", "환상체 도감", "환상체 열과 마주쳤다", () => (S.abnos || []).length >= 10, "l", "만남"],
   /* 혈귀 */
-  ["bornKin", "타고난 혈귀", "혈귀로 태어났다", () => !!S.bornKindred, "r"],
-  ["bloodFull", "포만", "혈액을 가득 채웠다", () => isKindred() && S.blood >= 100, "u"],
-  ["starve", "시든 혈귀", "혈액이 바닥났다", () => isKindred() && S.blood != null && S.blood <= 0, "r"],
-  ["hunter", "혈귀 사냥꾼", "혈귀를 토벌했다", () => S.tags.some(t => /^토벌:.*혈귀/.test(t)), "r"],
+  ["bornKin", "타고난 혈귀", "혈귀로 태어났다", () => !!S.bornKindred, "r", "태생"],
+  ["bloodFull", "포만", "혈액을 가득 채웠다", () => isKindred() && S.blood >= 100, "u", "혈귀"],
+  ["kinThirst", "첫 갈증", "다섯 살, 피를 원하는 갈증이 시작되었다", () => !!S.kindredAwake, "u", "혈귀"],
+  ["kinTurned", "권속", "물려서 혈귀가 되었다", () => isKindred() && !S.bornKindred, "r", "혈귀"],
+  ["kinBar", "혈액바", "혈액바를 먹었다", () => cnt("bloodBar") >= 1, "c", "혈귀"],
+  ["kinPack", "혈액팩", "혈액팩을 마셨다", () => cnt("bloodPack") >= 1, "u", "혈귀"],
+  ["kinHuman", "사냥", "사람에게서 직접 피를 마셨다", () => cnt("bloodHuman") >= 1, "r", "혈귀"],
+  ["kinDrink20", "익숙한 맛", "피를 스무 번 마셨다", () => cnt("bloodDrink") >= 20, "r", "혈귀"],
+  ["kinDrink100", "갈증의 노예", "피를 백 번 마셨다", () => cnt("bloodDrink") >= 100, "e", "혈귀"],
+  ["kinStarve30", "긴 굶주림", "피 없이 한 달을 버텼다", () => cnt("starveDays") >= 30, "e", "혈귀"],
+  ["kinStrong", "피의 힘", "혈귀의 힘으로 힘이 60을 넘었다", () => isKindred() && eff("str") >= 60, "e", "혈귀"],
+  ["kinAge60", "변치 않는 얼굴", "혈귀로 예순 살을 넘겼다", () => isKindred() && ageY() >= 60, "r", "혈귀"],
+  ["kinAge150", "늙지 않는 자", "혈귀로 백오십 살을 넘겼다", () => isKindred() && ageY() >= 150, "l", "혈귀"],
+  ["kinLicense", "혈귀 해결사", "혈귀이면서 해결사 자격을 땄다", () => isKindred() && !!S.license, "r", "혈귀"],
+  ["kinFamily", "혈귀의 가족", "혈귀로 살며 아이를 얻었다", () => isKindred() && famN() >= 1, "e", "혈귀"],
+  ["kinWarp", "열차 위의 혈귀", "혈귀로 워프열차를 완주했다", () => isKindred() && (S.warpBest || 0) >= WARP_CARS, "l", "혈귀"],
+  ["kinDistort", "피에 미친", "혈귀로 뒤틀렸다", () => isKindred() && !!S.distorted, "l", "혈귀"],
+  ["starve", "시든 혈귀", "혈액이 바닥났다", () => isKindred() && S.blood != null && S.blood <= 0, "r", "혈귀"],
+  ["hunter", "혈귀 사냥꾼", "혈귀를 토벌했다", () => S.tags.some(t => /^토벌:.*혈귀/.test(t)), "r", "전투"],
   /* 몸 */
-  ["wound", "첫 상처", "다쳤다", () => S.tags.some(t => /^부상:/.test(t)), "c"],
-  ["bone", "부러진 뼈", "뼈가 부러졌다", () => S.tags.some(t => /^부상:.*(골절|부러)/.test(t)), "u"],
-  ["lowHp", "죽을 고비", "체력이 10 아래로 떨어지고도 살아남았다", () => !S.dead && S.hp > 0 && S.hp < 10, "r"],
-  ["calm", "평정", "정신력이 +40을 넘었다", () => S.sp >= 40, "r"],
-  ["edge", "벼랑 끝", "정신력이 −40 아래로 떨어졌다", () => S.sp <= -40, "u"],
+  ["wound", "첫 상처", "다쳤다", () => S.tags.some(t => /^부상:/.test(t)), "c", "몸과 마음"],
+  ["bone", "부러진 뼈", "뼈가 부러졌다", () => S.tags.some(t => /^부상:.*(골절|부러)/.test(t)), "u", "몸과 마음"],
+  ["lowHp", "죽을 고비", "체력이 10 아래로 떨어지고도 살아남았다", () => !S.dead && S.hp > 0 && S.hp < 10, "r", "몸과 마음"],
+  ["calm", "평정", "정신력이 +40을 넘었다", () => S.sp >= 40, "r", "몸과 마음"],
+  ["edge", "벼랑 끝", "정신력이 −40 아래로 떨어졌다", () => S.sp <= -40, "u", "몸과 마음"],
   /* 삶의 길이와 선택 */
-  ["turn100", "백 번의 선택", "행동을 백 번 했다", () => (S.turn || 0) >= 100, "u"],
-  ["turn500", "오백 번의 선택", "행동을 오백 번 했다", () => (S.turn || 0) >= 500, "r"],
-  ["turn1000", "천 번의 선택", "행동을 천 번 했다", () => (S.turn || 0) >= 1000, "e"],
+  ["turn100", "백 번의 선택", "행동을 백 번 했다", () => (S.turn || 0) >= 100, "u", "삶"],
+  ["turn500", "오백 번의 선택", "행동을 오백 번 했다", () => (S.turn || 0) >= 500, "r", "삶"],
+  ["turn1000", "천 번의 선택", "행동을 천 번 했다", () => (S.turn || 0) >= 1000, "e", "삶"],
   /* 마지막 */
-  ["dieYoung", "요절", "어른이 되기 전에 세상을 떠났다", () => !!S.dead && ageY() < 18, "u"],
-  ["dieOld", "천수를 누리다", "여든 넘어 세상을 떠났다", () => !!S.dead && ageY() >= 80, "e"],
-  ["dieDistort", "뒤틀린 끝", "뒤틀림이 되어 삶이 끝났다", () => /뒤틀림/.test(S.dead || ""), "r"],
-  ["dieBag", "피주머니", "혈귀에게 물려 피주머니가 되었다", () => /피주머니/.test(S.dead || ""), "r"],
+  ["dieYoung", "요절", "어른이 되기 전에 세상을 떠났다", () => !!S.dead && ageY() < 18, "u", "마지막"],
+  ["dieOld", "천수를 누리다", "여든 넘어 세상을 떠났다", () => !!S.dead && ageY() >= 80, "e", "마지막"],
+  ["dieDistort", "뒤틀린 끝", "뒤틀림이 되어 삶이 끝났다", () => /뒤틀림/.test(S.dead || ""), "r", "마지막"],
+  /* 전투 */
+  ["crit1", "첫 대성공", "주사위에서 대성공을 냈다", () => cnt("crit") >= 1, "c", "전투"],
+  ["crit10", "행운아", "대성공 열 번", () => cnt("crit") >= 10, "r", "전투"],
+  ["crit50", "운명의 총아", "대성공 쉰 번", () => cnt("crit") >= 50, "e", "전투"],
+  ["fumble1", "대실패", "주사위에서 대실패를 냈다", () => cnt("fumble") >= 1, "c", "전투"],
+  ["fumble10", "불운", "대실패 열 번", () => cnt("fumble") >= 10, "u", "전투"],
+  ["fight1", "첫 싸움", "싸움에 뛰어들었다", () => cnt("fight") >= 1, "c", "전투"],
+  ["fight10", "싸움꾼", "열 번 싸웠다", () => cnt("fight") >= 10, "u", "전투"],
+  ["fight50", "역전의 용사", "쉰 번 싸웠다", () => cnt("fight") >= 50, "r", "전투"],
+  ["fight200", "전장의 주인", "이백 번 싸웠다", () => cnt("fight") >= 200, "e", "전투"],
+  ["win20", "연전연승", "싸움에서 스무 번 이겼다", () => cnt("win") >= 20, "r", "전투"],
+  /* 장소와 시간 */
+  ["night1", "뒷골목의 밤", "새벽 3시 13분 뒤, 밤거리에서 움직였다", () => cnt("night") >= 1, "u", "장소와 시간"],
+  ["night10", "밤의 주민", "뒷골목의 밤에 열 번 움직였다", () => cnt("night") >= 10, "r", "장소와 시간"],
+  ["places5", "산책자", "다섯 곳을 다녔다", () => (S.places || []).length >= 5, "c", "장소와 시간"],
+  ["places15", "동네 탐험가", "열다섯 곳을 다녔다", () => (S.places || []).length >= 15, "u", "장소와 시간"],
+  ["places40", "도시의 지도", "마흔 곳을 다녔다", () => (S.places || []).length >= 40, "r", "장소와 시간"],
+  ["dist3", "구역 넘나들기", "세 구역을 다녀 보았다", () => (S.dists || []).length >= 3, "u", "장소와 시간"],
+  ["dist10", "도시 여행자", "열 구역을 다녀 보았다", () => (S.dists || []).length >= 10, "e", "장소와 시간"],
+  ["dist26", "도시의 끝에서 끝까지", "스물여섯 구역을 모두 다녀 보았다", () => (S.dists || []).length >= 26, "l", "장소와 시간"],
+  ["nestVisit", "둥지 구경", "뒷골목에서 태어나 둥지에 가 보았다", () => S.origin !== "nest" && (S.placeFull || []).includes("둥지"), "u", "장소와 시간"],
+  ["dieBag", "피주머니", "혈귀에게 물려 피주머니가 되었다", () => /피주머니/.test(S.dead || ""), "r", "마지막"],
   /* 뒤틀림 */
-  ["whisper", "속삭임", "머릿속에서 낯선 여자의 목소리를 들었다", () => !!S.ego || !!S.distorted || /뒤틀림/.test(S.dead || ""), "u"],
-  ["distorted", "뒤틀린 채로", "뒤틀림이 되고도 삶을 이어 갔다", () => !!S.distorted, "e"],
-  ["distortFollow", "속삭임을 따라", "뒤틀린 뒤 속삭임을 따랐다", () => !!S.distorted && S.distorted.path === "follow", "r"],
-  ["distortSelf", "나 자신으로", "뒤틀린 뒤에도 내 방식대로 살았다", () => !!S.distorted && S.distorted.path === "self", "r"],
-  ["distortKid", "어린 뒤틀림", "열세 살이 되기 전에 뒤틀렸다", () => !!S.distorted && S.distorted.age < 13, "e"],
-  ["hunted1", "쫓기는 몸", "뒤틀린 채로 습격받았다", () => (S.distortHunts || 0) >= 1, "u"],
-  ["hunted5", "현상수배", "뒤틀린 채로 다섯 번 습격받았다", () => (S.distortHunts || 0) >= 5, "r"],
-  ["hunted20", "도시의 공포", "뒤틀린 채로 스무 번 습격받았다", () => (S.distortHunts || 0) >= 20, "l"],
-  ["distortMonth", "버티는 괴물", "뒤틀린 채로 한 달을 버텼다", () => !!S.distorted && S.days - S.distorted.at >= 30, "r"],
-  ["distortYear", "살아남은 뒤틀림", "뒤틀린 채로 1년을 버텼다", () => !!S.distorted && S.days - S.distorted.at >= 365, "l"],
-  ["egoDistort", "두 얼굴", "에고를 발현한 뒤에 뒤틀렸다", () => !!S.ego && !!S.distorted, "l"],
-  ["distortHunter", "괴물이 된 사냥꾼", "해결사였다가 뒤틀렸다", () => !!S.license && !!S.distorted, "e"],
-  ["dieDistorted", "토벌된 뒤틀림", "뒤틀린 채로 쓰러졌다", () => !!S.dead && !!S.distorted, "r"],
+  ["whisper", "속삭임", "머릿속에서 낯선 여자의 목소리를 들었다", () => !!S.ego || !!S.distorted || /뒤틀림/.test(S.dead || ""), "u", "뒤틀림"],
+  ["distorted", "뒤틀린 채로", "뒤틀림이 되고도 삶을 이어 갔다", () => !!S.distorted, "e", "뒤틀림"],
+  ["distortFollow", "속삭임을 따라", "뒤틀린 뒤 속삭임을 따랐다", () => !!S.distorted && S.distorted.path === "follow", "r", "뒤틀림"],
+  ["distortSelf", "나 자신으로", "뒤틀린 뒤에도 내 방식대로 살았다", () => !!S.distorted && S.distorted.path === "self", "r", "뒤틀림"],
+  ["distortKid", "어린 뒤틀림", "열세 살이 되기 전에 뒤틀렸다", () => !!S.distorted && S.distorted.age < 13, "e", "뒤틀림"],
+  ["hunted1", "쫓기는 몸", "뒤틀린 채로 습격받았다", () => (S.distortHunts || 0) >= 1, "u", "뒤틀림"],
+  ["hunted5", "현상수배", "뒤틀린 채로 다섯 번 습격받았다", () => (S.distortHunts || 0) >= 5, "r", "뒤틀림"],
+  ["hunted20", "도시의 공포", "뒤틀린 채로 스무 번 습격받았다", () => (S.distortHunts || 0) >= 20, "l", "뒤틀림"],
+  ["distortMonth", "버티는 괴물", "뒤틀린 채로 한 달을 버텼다", () => !!S.distorted && S.days - S.distorted.at >= 30, "r", "뒤틀림"],
+  ["distortYear", "살아남은 뒤틀림", "뒤틀린 채로 1년을 버텼다", () => !!S.distorted && S.days - S.distorted.at >= 365, "l", "뒤틀림"],
+  ["egoDistort", "두 얼굴", "에고를 발현한 뒤에 뒤틀렸다", () => !!S.ego && !!S.distorted, "l", "뒤틀림"],
+  ["distortHunter", "괴물이 된 사냥꾼", "해결사였다가 뒤틀렸다", () => !!S.license && !!S.distorted, "e", "뒤틀림"],
+  ["dieDistorted", "토벌된 뒤틀림", "뒤틀린 채로 쓰러졌다", () => !!S.dead && !!S.distorted, "r", "뒤틀림"],
 ];
 function loadAch(){ const a = store.get(ACH_KEY); return a && typeof a === "object" ? a : {}; }
 function checkAch(){
@@ -4188,28 +4238,33 @@ function checkAch(){
 /* 전기에 남길 업적 카드(이름·설명·희귀도). 워프열차는 몇 칸까지 갔는지 하나로 */
 function lifeAchList(){
   const ids = S.ach || [], out = [];
-  for(const [id, name, desc, , r] of ACHS){
-    if(!ids.includes(id) || id === "born" || id === "warpIn" || id === "warp4" || id === "warp8") continue;
-    out.push({name, desc, r});
+  for(const [id, name, desc, , r, cat] of ACHS){
+    if(!ids.includes(id) || id === "born") continue;
+    out.push({name, desc, r, cat});
   }
-  if(S.warpTried){ const b = S.warpBest || 0; out.push(b >= WARP_CARS ? {name:"워프열차 완주", desc:"8칸을 모두 돌파했다", r:"l"} : {name:`워프열차 ${b}칸 돌파`, desc:`8칸 중 ${b}칸까지 돌파했다`, r:b >= 4 ? "e" : "r"}); }
-  const ord = "leruc"; out.sort((a, b) => ord.indexOf(a.r) - ord.indexOf(b.r));
+  const at = n => ACHS.findIndex(x => x[1] === n);
+  out.sort((a, b) => ACH_CATS.indexOf(a.cat) - ACH_CATS.indexOf(b.cat) || at(a.name) - at(b.name));
   return out;
 }
 function lifeAchNames(){
   const ids = S.ach || [], out = [];
   for(const [id, name] of ACHS){
-    if(!ids.includes(id) || id === "born" || id === "warpIn" || id === "warp4" || id === "warp8") continue;
+    if(!ids.includes(id) || id === "born") continue;
     out.push(name);
   }
-  if(S.warpTried) out.push((S.warpBest || 0) >= WARP_CARS ? "워프열차 완주" : `워프열차 ${S.warpBest || 0}칸 돌파`);
   return out;
 }
 function renderAch(){
   const box = $("#achList"); if(!box) return;
   const g = loadAch(); box.replaceChildren();
-  let n = 0;
-  for(const [id, name, desc] of ACHS){
+  let n = 0, lastCat = null;
+  for(const cat of ACH_CATS) for(const [id, name, desc, , , ac] of ACHS){
+    if(ac !== cat) continue;
+    if(cat !== lastCat){
+      lastCat = cat;
+      const all = ACHS.filter(a => a[5] === cat), got = all.filter(a => g[a[0]]).length;
+      const h = el("div", "ach-cat"); h.append(el("span", null, cat), el("span", "note", `${got} / ${all.length}`)); box.appendChild(h);
+    }
     const on = !!g[id]; if(on) n++;
     const c = el("div", "ach " + (on ? "on" : "off"));
     const rr = (ACHS.find(a => a[0] === id) || [])[4] || "c";
@@ -4274,6 +4329,13 @@ async function doAction(input, opt = {}){
   }
 
   let n = null, ev = null;
+  /* 업적용 기록 */
+  if(passive) bump("passive");
+  else {
+    if(sp.says.length) bump("talk");
+    for(const r of results){ if(r.auto) continue; bump("roll"); if(r.cls === "crit") bump("crit"); if(r.cls === "fumble") bump("fumble"); if(inCombat(r, input)){ bump("fight"); if(r.cls === "ok" || r.cls === "crit") bump("win"); } }
+    { const mm = minsNow(); if(mm >= 193 && mm <= 274) bump("night"); }
+  }
   const wo = S.warp ? warpOutcome(results, passive) : null;
   if(aiOK){
     done = thinking("결과를 서술하는 중…");
@@ -4307,7 +4369,7 @@ async function doAction(input, opt = {}){
   /* 다친 연출은 싸우던 중일 때만 */
   if(wo || results.some(r => !r.auto && inCombat(r, input)) || (fin.event && FIGHT_RE.test(fin.narration || ""))) fxAfter(fin);
   if(wo) warpAfter(wo);
-  else { checkMilestones(input, results); applyMerit(input, results, fin); }
+  else { checkMilestones(input, results); applyMerit(input, results, fin); notePlace(); }
   checkAch();
   save(); setBusy(false);
   memoryTick();
@@ -5676,7 +5738,15 @@ async function flowNarrate(elapsed, big){
 
 /* ───────── 공방 창 ───────── */
 let shopTab = "weapon";
+function notePlace(){
+  const loc = S.location || ""; if(!loc) return;
+  S.places = S.places || []; S.dists = S.dists || [];
+  const sp = shortPlace(loc); if(sp && sp !== "알 수 없음" && !S.places.includes(sp) && S.places.length < 200) S.places.push(sp);
+  const m = /([A-Z])사\s*구역/.exec(loc); if(m && !S.dists.includes(m[1])) S.dists.push(m[1]);
+  if(/둥지/.test(loc)){ S.placeFull = S.placeFull || []; if(!S.placeFull.includes("둥지")) S.placeFull.push("둥지"); }
+}
 function openShop(){
+  try{ bump("shop"); }catch(e){}
   if(flow.on) stopFlow(null);
   renderShop(); $("#shop").showModal();
 }
@@ -5879,10 +5949,16 @@ function openBio(id){
   $("#bioEpitaph").textContent = life.epitaph ? `“${life.epitaph}”` : "";
   const body = $("#bioBody"); body.replaceChildren(el("p", null, shortBio(life.bio)));
   /* 업적 카드: 테두리 색이 희귀도 */
-  const achs = life.achs || (life.ach || []).map(n => { const a = ACHS.find(x => x[1] === n); return {name:n, desc:a ? a[2] : "", r:a ? a[4] : (/워프열차 완주/.test(n) ? "l" : /워프열차/.test(n) ? "r" : "c")}; });
+  const achs0 = life.achs || (life.ach || []).map(n => { const a = ACHS.find(x => x[1] === n); return {name:n, desc:a ? a[2] : "", r:a ? a[4] : (/워프열차 완주/.test(n) ? "l" : /워프열차/.test(n) ? "r" : "c"), cat:a ? a[5] : (/워프열차/.test(n) ? "워프열차" : "")}; });
+  const achs = achs0.slice().sort((a, b) => ACH_CATS.indexOf(a.cat || (ACHS.find(x => x[1] === a.name) || [])[5]) - ACH_CATS.indexOf(b.cat || (ACHS.find(x => x[1] === b.name) || [])[5]));
   const ab = $("#bioAchs"); ab.replaceChildren();
   if(!achs.length) ab.appendChild(el("p", "note", "남긴 업적이 없다."));
-  for(const a of achs){ const c = el("div", "bio-ach"); const rr = RARITY[a.r] || RARITY.c; c.style.setProperty("--c", rr.col); c.append(el("i", null, rr.ko), el("b", null, a.name), el("span", null, a.desc || "")); ab.appendChild(c); }
+  let lastCat = null;
+  for(const a of achs){
+    const cat = a.cat || (ACHS.find(x => x[1] === a.name) || [])[5] || "";
+    if(cat && cat !== lastCat){ lastCat = cat; ab.appendChild(el("div", "ach-cat", cat)); }
+    const c = el("div", "bio-ach"); const rr = RARITY[a.r] || RARITY.c; c.style.setProperty("--c", rr.col); c.append(el("i", null, rr.ko), el("b", null, a.name), el("span", null, a.desc || "")); ab.appendChild(c);
+  }
   /* 생전 마지막 상태창 */
   const lb = $("#bioLast"); lb.replaceChildren();
   const L = life.last;
