@@ -380,7 +380,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   <button class="btn" id="btnSettings" type="button">설정</button>
 </header>
 
-<!-- 첫 화면: 태어나기 · 이어서 하기 · 지나간 삶 -->
+<!-- 첫 화면: 태어나기 · 이어서 살기 · 지나간 삶 -->
 <main class="menu" id="menu" hidden>
   <div class="menu-hero">
     <h2>도시에서 살아간다는 것</h2>
@@ -414,6 +414,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <div class="seedrow"><input type="text" id="cSeed" maxlength="30" autocomplete="off"><button class="btn" type="button" id="cSeedDice" aria-label="무작위 시드">🎲</button></div>
     </div>
     <button class="btn primary" type="submit" id="btnBorn">태어나기</button>
+    <div class="cont card" id="menuContinue" hidden>
+      <canvas class="sprite sm" id="contSprite" width="60" height="92" aria-hidden="true"></canvas>
+      <div class="cont-txt"><b id="contName"></b><span class="note" id="contInfo"></span></div>
+      <button class="btn primary" type="button" id="btnContinue">이어서 살기</button>
+    </div>
     <p class="note" id="reliveNote" hidden></p>
     <p class="note" id="createNote"></p>
     <div class="ugauge-row note" id="menuEngine" hidden></div>
@@ -422,11 +427,6 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <span class="note">무료 계정의 사용량으로 AI를 씁니다. 폰에서 모델을 내려받지 않아 가볍고 빠릅니다.</span>
     </div>
   </form>
-  <div class="cont card" id="menuContinue" hidden>
-    <canvas class="sprite sm" id="contSprite" width="60" height="92" aria-hidden="true"></canvas>
-    <div class="cont-txt"><b id="contName"></b><span class="note" id="contInfo"></span></div>
-    <button class="btn primary" type="button" id="btnContinue">이어서 하기</button>
-  </div>
   <section class="lives">
     <h3 class="label">지나간 삶</h3>
     <p class="note" id="livesNote"></p>
@@ -647,10 +647,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1230"></script>
+<script src="parts.js?v=20261107-1240"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1230";
+const BUILD = "20261107-1240";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -4020,11 +4020,14 @@ async function shareBio(){
 /* ───────── 첫 화면 메뉴 ───────── */
 function renderMenu(){
   const cur = store.get("dosi_save");
-  const alive = cur && (cur.v === 2 || cur.v === 1) && !cur.archived;
+  /* 도중에 나갔거나 멈춘 삶(죽지 않은 삶)은 이어서 살 수 있다. 죽은 삶은 '지나간 삶'으로 간다 */
+  const alive = cur && cur.name && !cur.archived;
   $("#menuContinue").hidden = !alive;
   if(alive){
     const y = Math.floor((cur.days || 0) / 365);
     $("#contName").textContent = cur.name;
+    /* 죽었지만 전기가 아직 안 남은 삶은 마저 정리한다 */
+    $("#btnContinue").textContent = cur.dead ? "마지막을 마저 보기" : "이어서 살기";
     $("#contInfo").textContent = `${y}세 · ${corpOf(cur.district)} 구역 · ` + (cur.savedAt ? "자동 저장 " + new Date(cur.savedAt).toLocaleString("ko-KR", {month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit"}) : "자동 저장됨");
     try{ const keep = S; S = cur; if(!S.equip) S.equip = {}; if(S.doy0 == null) S.doy0 = 0; drawSprite($("#contSprite")); S = keep; }catch(e){}
   }
@@ -4102,6 +4105,10 @@ function showGame(){
 function newLife(){ showCreate(); }
 $("#btnMenu").addEventListener("click", showMenu);
 $("#btnContinue").addEventListener("click", continueLife);
+/* 상태창 '상세' 열기/닫기 (폰에서는 상세 창이 화면을 덮는다) */
+$("#btnStatus").addEventListener("click", () => { renderStatus(); document.body.classList.add("show-status"); $("#btnCloseStatus").focus(); });
+$("#btnCloseStatus").addEventListener("click", () => { document.body.classList.remove("show-status"); $("#btnStatus").focus(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") document.body.classList.remove("show-status"); });
 $("#bioSave").addEventListener("click", saveBioImage);
 $("#bioShare").addEventListener("click", shareBio);
 $("#bioAgain").addEventListener("click", () => bioId && relive(bioId));
