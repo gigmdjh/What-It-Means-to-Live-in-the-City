@@ -54,7 +54,7 @@ body.in-game .game{flex:1;min-height:0;height:auto}
 .form{display:grid;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px}
 .field{display:grid;gap:6px}
 .field>span{font-size:.8rem;color:var(--muted);letter-spacing:.04em}
-.field input[type=text],.field input[type=password],.field input[type=url],.field select,.field textarea{
+.le-find input,.le-find select,.field input[type=text],.field input[type=password],.field input[type=url],.field select,.field textarea{
   width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 11px}
 .field textarea{resize:vertical;min-height:76px}
 .row{display:flex;gap:12px;flex-wrap:wrap}
@@ -240,7 +240,19 @@ dialog.le-dlg{}
 @media (max-width:480px){.le-body{flex-direction:column;align-items:stretch}.le-body .preview{align-self:center}}
 body.editor-mode > *:not(#lookEd){display:none!important}
 body.editor-mode #lookEd{position:static;display:block;margin:16px auto;max-height:none}
-.le-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.le-pick{padding:4px 10px}
+body.editor-mode #lookEd, body.editor-mode #lookEd .dlg{overflow:visible}
+.dlg.le{display:grid;grid-template-columns:minmax(0,1fr)}.dlg.le > *{min-width:0}
+.le-top{min-width:0;max-width:100%;position:sticky;top:0;z-index:2;background:var(--panel);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.le-find{gap:6px;margin:6px 0;flex-wrap:nowrap}.le-find select,.le-find .btn{width:auto;flex:0 0 auto}.le-find input{flex:1;min-width:0}
+.le-roster{max-width:100%;display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x proximity}
+.le-tile{flex:0 0 auto;width:64px;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px 2px;color:var(--fg);cursor:pointer;scroll-snap-align:start;position:relative}
+.le-tile canvas{width:40px;height:61px;image-rendering:pixelated}
+.le-tile span{font-size:.72rem;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.le-tile.on{border-color:var(--accent,#d4a93c);box-shadow:0 0 0 1px var(--accent,#d4a93c)}
+.le-tile.dirty::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--accent,#d4a93c)}
+.le-tile .empty{width:40px;height:61px;display:grid;place-items:center;font-size:.7rem;opacity:.5}
+.le-cur{margin:4px 0 8px}
+.le-savebar{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:var(--panel);padding:8px 0;border-top:1px solid var(--line);margin-top:8px}.le-savebar .note{margin-right:auto}
 .le-gh summary{cursor:pointer;margin:6px 0}
 dialog::backdrop{background:rgb(0 0 0 / .6)}
 .dlg{display:grid;gap:16px;padding:22px;overflow:auto}
@@ -632,8 +644,13 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   <form method="dialog" class="dlg le">
     <h2 id="leTitle">인물 외형 꾸미기</h2>
     <p class="note">인물을 고르고 외형을 꾸며 저장하면, 본게임에서 그 이름의 인물이 대화할 때 이 모습으로 나옵니다. 모든 플레이어에게 똑같이 보입니다.</p>
-    <label class="field"><span>인물 이름</span><input type="text" id="leName" list="leNames" maxlength="20" placeholder="예: 원작 인물 이름이나 내 게임 속 인물"></label>
-    <datalist id="leNames"></datalist>
+    <div class="le-top">
+      <div class="row le-find"><input type="search" id="leFind" placeholder="인물 찾기 (이름·소속)"><select id="leShow"><option value="all">전체</option><option value="done">꾸민 인물</option><option value="todo">안 꾸민 인물</option></select></div>
+      <div class="le-roster" id="leRoster"></div>
+      <div class="row le-find"><input type="text" id="leNew" maxlength="20" placeholder="목록에 없는 인물 이름"><button class="btn" type="button" id="leAdd">추가</button></div>
+    </div>
+    <h3 class="le-cur" id="leCur">인물을 고르세요</h3>
+    <input type="hidden" id="leName">
     <div class="le-body">
       <figure class="preview"><canvas class="sprite" id="lePreview" width="60" height="92" role="img" aria-label="외형 미리보기"></canvas>
         <button class="btn" type="button" id="leSeed">머리·눈 모양 바꾸기</button></figure>
@@ -658,16 +675,16 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
     <label class="field"><span>더 적기 (선택)</span><input type="text" id="leExtra" maxlength="80" placeholder="예: 왼뺨의 흉터, 눈물점"></label>
     <p class="note" id="leText"></p>
     <div class="row le-btns">
-      <button class="btn" type="button" id="leDelete">본게임에서 이 외형 지우기</button>
-      <button class="btn primary" type="button" id="leSave">본게임에 저장</button>
+      <button class="btn" type="button" id="leDelete">이 인물 외형 지우기</button>
+      <button class="btn" type="button" id="leNext">다음 인물 →</button>
     </div>
+    <div class="le-savebar"><span class="note" id="leDirty">바뀐 인물 없음</span><button class="btn" type="button" id="leRevert">바꾼 것 되돌리기</button><button class="btn primary" type="button" id="leSave">모두 본게임에 저장</button></div>
     <details class="le-gh"><summary>GitHub 연결 (처음 한 번)</summary>
       <p class="note">저장하면 저장소의 looks.json이 바뀌고, 1~2분 뒤 본게임에 반영됩니다. GitHub에서 이 저장소의 Contents 읽기·쓰기 권한만 준 fine-grained 토큰을 만들어 넣으세요. 토큰은 이 기기에만 저장되고 GitHub 말고는 어디에도 보내지 않습니다.</p>
       <label class="field"><span>저장소 (소유자/이름)</span><input type="text" id="leRepo" autocomplete="off"></label>
       <label class="field"><span>토큰</span><input type="password" id="leToken" autocomplete="off" placeholder="github_pat_..."></label>
       <div class="row"><button class="btn" type="button" id="leTokenSave">연결 저장</button><button class="btn" type="button" id="leTokenClear">토큰 지우기</button></div>
     </details>
-    <div class="le-list" id="leList"></div>
     <p class="note" id="leMsg"></p>
   </form>
 </dialog>
@@ -751,10 +768,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1405"></script>
+<script src="parts.js?v=20261107-1422"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1405";
+const BUILD = "20261107-1422";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3491,7 +3508,7 @@ async function loadParts(){
   PART.ready = true;
   lastSpriteKey = "";
   try{ if(S && !$("#game").hidden) renderStatus(); }catch(e){}
-  if(window.DOSI_EDITOR){ try{ leDraw(); }catch(e){} return; }
+  if(window.DOSI_EDITOR){ try{ leDraw(); leRenderRoster(); }catch(e){} return; }
   try{ drawPreview(); renderMenu(); }catch(e){}
 }
 /* 머리카락 목록의 모양 태그 (시트의 4×3 배치 순서) */
@@ -4791,7 +4808,6 @@ function leFill(){
   opt($("#leEyeR"), EYE_COLORS.filter(c => c[1] !== "odd").map(c => c[0]));
   opt($("#leClothC"), LE_CLOTH_COLORS);
   $("#leAcc").replaceChildren(...LE_ACC.map(([k]) => { const l = document.createElement("label"); const c = document.createElement("input"); c.type = "checkbox"; c.value = k; l.append(c, k); return l; }));
-  $("#leNames").replaceChildren(...FAMOUS.map(f => { const o = document.createElement("option"); o.value = f.name; o.label = f.org; return o; }));
 }
 function leLookText(){
   const hc = $("#leHairC").value, hs = $("#leHairS").value;
@@ -4807,15 +4823,6 @@ function leDraw(){
   $("#leText").textContent = "외형 글: " + look;
   try{ drawSprite($("#lePreview"), {age:+$("#leAge").value, traits:lookTraitsOf(look, seed, g, "npc"), equip:{}, origin:"back", look, seedName:seed}); }catch(e){}
 }
-function leLoad(name){
-  const c = customLookOf(name);
-  $("#leMsg").textContent = "";
-  if(!c || !c.form) return;
-  const f = c.form;
-  for(const [id, v] of Object.entries(f)) if(id !== "acc" && $("#" + id)) $("#" + id).value = v;
-  $("#leAcc").querySelectorAll("input").forEach(x => { x.checked = (f.acc || []).includes(x.value); });
-  leSeedN = c.seedN || 0;
-}
 function leForm(){
   const f = {};
   for(const id of ["leGender", "leAge", "leHairC", "leHairS", "leFringe", "leEyeS", "leEyeL", "leEyeR", "leSkin", "leBuild", "leCloth", "leClothC", "leExtra"]) f[id] = $("#" + id).value;
@@ -4823,9 +4830,6 @@ function leForm(){
   return f;
 }
 
-$("#lookEd").addEventListener("input", e => { if(e.target.id === "leName"){ leLoad(e.target.value.trim()); } leDraw(); });
-$("#lookEd").addEventListener("change", () => leDraw());
-$("#leSeed").addEventListener("click", () => { leSeedN = (leSeedN + 1) % 12; leDraw(); });
 /* ───────── 별도 에디터: GitHub 저장소의 looks.json을 읽고 고친다 ───────── */
 const GH_DEFAULT_REPO = "gigmdjh/What-It-Means-to-Live-in-the-City";
 const ghRepo = () => { try{ return localStorage.getItem("dosi_gh_repo") || GH_DEFAULT_REPO; }catch(e){ return GH_DEFAULT_REPO; } };
@@ -4846,47 +4850,131 @@ async function ghPutLooks(data, sha, msg){
   const r = await fetch(`https://api.github.com/repos/${ghRepo()}/contents/looks.json`, {method:"PUT", headers:{Accept:"application/vnd.github+json", Authorization:"Bearer " + ghToken(), "Content-Type":"application/json"}, body:JSON.stringify(body)});
   if(!r.ok){ let t = ""; try{ t = (await r.json()).message || ""; }catch(e){} throw new Error("저장 실패 (" + r.status + ") " + t); }
 }
-async function leRefreshList(){
-  try{ const {data} = await ghGetLooks(); SHARED_LOOKS = data; }catch(e){ $("#leMsg").textContent = e.message; }
-  const box = $("#leList"); box.replaceChildren();
-  const names = Object.keys(SHARED_LOOKS);
-  box.appendChild(el("div", "note", names.length ? `본게임에 저장된 외형 ${names.length}명 · 눌러서 불러오기` : "본게임에 저장된 외형이 아직 없어요."));
-  for(const n of names){
-    const b = document.createElement("button"); b.type = "button"; b.className = "btn le-pick"; b.textContent = n;
-    b.onclick = () => { $("#leName").value = n; leLoad(n); leDraw(); };
+/* 편집 중인 외형들(저장 전). 본게임 것(SHARED_LOOKS)을 바탕으로, 바뀐 것만 표시한다 */
+let LE_DRAFT = {}, LE_CUR = "";
+const leKeyJ = v => JSON.stringify(v || null);
+function leDirtyNames(){
+  const names = new Set([...Object.keys(LE_DRAFT), ...Object.keys(SHARED_LOOKS)]);
+  return [...names].filter(n => leKeyJ(LE_DRAFT[n]) !== leKeyJ(SHARED_LOOKS[n]));
+}
+function leSaveDraftLocal(){ try{ localStorage.setItem("dosi_le_draft", JSON.stringify(LE_DRAFT)); }catch(e){} }
+function leRosterNames(){
+  const extra = [...new Set([...Object.keys(LE_DRAFT).filter(n => LE_DRAFT[n] !== null || SHARED_LOOKS[n]), ...Object.keys(SHARED_LOOKS)])].filter(n => !famousOf(n));
+  return FAMOUS.map(f => f.name).concat(extra);
+}
+function leTileDraw(cv, name){
+  const c = LE_DRAFT[name];
+  if(!c) return false;
+  try{ drawSprite(cv, {age:c.age || 28, traits:lookTraitsOf(c.look, c.seed || name, c.gender, "npc"), equip:{}, origin:"back", look:c.look, seedName:c.seed || name}); }catch(e){}
+  return true;
+}
+function leRenderRoster(){
+  const box = $("#leRoster"), q = $("#leFind").value.trim(), show = $("#leShow").value;
+  const dirty = new Set(leDirtyNames());
+  box.replaceChildren();
+  for(const n of leRosterNames()){
+    const f = famousOf(n);
+    if(q && !(n.includes(q) || (f && (f.org.includes(q) || f.game.includes(q))))) continue;
+    if(show === "done" && !LE_DRAFT[n]) continue;
+    if(show === "todo" && LE_DRAFT[n]) continue;
+    const b = document.createElement("button"); b.type = "button"; b.className = "le-tile" + (n === LE_CUR ? " on" : "") + (dirty.has(n) ? " dirty" : "");
+    b.title = f ? `${n} · ${f.org}` : n;
+    const cv = document.createElement("canvas"); cv.width = SPRITE_W; cv.height = SPRITE_H;
+    if(leTileDraw(cv, n)) b.appendChild(cv); else b.appendChild(el("div", "empty", "미설정"));
+    b.appendChild(el("span", "", n));
+    b.onclick = () => leSelect(n);
     box.appendChild(b);
   }
+  const d = dirty.size;
+  $("#leDirty").textContent = d ? `저장 안 한 인물 ${d}명: ${[...dirty].slice(0, 6).join(", ")}${d > 6 ? " 외" : ""}` : "바뀐 인물 없음";
+  $("#leSave").disabled = !d;
 }
+function leApplyForm(c){
+  if(!c || !c.form){
+    /* 처음 꾸미는 인물: 기본값으로 */
+    for(const id of ["leFringe", "leEyeS", "leSkin", "leExtra"]) $("#" + id).value = "";
+    $("#leAge").value = "28"; $("#leHairS").value = "긴 머리"; $("#leBuild").value = "보통 체격"; $("#leCloth").value = "셔츠";
+    $("#leAcc").querySelectorAll("input").forEach(x => { x.checked = false; });
+    leSeedN = 0; return;
+  }
+  const f = c.form;
+  for(const [id, v] of Object.entries(f)) if(id !== "acc" && $("#" + id)) $("#" + id).value = v;
+  $("#leAcc").querySelectorAll("input").forEach(x => { x.checked = (f.acc || []).includes(x.value); });
+  leSeedN = c.seedN || 0;
+}
+function leSelect(n){
+  LE_CUR = n; $("#leName").value = n;
+  const f = famousOf(n);
+  $("#leCur").textContent = f ? `${n} · ${f.org}` : n;
+  leApplyForm(LE_DRAFT[n]);
+  $("#leMsg").textContent = "";
+  leDraw(); leRenderRoster();
+  const on = $("#leRoster .le-tile.on"); if(on) on.scrollIntoView({block:"nearest", inline:"center"});
+}
+/* 고칠 때마다 지금 인물의 초안을 바꾼다 */
+function leUpdateCur(){
+  leDraw();
+  if(!LE_CUR) return;
+  LE_DRAFT[LE_CUR] = {look:leLookText(), gender:$("#leGender").value, age:+$("#leAge").value, seed:leSeedStr(), seedN:leSeedN, form:leForm()};
+  leSaveDraftLocal();
+  const t = [...$("#leRoster").children].find(b => b.querySelector("span") && b.querySelector("span").textContent === LE_CUR);
+  if(t){ const cv = t.querySelector("canvas") || (() => { const c = document.createElement("canvas"); c.width = SPRITE_W; c.height = SPRITE_H; t.replaceChild(c, t.querySelector(".empty")); return c; })(); leTileDraw(cv, LE_CUR); t.classList.toggle("dirty", leKeyJ(LE_DRAFT[LE_CUR]) !== leKeyJ(SHARED_LOOKS[LE_CUR])); }
+  const d = leDirtyNames();
+  $("#leDirty").textContent = d.length ? `저장 안 한 인물 ${d.length}명: ${d.slice(0, 6).join(", ")}${d.length > 6 ? " 외" : ""}` : "바뀐 인물 없음";
+  $("#leSave").disabled = !d.length;
+}
+$("#lookEd").addEventListener("input", e => { if(["leFind", "leNew", "leRepo", "leToken"].includes(e.target.id)){ if(e.target.id === "leFind") leRenderRoster(); return; } leUpdateCur(); });
+$("#lookEd").addEventListener("change", e => { if(e.target.id === "leShow"){ leRenderRoster(); return; } if(["leFind", "leNew", "leRepo", "leToken"].includes(e.target.id)) return; leUpdateCur(); });
+$("#leSeed").addEventListener("click", () => { leSeedN = (leSeedN + 1) % 12; leUpdateCur(); });
+$("#leNext").addEventListener("click", () => {
+  const list = [...$("#leRoster").children].map(b => b.querySelector("span").textContent);
+  const i = list.indexOf(LE_CUR);
+  if(list.length) leSelect(list[(i + 1) % list.length]);
+});
+$("#leAdd").addEventListener("click", () => {
+  const n = $("#leNew").value.trim(); if(!n) return;
+  $("#leNew").value = "";
+  if(!LE_DRAFT[n]){ LE_CUR = n; leApplyForm(null); }
+  leSelect(n); leUpdateCur(); leRenderRoster();
+});
+$("#leDelete").addEventListener("click", () => {
+  if(!LE_CUR || !LE_DRAFT[LE_CUR]) return;
+  LE_DRAFT[LE_CUR] = null; leSaveDraftLocal();   /* null = 지우기로 표시 */
+  $("#leMsg").textContent = `${LE_CUR} 외형을 지웠어요. "모두 본게임에 저장"을 눌러야 본게임에서도 지워져요.`;
+  leApplyForm(null); leDraw(); leRenderRoster();
+});
+$("#leRevert").addEventListener("click", () => {
+  if($("#leRevert").dataset.arm !== "1"){ $("#leRevert").dataset.arm = "1"; $("#leRevert").textContent = "정말 되돌릴까요?"; setTimeout(() => { $("#leRevert").dataset.arm = ""; $("#leRevert").textContent = "바꾼 것 되돌리기"; }, 3000); return; }
+  LE_DRAFT = JSON.parse(JSON.stringify(SHARED_LOOKS)); leSaveDraftLocal();
+  $("#leRevert").dataset.arm = ""; $("#leRevert").textContent = "바꾼 것 되돌리기";
+  if(LE_CUR) leSelect(LE_CUR); else leRenderRoster();
+  $("#leMsg").textContent = "본게임 상태로 되돌렸어요.";
+});
+/* 바뀐 인물만 골라 한 번에 저장(커밋 한 번) */
 $("#leSave").addEventListener("click", async () => {
-  const name = $("#leName").value.trim();
-  if(!name){ $("#leMsg").textContent = "인물 이름을 적어 주세요."; return; }
-  $("#leMsg").textContent = "저장하는 중…";
+  const dirty = leDirtyNames(); if(!dirty.length) return;
+  $("#leMsg").textContent = `${dirty.length}명 저장하는 중…`; $("#leSave").disabled = true;
   try{
     const {data, sha} = await ghGetLooks();
-    data[name] = {look:leLookText(), gender:$("#leGender").value, age:+$("#leAge").value, seed:leSeedStr(), seedN:leSeedN, form:leForm()};
-    await ghPutLooks(data, sha, `외형 저장: ${name}`);
-    $("#leMsg").textContent = `저장했어요. 1~2분 뒤 본게임에서 ${jo(name, "이", "가")} 이 모습으로 나와요.`;
-    leRefreshList();
+    for(const n of dirty){ if(LE_DRAFT[n]) data[n] = LE_DRAFT[n]; else delete data[n]; }
+    await ghPutLooks(data, sha, `외형 ${dirty.length}명 저장: ${dirty.slice(0, 5).join(", ")}${dirty.length > 5 ? " 외" : ""}`);
+    SHARED_LOOKS = JSON.parse(JSON.stringify(data));
+    for(const n of Object.keys(LE_DRAFT)) if(LE_DRAFT[n] === null) delete LE_DRAFT[n];
+    leSaveDraftLocal();
+    $("#leMsg").textContent = `${dirty.length}명을 저장했어요. 1~2분 뒤 본게임에 반영돼요.`;
   }catch(e){ $("#leMsg").textContent = e.message; }
+  leRenderRoster();
 });
-$("#leDelete").addEventListener("click", async () => {
-  const name = $("#leName").value.trim();
-  if(!name) return;
-  if($("#leDelete").dataset.arm !== name){ $("#leDelete").dataset.arm = name; $("#leDelete").textContent = `정말 ${name} 외형을 지울까요? 한 번 더 누르기`; return; }
-  $("#leDelete").dataset.arm = ""; $("#leDelete").textContent = "본게임에서 이 외형 지우기";
-  try{
-    const {data, sha} = await ghGetLooks();
-    if(!data[name]){ $("#leMsg").textContent = "본게임에 저장된 외형이 아니에요."; return; }
-    delete data[name];
-    await ghPutLooks(data, sha, `외형 삭제: ${name}`);
-    $("#leMsg").textContent = "지웠어요."; leRefreshList();
-  }catch(e){ $("#leMsg").textContent = e.message; }
-});
-$("#leTokenSave").addEventListener("click", () => {
-  try{ localStorage.setItem("dosi_gh_repo", $("#leRepo").value.trim() || GH_DEFAULT_REPO); if($("#leToken").value.trim()) localStorage.setItem("dosi_gh_token", $("#leToken").value.trim()); }catch(e){}
-  $("#leToken").value = ""; $("#leMsg").textContent = ghToken() ? "연결했어요." : "토큰이 비어 있어요."; leRefreshList();
-});
-$("#leTokenClear").addEventListener("click", () => { try{ localStorage.removeItem("dosi_gh_token"); }catch(e){} $("#leMsg").textContent = "토큰을 지웠어요."; });
+async function leRefreshList(){
+  try{ const {data} = await ghGetLooks(); SHARED_LOOKS = data; }catch(e){ $("#leMsg").textContent = e.message; }
+  /* 저장 안 한 초안이 있으면 그대로 두고, 없는 인물만 본게임 것으로 채운다 */
+  let saved = null; try{ saved = JSON.parse(localStorage.getItem("dosi_le_draft") || "null"); }catch(e){}
+  LE_DRAFT = saved && typeof saved === "object" ? saved : {};
+  for(const [n, v] of Object.entries(SHARED_LOOKS)) if(!(n in LE_DRAFT)) LE_DRAFT[n] = v;
+  leSaveDraftLocal();
+  leRenderRoster();
+  if(!LE_CUR){ const first = leRosterNames()[0]; if(first) leSelect(first); }
+}
 /* 에디터 화면으로 시작 */
 async function editorBoot(){
   document.body.classList.add("editor-mode");
