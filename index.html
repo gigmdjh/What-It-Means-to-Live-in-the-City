@@ -1005,10 +1005,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0225"></script>
+<script src="parts.js?v=20261108-0235"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0225";
+const BUILD = "20261108-0235";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1165,9 +1165,10 @@ const NARR_RULES_LOCAL = `
 [시간] 며칠·몇 달이 지났으면 음식·포장지 같은 자잘한 물건은 이미 없고 가벼운 상처는 아물었다. 지난 장면을 지금 일처럼 이어 쓰지 마라.
 [대사] 짧은 구어체 1~2문장. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말).
 [외모] [외모] 글을 읽고 그 인상이 사람들의 반응과 사건에 영향을 주게 하라.
+[대화] 다른 인물이 말하면 talk에 1~3개: {"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이 짧은 구어체)","act":"말하며 하는 짧은 행동","look":"처음 나오는 인물만 외모","gender":"남성/여성","age":"처음 나오는 인물만 나이 숫자","job":"처음 나오는 인물만 하는 일","aff":"주인공에 대한 호감 변화(없음/오름/내림/크게 오름/크게 내림)"}. 주인공은 talk에 넣지 말고, 대사는 narration에 다시 쓰지 마라. 플레이어가 말을 걸면 상대가 꼭 talk로 대답한다. [아는 사람]의 성별·나이·직업·#성격을 지키고, 전에 한 말은 되풀이하지 마라. 말하는 사람이 없으면 [].
 [특별한 신분] [혈귀]·[뒤틀림]·[心]·[발톱]·[엄지]·[검지]·[중지]·[약지]·[소지]·[별의 이름]·[라만차랜드]·[워프열차] 같은 칸이 있으면 그 설정을 장면에 반영하라. 급수·계급·특색·별의 이름은 게임이 정하니 스스로 바꾸지 마라.
 [칸] 변화는 말로: hp·sp·en·rep는 "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복", ahn은 "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎", str·def·spd·int는 "없음/오름/내림", days는 "없음/하루/며칠/일주일/한 달/몇 달". options: 항상 "". tag_add/tag_remove: "분류:내용" 또는 "". shop: 공방 안에서 끝나면 true.
-JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","shop":false}`;
+JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","shop":false,"urgent":false,"talk":[]}`;
 
 const SUM_RULES = `
 너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 다른 AI가 읽고 이야기를 이어 갈 수 있게, 칸을 나눠 짧게 정리하라. 꾸밈말 없이 사실만.
@@ -1873,7 +1874,7 @@ const store = {
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
 /* ───────── 외부 API 사용량: 회사가 응답 머리말로 알려 주는 남은 양 + 이 기기에서 센 오늘 사용량 ───────── */
-const API_PROVS = ["anthropic", "openai", "gemini", "pollinations"];
+const API_PROVS = ["anthropic", "openai", "gemini", "pollinations", "groq"];
 let USAGE = store.get("dosi_usage") || {};
 function usageToday(){ const d = new Date().toISOString().slice(0, 10); if(USAGE.date !== d){ USAGE = {date:d, rl:USAGE.rl || {}, credit:USAGE.credit || null, polli:USAGE.polli || null, polliFull:USAGE.polliFull || 0}; } return USAGE; }
 function recordUsage(prov, headers, tokIn, tokOut){
@@ -1936,8 +1937,21 @@ async function checkPolliBalance(force){
   }
 }
 /* 게이지: 남은 비율(0~1)과 글. 회사가 알려 주는 값이 있을 때만 */
+/* Groq: 회사가 남은 양을 브라우저에 알려 주지 않으면, 이 기기에서 센 토큰을 무료 한도(모델마다 하루 약 20만)와 견준다 */
+const GROQ_DAY_TOK = 200000;
+function groqLocal(){
+  const g = store.get("dosi_groq_tok"); const d = new Date().toISOString().slice(0, 10);
+  if(!g || g.d !== d || !g.m) return null;
+  const top = Object.entries(g.m).sort((a, b) => b[1] - a[1])[0];
+  return {model:top[0].replace(/^openai\//, ""), used:top[1], all:g.m, last:g.last || 0};
+}
 function usageGauge(prov){
   const u = usageToday(), rl = (u.rl || {})[prov];
+  if(prov === "groq" && !(rl && (rl.remReq || rl.remTok))){
+    const L = groqLocal(); if(!L) return null;
+    const left = Math.max(0, GROQ_DAY_TOK - L.used);
+    return {frac:left / GROQ_DAY_TOK, text:`남은 토큰(추정) ${left.toLocaleString("ko-KR")} / ${GROQ_DAY_TOK.toLocaleString("ko-KR")} · ${L.model}${L.last ? ` · 마지막 한 번 ${L.last.toLocaleString("ko-KR")}` : ""}`};
+  }
   if(prov === "pollinations" && u.polli && u.polliFull){
     const left = u.polli.left != null ? u.polli.left : u.polli.bal;
     return {frac:Math.max(0, Math.min(1, left / u.polliFull)), text:`남은 pollen ${Number(left).toFixed(2)} / ${Number(u.polliFull).toFixed(2)}`};
@@ -1956,6 +1970,7 @@ function gaugeEl(g){
 }
 function usageShort(prov){
   if(!API_PROVS.includes(prov)) return "";
+  if(prov === "groq"){ const rl0 = (usageToday().rl || {}).groq; if(!(rl0 && (rl0.remReq || rl0.remTok))){ const L = groqLocal(); if(L) return `남은 토큰 약 ${Math.max(0, GROQ_DAY_TOK - L.used).toLocaleString("ko-KR")}`; } }
   const u = usageToday(), rl = (u.rl || {})[prov];
   if(prov === "openai" && u.credit && u.credit.remaining != null) return `크레딧 $${Number(u.credit.remaining).toFixed(2)} 남음`;
   if(rl && rl.remReq && rl.limReq) return `남은 요청 ${rl.remReq}/${rl.limReq}`;
@@ -1979,7 +1994,7 @@ function renderUsage(){
   }
   box.hidden = !rows.length;
   box.replaceChildren(el("b", null, "API 사용량"), ...rows.map(([t, g]) => { const d = el("div", null, t); if(g){ const gw = el("div", "ugauge-row"); gw.append(gaugeEl(g), el("span", null, g.text)); d.appendChild(gw); } return d; }),
-    el("div", "note", "남은 양은 회사가 알려 줄 때만 보입니다(Gemini는 알려 주지 않아 이 기기에서 센 횟수만). 요금·잔액은 각 회사 사이트에서 정확히 확인하세요."));
+    el("div", "note", "남은 양은 회사가 알려 줄 때만 보입니다(Gemini는 알려 주지 않아 이 기기에서 센 횟수만, Groq는 회사가 알려 주지 않으면 이 기기에서 쓴 토큰으로 어림). 요금·잔액은 각 회사 사이트에서 정확히 확인하세요."));
 }
 function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
 
