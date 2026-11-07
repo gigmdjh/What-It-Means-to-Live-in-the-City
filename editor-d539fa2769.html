@@ -482,6 +482,16 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .co-stat{display:grid;gap:2px;font-size:.74rem;color:var(--muted)}
 .co-stat input{min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:var(--f-mono)}
 .item-meta.bad{color:var(--bad)}
+.people{display:grid;gap:4px}
+.person{border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.person summary{display:flex;gap:8px;align-items:baseline;padding:6px 10px;cursor:pointer;list-style:none}
+.person summary::-webkit-details-marker{display:none}
+.person summary b{font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.p-meta{font-size:.72rem;color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-aff{font:600 .74rem var(--f-mono);white-space:nowrap}
+.p-det{display:grid;gap:3px;padding:0 10px 8px;font-size:.76rem;color:var(--muted)}
+.p-stats{font-family:var(--f-mono)}
+.person.gone{opacity:.5}
 .presbar{margin:-2px 0 8px;padding:6px 10px;border:1px dashed #b9a679;border-radius:6px;background:rgba(240,230,200,.06);font:500 .78rem/1.4 var(--f-display);color:#e6d7b0}
 .presbar.done{opacity:.5;text-decoration:line-through}
 /* 처음 태어날 때의 화면 안내 */
@@ -719,6 +729,10 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
       <div class="label">인연</div>
       <div class="family" id="sBonds"></div>
     </div>
+    <div class="card full">
+      <div class="label">만난 사람 <span class="note" id="sPeopleN"></span></div>
+      <div class="people" id="sPeople"></div>
+    </div>
     <div class="card">
       <div class="label">마주친 환상체</div>
       <div class="family" id="sAbnos"></div>
@@ -894,13 +908,14 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
     <p class="note">이야기와 주요 화면의 언어. 일부 작은 문구는 한국어로 남을 수 있어요.</p>
     <label class="field"><span>사용할 엔진</span>
       <select id="optProvider">
-        <option value="auto">자동 (내 API 키 → Pollinations → 내 기기 AI → 규칙 순)</option>
+        <option value="auto">자동 (내 API 키 → Groq → Pollinations → 내 기기 AI → 규칙 순)</option>
         <option value="pollinations">Pollinations (무료 계정으로 로그인, 폰 부담 없음)</option>
         <option value="webllm">내 기기: 로컬 모델 (WebLLM, 무료)</option>
         <option value="chrome">내 기기: 크롬 내장 AI (무료)</option>
         <option value="anthropic">내 API 키: Anthropic Claude</option>
         <option value="openai">내 API 키: OpenAI 호환 (OpenRouter·Groq 등)</option>
         <option value="gemini">내 API 키: Google Gemini</option>
+        <option value="groq">내 무료 키: Groq (빠름, 하루 토큰 한도 있음)</option>
         <option value="rules">AI 없이 규칙으로만</option>
       </select></label>
 
@@ -950,6 +965,16 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
       <label class="field"><span>모델 이름</span><input type="text" id="optPolliModel" placeholder="openai/gpt-5.4-nano"></label>
     </section>
 
+    <section data-prov="groq">
+      <h3>Groq (무료 키)</h3>
+      <p class="note">console.groq.com에 가입해 API Keys에서 무료 키를 받아 넣으세요(가입 전 이용 조건·나이 제한을 확인하세요). 무료 플랜은 모델마다 하루 약 20만 토큰, 분당 8천 토큰 한도가 있어요. 이 게임은 판정(작은 모델)과 서술(큰 모델)을 나눠 써서 한도를 아끼고, 짧은 지침으로 불러요. 한국어 문장은 Gemini보다 어색할 수 있어요.</p>
+      <label class="field"><span>API 키</span><input type="password" id="optGqKey" autocomplete="off" placeholder="gsk_..."></label>
+      <label class="field"><span>서술 모델</span><input type="text" id="optGqModel" list="gqModels"></label>
+      <label class="field"><span>판정·요약 모델</span><input type="text" id="optGqJudge" list="gqModels"></label>
+      <datalist id="gqModels"><option value="openai/gpt-oss-120b"><option value="openai/gpt-oss-20b"></datalist>
+      <div class="prog" id="gqTok"></div>
+    </section>
+
     <section data-prov="gemini">
       <h3>Google Gemini</h3>
       <label class="field"><span>API 키</span><input type="password" id="optGmKey" autocomplete="off"></label>
@@ -978,11 +1003,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0055"></script>
+<script src="parts.js?v=20261108-0155"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-0055";
+const BUILD = "20261108-0155";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1051,6 +1076,7 @@ const NARR_RULES = `
 [0. 맥락 먼저]
 - 쓰기 전에 [최근 상황]의 맨 아래(바로 직전 장면과 대사)를 읽고, 플레이어 입력이 그 장면의 누구·무엇에 대한 것인지 먼저 파악하라. '그거', '그 사람', '네', '받을게'처럼 짧은 입력은 직전 장면에서 가리키는 대상과 이어서 해석한다.
 - 직전 장면에서 이어지는 장소·사람·물건·시간을 그대로 이어 쓰고, 멋대로 다른 곳으로 옮기거나 새 인물을 끼워 넣지 마라.
+- [이미 끝난 일]에 있는 위험이나 사건을 같은 모습으로 다시 일으키지 마라. 기억 속 지난 일은 지난 일로만 다룬다.
 - [현재 장소]와 [때]를 반드시 읽어라. 장면은 그 장소, 그 시각에서 시작한다(밤이면 어둡고, 집이면 집 안). 플레이어가 이동하지 않았는데 다른 곳에서 시작하지 마라. 이동했다면 location에 새 장소를 쓰고, 그대로면 지금 장소를 그대로 써라.
 
 [3. 주인공은 플레이어의 것]
@@ -1073,9 +1099,11 @@ const NARR_RULES = `
 [6. 다른 인물과 대화]
 - talk: 다른 인물(가족·이웃·의뢰인 등)이 말하면 그 말과 행동을 1~3개 넣어라: [{"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이)","act":"말하면서 하는 짧은 행동","look":"처음 나오는 인물만 짧은 외모(머리색·머리 모양·눈색·체격·옷), 이미 나온 인물은 \"\"","gender":"남성/여성"}]. 말하는 사람이 없으면 [].
 - talk에는 주인공을 절대 넣지 마라. 대사는 narration에 다시 쓰지 마라.
+- talk의 "aff": 이 장면에서 그 인물이 주인공을 보는 마음이 어떻게 바뀌었는지("크게 오름", "오름", "약간 오름", "없음", "약간 내림", "내림", "크게 내림"). 도와주거나 선물하거나 진심으로 대하면 오르고, 속이거나 해치거나 무례하면 내린다. 처음 나오는 인물은 "age"에 나이(숫자)와 "job"에 하는 일(예: "시장 생선 장수", "7급 해결사")도 적어라. 아는 인물의 일이 바뀌었을 때(승진·이직·은퇴)만 job을 다시 적어라.
 - 플레이어가 누군가에게 말을 걸면 그 상대가 반드시 talk로 대답한다.
+- 같은 인물이라도 전에 한 말을 되풀이하지 마라. 지금 상황과 주인공이 방금 한 말에 맞는 새 말을 하게 하라.
 - 대사는 실제 사람이 하는 말처럼 짧은 구어체 1~2문장. 상황 설명조·문어체·과장된 말 금지. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말, 거친 사람은 거칠게).
-- 가족은 [가족] 목록의 이름과 외모를 그대로 쓰고 멋대로 바꾸지 마라.
+- 가족은 [가족] 목록의 이름·외모·일·성격을 그대로 쓰고 멋대로 바꾸지 마라. 부모는 그 일과 성격에 맞게 말하고 행동한다.
 
 [7. 수치 칸] 숫자가 아니라 말로 적는다(정확한 수치는 게임이 정한다).
 - hp(체력), sp(정신력), en(기력), rep(평판): "없음", "약간 감소", "감소", "크게 감소", "약간 회복", "회복", "크게 회복".
@@ -1140,15 +1168,18 @@ const NARR_RULES_LOCAL = `
 JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
 
 const SUM_RULES = `
-너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 이야기를 이어 갈 때 필요한 사실만 한국어 2~4문장으로 요약하라.
-- 반드시 남길 것: 사람 이름과 주인공과의 관계, 누가 무엇을 했고 어떻게 끝났는지, 약속·빚·원한·은혜, 다친 곳, 얻거나 잃은 물건, 사는 곳·자주 가는 곳, 주인공이 품은 목표.
-- 버릴 것: 분위기 묘사, 날씨, 끝난 자잘한 일.
-- 아직 끝나지 않은 일(지켜야 할 약속, 갚을 빚, 쫓아오는 사람)은 "아직:"으로 따로 밝혀라. 꾸밈말 없이.
-반드시 JSON만 출력: {"summary":"요약"}`;
+너는 텍스트 RPG의 기억 정리 담당이다. 주어진 기록을 나중에 다른 AI가 읽고 이야기를 이어 갈 수 있게, 칸을 나눠 짧게 정리하라. 꾸밈말 없이 사실만.
+- where: 언제·어디서(예: "15세 가을, L사 구역 뒷골목 시장").
+- situation: 무슨 일이 있었는지 한두 문장.
+- people: 나온 사람들. "이름(주인공과의 관계·특징·주인공을 대하는 태도)"를 쉼표로. 없으면 "".
+- outcome: 그 일이 어떻게 끝났는지(누가 이기고 졌는지, 다친 곳, 얻거나 잃은 것, 약속·빚·원한·은혜). 이미 끝난 위험은 "끝남"이라고 분명히.
+- pending: 아직 끝나지 않은 일(지켜야 할 약속, 갚을 빚, 쫓아오는 사람). 없으면 "".
+- 분위기·날씨·끝난 자잘한 일은 버려라.
+반드시 JSON만 출력: {"where":"","situation":"","people":"","outcome":"","pending":""}`;
 
 const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"},combat:{type:"boolean"}},required:["text","stat","difficulty","why","trivial","combat"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},blood:{type:"string"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
-const SUM_SCHEMA = {type:"object",properties:{summary:{type:"string"}},required:["summary"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},blood:{type:"string"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"},aff:{type:"string"},age:{type:"string"},job:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const SUM_SCHEMA = {type:"object",properties:{where:{type:"string"},situation:{type:"string"},people:{type:"string"},outcome:{type:"string"},pending:{type:"string"},summary:{type:"string"}},required:["situation","outcome"]};
 
 /* 계절 · 달력 */
 const SEASONS = {봄:[3,4,5], 여름:[6,7,8], 가을:[9,10,11], 겨울:[12,1,2]};
@@ -1781,7 +1812,7 @@ function allowanceNow(){
   return Math.round(base * (y < 13 ? 0.35 : y < 16 ? 0.7 : 1) / 1000) * 1000;
 }
 const DISTRICT_NOTE = {8:"홍원 바이오(옛 H사)",9:"음악의 거리",10:"도박",12:"Lobotomy",13:"MDM",14:"Nagel und Hammer",19:"살피뼈 농산",20:"TimeTrack",21:"습지",23:"WARP · 맛의 거리",25:"혹한"};
-const PROV_KO = {pollinations:"Pollinations",auto:"자동",anthropic:"Claude",openai:"OpenAI 호환",gemini:"Gemini",chrome:"크롬 내장 AI",webllm:"로컬 모델",rules:"규칙 기반"};
+const PROV_KO = {groq:"Groq",pollinations:"Pollinations",auto:"자동",anthropic:"Claude",openai:"OpenAI 호환",gemini:"Gemini",chrome:"크롬 내장 AI",webllm:"로컬 모델",rules:"규칙 기반"};
 
 /* 시드 난수: 같은 시드면 출생·가족·주사위·사건 흐름이 같다 (AI 문장은 매번 다름) */
 function rand01(){
@@ -1957,6 +1988,7 @@ const CFG_DEFAULT = {
   openai:{base:"https://api.openai.com/v1", key:"", model:""},
   gemini:{key:"", model:""},
   polli:{model:"openai/gpt-5.4-nano", appKey:""},
+  groq:{key:"", model:"openai/gpt-oss-120b", judge:"openai/gpt-oss-20b"},
   webllm:{model:"", autoload:false, working:""}
 };
 function loadCfg(){
@@ -1971,7 +2003,7 @@ function loadCfg(){
 let CFG = loadCfg();
 function saveCfg(){
   const copy = structuredClone(CFG);
-  if(!CFG.remember){ copy.anthropic.key = ""; copy.openai.key = ""; copy.gemini.key = ""; }
+  if(!CFG.remember){ copy.anthropic.key = ""; copy.openai.key = ""; copy.gemini.key = ""; copy.groq.key = ""; }
   store.set("dosi_cfg", copy);
 }
 
@@ -1999,7 +2031,7 @@ function webllmModel(){
   if(isMobile) return "Qwen3-1.7B-q4f16_1-MLC";
   return (navigator.deviceMemory || 4) >= 8 ? "Qwen3-4B-q4f16_1-MLC" : "Qwen3-1.7B-q4f16_1-MLC";
 }
-const hasKey = () => !!((CFG.anthropic.key && CFG.anthropic.model) || (CFG.openai.key && CFG.openai.model) || (CFG.gemini.key && CFG.gemini.model));
+const hasKey = () => !!((CFG.anthropic.key && CFG.anthropic.model) || (CFG.openai.key && CFG.openai.model) || (CFG.gemini.key && CFG.gemini.model) || (CFG.groq && CFG.groq.key));
 
 async function chromeStatus(){
   try{ if(typeof LanguageModel === "undefined") return "none"; return await LanguageModel.availability(); }
@@ -2110,11 +2142,48 @@ async function pickProvider(){
   if(CFG.anthropic.key && CFG.anthropic.model) return "anthropic";
   if(CFG.openai.key && CFG.openai.model) return "openai";
   if(CFG.gemini.key && CFG.gemini.model) return "gemini";
+  if(CFG.groq && CFG.groq.key) return "groq";
   if(polliKey()) return "pollinations";
   if(webllmEngine) return "webllm";
   return "rules";
 }
 
+/* Groq(무료 키): 판정은 작은 모델, 서술은 큰 모델로 나눠 모델별 하루 한도를 두 배로 쓴다.
+   gpt-oss는 생각(추론)에도 토큰을 쓰므로 추론은 낮게. 토큰을 아끼려고 짧은 지침(compact)으로 부른다 */
+async function callGroq(sys, user, maxTok, schema){
+  const c = CFG.groq;
+  if(!c.key) throw new Error("설정에서 Groq API 키를 넣으세요(console.groq.com에서 무료로 받을 수 있어요).");
+  const model = schema === JUDGE_SCHEMA || schema === SUM_SCHEMA ? (c.judge || c.model) : c.model;
+  const messages = [{role:"system", content:sys}, {role:"user", content:user}];
+  const base = {model, messages, temperature:0.9, max_tokens:maxTok};
+  const tries = [
+    Object.assign({}, base, {response_format:{type:"json_object"}, reasoning_effort:"low"}),
+    Object.assign({}, base, {response_format:{type:"json_object"}}),
+    base];
+  let last = "";
+  for(const body of tries){
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer " + c.key}, body:JSON.stringify(body)});
+    if(r.ok){
+      const j = await r.json();
+      const u = j.usage || {};
+      groqTokens(u.total_tokens || ((u.prompt_tokens || 0) + (u.completion_tokens || 0)), model);
+      recordUsage("groq", r.headers, u.prompt_tokens, u.completion_tokens);
+      return j.choices?.[0]?.message?.content || "";
+    }
+    last = r.status + ": " + (await r.text()).slice(0, 200);
+    if(r.status === 429) throw new Error("Groq 한도에 걸렸어요(분당 또는 하루 토큰). 잠시 뒤에 다시 하거나 다른 AI를 쓰세요. " + last);
+    if(r.status !== 400 && r.status !== 422) break;
+  }
+  throw new Error("Groq 오류 " + last);
+}
+/* 이 기기에서 오늘 Groq에 쓴 토큰(모델별): 한 번 행동에 얼마나 쓰는지 보여 준다 */
+function groqTokens(n, model){
+  const d = new Date().toISOString().slice(0, 10);
+  const g = store.get("dosi_groq_tok") || {};
+  if(g.d !== d){ g.d = d; g.m = {}; }
+  g.m[model] = (g.m[model] || 0) + (n || 0); g.last = n || 0;
+  store.set("dosi_groq_tok", g);
+}
 async function callAnthropic(sys, user, maxTok){
   const c = CFG.anthropic;
   if(!c.key || !c.model) throw new Error("설정에서 Anthropic API 키와 모델을 입력하세요.");
@@ -2408,25 +2477,28 @@ async function runAI(build, maxTok, schema, quiet, onText){
   if(!quiet){ currentProv = p; renderEngineChip(); }
   if(p === "rules") return null;
   const local = (p === "chrome" || p === "webllm");
+  /* Groq는 토큰 한도가 빠듯해 짧은 지침으로 부른다(형식은 JSON 그대로) */
+  const compact = local || p === "groq";
   /* 기기 AI: (프롬프트 + 답) 이 문맥 길이를 넘으면 실패한다 → 넘지 않을 때까지 기억·최근 기록을 줄인다 */
   const est = t => Math.ceil(t.length * 1.25);
   const plain = local && schema === NARR_SCHEMA;
   let sys, user;
   for(PROMPT_TIGHT = 0; PROMPT_TIGHT <= 3; PROMPT_TIGHT++){
-    ({sys, user} = build(local, plain));
+    ({sys, user} = build(compact, plain));
     sys += langRule(plain);
     if(p !== "webllm" || est(sys + user) + Math.min(maxTok, 800) + 80 <= webllmCtx) break;
   }
   PROMPT_TIGHT = 0;
   /* API일 때만: 한국어 서술은 토큰을 많이 먹어 잘리기 쉬우니 넉넉하게, 실패하면 한 번 더 요청.
      기기 AI·크롬 내장 AI는 느리니 이 과정을 건너뛴다(고쳐 읽기만 한다) */
-  const api = p === "anthropic" || p === "openai" || p === "gemini" || p === "pollinations";
+  const api = p === "anthropic" || p === "openai" || p === "gemini" || p === "pollinations" || p === "groq";
   const tok = api ? Math.round(maxTok * 1.8) : maxTok;
   const call = async u => {
     if(p === "anthropic") return callAnthropic(sys, u, tok);
     if(p === "openai") return callOpenAI(sys, u, tok);
     if(p === "gemini") return callGemini(sys, u, tok);
     if(p === "pollinations") return callPolli(sys, u, tok);
+    if(p === "groq") return callGroq(sys, u, tok, schema);
     if(p === "chrome") return callChrome(sys, u, tok, schema);
     if(p === "webllm"){
       const room = Math.max(250, webllmCtx - est(sys + u) - 60);
@@ -2489,7 +2561,7 @@ function rollLife(){ let t = 0; for(let i = 0; i < 4; i++) t += rand01(); return
 function lifeOf(f){ if(f.life == null) f.life = rollLife(); return f.life; }
 function familyText(){
   if(!S.family.length) return "없음";
-  return S.family.map(f => `${f.rel} ${f.name || "(이름 미정)"}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망: " + (f.cause || "사인 모름")}${f.look ? ", 외모: " + f.look : ""})`).join(", ");
+  return S.family.map(f => `${f.rel} ${f.name || "(이름 미정)"}(${f.gender}, ${f.alive ? famAge(f) + "세" : "사망: " + (f.cause || "사인 모름")}${f.job ? ", 일: " + f.job : ""}${f.trait ? ", 성격: " + f.trait : ""}${f.look ? ", 외모: " + f.look : ""})`).join(", ");
 }
 
 /* 외모 글을 게임이 읽은 결과를 AI가 상황에 쓰기 좋게 정리 (지금 나이·장비·의체 반영) */
@@ -2533,6 +2605,7 @@ function stateSummary(local){
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
   if(S.warp) lines.push(warpState());
   if(!isKindred() && ageY() >= 50) lines.push(`[노화] 이 도시의 평균 수명은 60세 남짓이다. 주인공은 ${ageY()}세로 ${ageY() >= (S.lifespan || 60) ? "기력이 많이 쇠했다" : "조금씩 몸이 예전 같지 않다"}.`);
+  if(S.ended && S.ended.length) lines.push("[이미 끝난 일] (아래 위험·사건은 이미 끝났다. 새 이유 없이 다시 일으키거나 되풀이하지 마라) " + S.ended.slice(-5).map(e => `${agoText(S.days - e.d)}: ${e.t}`).join(" / "));
   if(S.lm) lines.push(lmState());
   if(S.claw) lines.push(clawState());
   if(S.shin) lines.push(shinState());
@@ -2567,7 +2640,7 @@ function stateSummary(local){
   if(ltm.length) lines.push("[장기 기억]\n" + ltm.map(m => "- " + m).join("\n"));
   const stm = T >= 3 ? [] : S.stm.slice(local ? -1 : -3);
   if(stm.length) lines.push("[단기 기억]\n" + stm.map(m => "- " + m).join("\n"));
-  if(!local || T < 2){ const kp = knownPeopleText(local ? 3 : 8); if(kp) lines.push("[아는 사람] (이름이 같으면 같은 사람이다. 관계와 마지막 일을 이어서 그려라) " + kp); }
+  if(!local || T < 2){ const kp = knownPeopleText(local ? 3 : 8); if(kp) lines.push("[아는 사람] (이름이 같으면 같은 사람이다. 성별·나이·직업·외모를 그대로 지키고, 호감도에 맞는 태도로 대하게 하라. 능력치는 성인 평균 30 기준이다. 관계와 마지막 일을 이어서 그려라) " + kp); }
   if(!local && (S.chron || []).length) lines.push("[인생 연표] " + S.chron.slice(-14).map(c => `${Math.floor(c.d / 365)}세 ${c.t}`).join(" / "));
   const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -10);
   const cut = local ? [400, 260, 160, 120][T] : 900;
@@ -2663,6 +2736,7 @@ function rollCheck(a){
 
 /* ───────── 서술 ───────── */
 function normalizeNarr(j, statCap){
+  if(statCap == null) statCap = 3;
   if(!j || typeof j.narration !== "string" || !j.narration.trim()) return null;
   const n = blankNarr(j.narration.trim().slice(0, 4000));
   if(typeof j.urgent === "boolean" || j.urgent === "true" || j.urgent === "false") n.urgent = j.urgent === true || j.urgent === "true";
@@ -2685,7 +2759,9 @@ function normalizeNarr(j, statCap){
   n.merit = j.merit == null ? 0 : num(wordAmount(j.merit, "gauge"), -30, 30);
   n.talk = (Array.isArray(j.talk) ? j.talk : []).filter(t => t && t.who && t.say).slice(0, 4).map(t => ({
     who:String(t.who).slice(0, 20).trim(), say:String(t.say).replace(/^["“”']+|["“”']+$/g, "").slice(0, 200).trim(),
-    act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : "", outfit:/^(없음|)$/.test(String(t.outfit || "").trim()) ? "" : String(t.outfit).slice(0, 80).trim()}));
+    act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : "", outfit:/^(없음|)$/.test(String(t.outfit || "").trim()) ? "" : String(t.outfit).slice(0, 80).trim(),
+    aff:t.aff == null ? null : wordLevel(t.aff), age:/^\d{1,3}$/.test(String(t.age || "").trim()) ? +String(t.age).trim() : null,
+    job:/^(없음|모름|)$/.test(String(t.job || "").trim()) ? "" : String(t.job).slice(0, 30).trim()}));
   n.plain = !!j._plain;
   return n;
 }
@@ -2752,7 +2828,60 @@ function ruleSkip(days, luck){
   n.options = ruleOptions(y);
   return n;
 }
+/* ───────── 출생 배경: 부모의 일·성격, 집, 태어난 곳과 그날의 일 (시드로 정해진다) ───────── */
+const PARENT_JOBS = {
+  back:[["공장 야간 노동자", "고물상 일꾼", "세탁소 보조", "배달부", "건물 청소부", "노점상", "조직의 수금 심부름꾼", "일자리를 잃은 지 반년째"],
+        ["공장 야간 노동자", "버스 기사", "세탁소 직원", "시장 생선 가게 점원", "하급 해결사 사무소 잡부", "수리점 기술자", "식당 주방 보조"],
+        ["작은 식당 주인", "수리점 기술자", "8급 해결사", "공방 견습 장인", "약국 직원", "버스 기사", "학원 강사"],
+        ["뒷골목 상점가 건물주", "이름난 공방의 장인", "4급 해결사", "의체 시술소 원장", "운송 회사 사장"],
+        ["뒷골목 상점가 여러 채의 건물주", "조직과 거래하는 사업가(쉬쉬한다)", "2급 해결사", "큰 공방의 주인"]],
+  nest:[["날개 하청 회사 사무원", "둥지 상점 점원", "둥지 청소 용역", "협회 지부 행정직"],
+        ["둥지 병원 간호사", "날개 하청 회사 사무원", "둥지 학교 교사", "협회 지부 행정직"],
+        ["날개 계열사 대리", "둥지 병원 간호사", "둥지 학교 교사", "협회 심사관"],
+        ["날개 연구원", "날개 중간 관리자", "둥지 병원 의사", "협회 간부"],
+        ["날개 임원", "날개 수석 연구원", "이름난 둥지 병원 원장", "협회 고위 간부"]]};
+const PARENT_TRAITS = ["무뚝뚝하지만 속은 다정하다", "걱정이 많고 잔소리가 잦다", "말이 많고 잘 웃는다", "엄격하고 규칙을 따진다", "술을 자주 마신다", "미신을 믿고 부적을 챙긴다", "늘 피곤해 보인다", "계산적이고 현실적이다", "몸이 약해 자주 앓는다", "다혈질이지만 뒤끝이 없다", "조용하고 책을 좋아한다", "빚 걱정에 시달린다", "일하면서 노래를 흥얼거린다", "한때 해결사였다는 소문이 있다", "손재주가 좋아 뭐든 고친다", "이웃 일에 오지랖이 넓다"];
+const HOMES = {back:["곰팡이 핀 반지하 단칸방(창문이 없다)", "다세대 건물 꼭대기의 비 새는 다락방", "시장 골목 가게 뒤에 붙은 살림집", "철문을 두 겹으로 잠그는 2층 단독 주택", "경비를 둔 뒷골목의 큰 저택"],
+  nest:["둥지 외곽의 좁은 관사", "둥지 공동 주택의 작은 집", "둥지 공동 주택의 넓은 집", "둥지 단독 주택", "둥지 고층 건물 꼭대기의 저택"]};
+const BIRTH_PLACES = {back:["집 안방에서, 동네 산파의 손을 빌려", "뒷골목의 허가 없는 진료소에서", "단칸방에서, 옆집 할머니의 도움으로", "가게 안쪽 쪽방에서", "병원으로 가던 낡은 택시 안에서"],
+  nest:["둥지 병원 분만실에서", "집에서, 불러 온 주치의의 손으로", "날개 부속 병원의 조용한 병실에서", "둥지 병원으로 가는 자율 주행 차 안에서"]};
+const BIRTH_EVENTS = ["밤새 비가 지붕을 두드렸다", "정전이 나서 촛불 몇 개에 의지했다", "아버지는 일터에서 소식을 듣고 뒤늦게 뛰어왔다", "옆집 부부가 큰 소리로 싸우고 있었다", "이웃들이 냄비와 수건을 들고 몰려왔다", "창밖에서 축제 불꽃이 터지고 있었다", "한겨울인데 난방이 끊겨 있었다", "산파가 한참 늦게 도착했다", "할머니가 미리 지어 둔 이름을 적은 쪽지를 내밀었다", "뒷골목의 밤이 오기 직전이라 문을 몇 번이나 확인했다", "라디오에서는 협회 소식이 흘러나오고 있었다", "빚쟁이가 문을 두드리고 있었다", "고양이 한 마리가 창틀에서 모든 걸 지켜봤다", "아버지가 손을 떨며 첫 사진을 찍었다", "어머니는 진통 중에도 농담을 했다", "형편에 비해 과한 꽃다발이 도착했다"];
+const BIRTH_CLICHES = ["첫 울음을 터뜨린다", "지친 얼굴로 내려다본다", "품에 안는다", "벽 너머로 싸우는 소리", "행운이다", "삶이 시작된다", "작은 손가락", "눈물을 글썽인다"];
+function makeBirthInfo(){
+  /* 출생 장면 고르기는 따로 굴린다(기기마다 '최근 장면'이 달라도 삶의 주사위 흐름은 그대로) */
+  const keepRng = S.rng; S.rng = hashStr((S.seed || "") + "|출생");
+  try{ makeBirthInfo0(); } finally { S.rng = keepRng; }
+}
+function makeBirthInfo0(){
+  const o = S.origin === "nest" ? "nest" : "back", w = wealthOf();
+  for(const f of S.family){
+    if(f.rel !== "아버지" && f.rel !== "어머니") continue;
+    const jobs = PARENT_JOBS[o][w]; f.job = jobs[rnd(jobs.length)];
+    f.trait = PARENT_TRAITS[rnd(PARENT_TRAITS.length)];
+  }
+  /* 최근 다른 삶의 출생에서 쓴 장면은 되도록 피한다 */
+  const recent = store.get("dosi_birth_recent") || [];
+  const pickNew = (list, k) => { const free = list.filter(x => !recent.includes(x)); const pool = free.length >= k ? free : list; const out = []; while(out.length < k){ const x = pool[rnd(pool.length)]; if(!out.includes(x)) out.push(x); } return out; };
+  const places = BIRTH_PLACES[o];
+  S.birth = {place:pickNew(places, 1)[0], home:HOMES[o][w], events:pickNew(BIRTH_EVENTS, 2)};
+  store.set("dosi_birth_recent", [S.birth.place, ...S.birth.events, ...recent].slice(0, 12));
+}
+function birthInfoText(){
+  const B = S.birth; if(!B) return "";
+  const par = S.family.filter(f => (f.rel === "아버지" || f.rel === "어머니")).map(f => f.alive ? `${f.rel} ${f.name}: ${famAge(f)}세, ${f.job || "일 모름"}, 성격: ${f.trait || "알 수 없음"}` : `${f.rel} ${f.name}: 이미 세상에 없음(${f.cause || "사인 모름"})`).join(" / ");
+  return `[부모와 환경] ${par}. 사는 집: ${B.home}. 태어난 곳: ${B.place}. 그날 있었던 일: ${B.events.join(", ")}.`;
+}
 function ruleBirth(){
+  if(S.birth){
+    const B = S.birth, nest = S.origin === "nest", w = wealthOf();
+    const dad = S.family.find(f => f.rel === "아버지"), mom = S.family.find(f => f.rel === "어머니");
+    const who = [mom && mom.alive ? `${mom.job}인 어머니 ${mom.name}` : "", dad && dad.alive ? `${dad.job}인 아버지 ${dad.name}` : ""].filter(Boolean).join("와 ");
+    const lost = [dad, mom].find(f => f && !f.alive);
+    const n = blankNarr(`${corpOf(S.district)} 구역, ${B.place} 당신이 태어났다. ${B.events[0].replace(/다$/, "던")} 날이었다. ${B.events[1]}.\n\n${who ? who + "에게서" : "부모 없이"} 태어난 아이${lost ? `. ${lost.rel} ${lost.name}은(는) 이 자리에 없다(${lost.cause || "세상을 떠났다"})` : ""}. 집은 ${B.home}.${S.bornKindred ? " 당신의 살결은 유난히 차갑고, 눈동자에는 붉은빛이 어린다. 당신은 혈귀로 태어났다." : ""}\n\n이름은 ${S.name}.`);
+    n.location = `${corpOf(S.district)} 구역 ${nest ? (w >= 3 ? "둥지 저택" : "둥지 집") : (w >= 3 ? "뒷골목 2층집" : "뒷골목 집")}`;
+    n.tag_add = `출신:${nest ? "둥지" : "뒷골목"}, 형편:${WEALTH_KO[wealthOf()]}` + (S.bornKindred ? ", 혈귀:권속(타고남)" : "");
+    return n;
+  }
   const nest = S.origin === "nest";
   const mom = S.family.find(f => f.rel === "어머니");
   const n = blankNarr(nest
@@ -2883,22 +3012,92 @@ function isPlayerTalk(t){
   if(selfLike && selfLike.test(who) && (sim >= 0.35 || (S.name && t.say.includes(S.name)))) return true;
   return false;
 }
+/* ───────── 만난 사람 기억: 이름·성별·나이(시간에 따라 늘어남)·호감도·외모·능력치 ───────── */
+const AFF_STEP = [0, 4, 9, 16, 24];
+function affWord(a){ return a >= 70 ? "깊이 신뢰함" : a >= 40 ? "아주 호의적" : a >= 15 ? "호의적" : a > -15 ? "보통" : a > -40 ? "꺼림" : a > -70 ? "적대적" : "원수처럼 미워함"; }
+/* 나이·하는 일에 맞춘 능력치(성인 평균 30) */
+function rollPersonStats(age, who, look){
+  const t = String(who || "") + " " + String(look || "");
+  const grow = Math.min(age, 20) * 1.4 + 2 + Math.max(0, Math.min(age, 30) - 20) * 0.2;
+  const fighter = /(해결사|조직|협회|대행자|사도|카포|형제|발톱|처형자|토벌|경비|군인|요원|보안|청소부|혈귀|권속|장로|칼잡이|무사|싸움꾼)/.test(t);
+  const elite = /(특색|1급|2급|간부|두목|소토카포|대행자|장로|발톱|지부장)/.test(t);
+  const famous = famousOf(who);
+  const old = age >= 60 ? -Math.min(12, (age - 55)) : 0;
+  const st = {};
+  for(const k of STAT_KEYS){
+    let v = grow * (0.75 + rand01() * 0.5) + old * (k === "int" ? 0 : 1);
+    if(fighter && k !== "int") v *= 1.3;
+    if(elite && k !== "int") v *= 1.35;
+    if(famous) v = 55 + rnd(30);
+    st[k] = Math.max(1, Math.round(v));
+  }
+  return st;
+}
+/* 직업: AI가 알려 주지 않으면 이름·외모에서 짐작하고, 그래도 모르면 동네에 흔한 일 중에서 */
+const NPC_JOBS = ["시장 상인", "공장 노동자", "배달부", "식당 주인", "세탁소 직원", "고물상", "버스 기사", "수리공", "하급 해결사", "조직원", "건물 청소부", "노점상", "약국 직원", "학생", "간호사", "날개 하청 사무원", "공방 견습생", "무직"];
+function guessJob(name, look, age){
+  const t = String(name || "") + " " + String(look || "");
+  const kw = [[/해결사/, "해결사"], [/(조직|패거리|쥐|두목|간부)/, "조직원"], [/(경비|보안)/, "경비원"], [/(의사|원장)/, "의사"], [/간호/, "간호사"], [/(상인|주인|사장|가게)/, "가게 주인"], [/(장인|공방)/, "공방 장인"], [/(선생|교사)/, "교사"], [/(경찰|츠바이)/, "츠바이 협회 요원"], [/(협회)/, "협회 직원"], [/(기자)/, "기자"], [/(신부|사제)/, "사제"], [/(학생)/, "학생"], [/(청소부)/, "청소부"], [/(대행자|사도)/, "검지의 일원"], [/(카포|솔다토)/, "엄지의 일원"]];
+  for(const [re, j] of kw) if(re.test(t)) return j;
+  if(age != null && age < 18) return age < 7 ? "아이" : "학생";
+  if(age != null && age >= 70) return "은퇴한 노인";
+  return NPC_JOBS[rnd(NPC_JOBS.length)];
+}
+const npcAge = r => r && r.born != null ? Math.max(0, Math.floor((S.days - r.born) / 365)) : (r && r.age) || 0;
+/* 사람 기록 가져오기(없으면 만든다). 예전 저장본(나이·만난 날)도 태어난 날로 바꿔 둔다 */
+function personOf(name, hint){
+  if(!S.npcs) S.npcs = {};
+  let r = S.npcs[name];
+  if(r && r.born == null && r.age != null) r.born = (r.at != null ? r.at : S.days) - r.age * 365;
+  if(!r && hint){
+    const g = hint.gender || randGender();
+    const age = hint.age != null ? hint.age : (/(할머니|할아버지|노인|노파)/.test(name + (hint.look || "")) ? 66 + rnd(10) : /(아이|소년|소녀|꼬마)/.test(name + (hint.look || "")) ? 8 + rnd(5) : 22 + rnd(30));
+    r = S.npcs[name] = {look:hint.look || randLook(g), gender:g, born:S.days - age * 365 - rnd(365), at:S.days, job:hint.job || guessJob(name, hint.look, age)};
+  }
+  if(r){
+    if(r.aff == null) r.aff = 0;
+    if(!r.job) r.job = guessJob(name, r.look, npcAge(r));
+    if(!r.stats) r.stats = rollPersonStats(npcAge(r), name + " " + r.job, r.look);
+  }
+  return r;
+}
+function bumpAff(name, lv){
+  const r = personOf(name); if(!r) return;
+  const d = Math.sign(lv) * AFF_STEP[Math.min(4, Math.abs(lv))];
+  r.aff = clamp(Math.round(r.aff + d), -100, 100);
+  return d;
+}
+/* 너무 많아지면 오래 안 본 사람부터 잊는다(인연·가족은 남긴다) */
+function trimPeople(){
+  const keys = Object.keys(S.npcs || {}); if(keys.length <= 120) return;
+  const keep = n => S.tags.some(t => t.startsWith("인연:" + n)) || S.family.some(f => f.name === n);
+  keys.filter(k => !keep(k)).sort((a, b) => (S.npcs[a].last || S.npcs[a].at || 0) - (S.npcs[b].last || S.npcs[b].at || 0)).slice(0, keys.length - 120).forEach(k => delete S.npcs[k]);
+}
 /* 말하는 사람을 기억해 두고(외모·성별) 그림에 쓴다. 가족이면 가족 정보를 쓴다 */
 function registerSpeaker(t){
   const fam = S.family.find(f => f.name && (f.name === t.who || t.who.includes(f.name) || (f.rel && t.who === f.rel) || (t.who === "엄마" && f.rel === "어머니") || (t.who === "아빠" && f.rel === "아버지")));
   const OF = S.outfits || {};
-  if(fam) return {who:fam.name, rel:fam.rel, say:t.say, act:t.act || "", look:lookWithOutfit(fam.look || "", OF[fam.name] || OF[t.who]), gender:fam.gender, age:famAge(fam)};
+  if(fam){
+    if(fam.aff == null) fam.aff = 30;
+    if(t.aff) fam.aff = clamp(fam.aff + Math.sign(t.aff) * AFF_STEP[Math.min(4, Math.abs(t.aff))], -100, 100);
+    if(!fam.stats) fam.stats = rollPersonStats(famAge(fam), fam.rel, fam.look);
+    return {who:fam.name, rel:fam.rel, say:t.say, act:t.act || "", look:lookWithOutfit(fam.look || "", OF[fam.name] || OF[t.who]), gender:fam.gender, age:famAge(fam)};
+  }
   const cu = customLookOf(t.who);
   if(cu) return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(cu.look, OF[t.who]), gender:cu.gender, age:cu.age || 28, seed:cu.seed};
   if(!S.npcs) S.npcs = {};
   const known = S.npcs[t.who];
   const gender = t.gender || (known && known.gender) || (/(여자|여인|할머니|아주머니|소녀|언니|누나|아가씨|부인|그녀)/.test(t.who) ? "여성" : /(사내|남자|할아버지|아저씨|소년|형|오빠|청년)/.test(t.who) ? "남성" : randGender());
   const look = (known && known.look) || (famousOf(t.who) ? randLook(gender) : t.look) || randLook(gender);
-  /* 한 번 본 사람도 시간이 흐른 만큼 나이를 먹는다 */
-  const age = known && known.age ? known.age + Math.floor((S.days - (known.at != null ? known.at : S.days)) / 365) : (/(할머니|할아버지|노인|노파)/.test(t.who + look) ? 70 : /(아이|소년|소녀|꼬마)/.test(t.who + look) ? 10 : 25 + rnd(25));
-  S.npcs[t.who] = {look, gender, age, at:S.days};
-  const keys = Object.keys(S.npcs); if(keys.length > 30) delete S.npcs[keys[0]];
-  return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(look, OF[t.who]), gender, age};
+  /* 처음 보는 사람은 기록을 만들고, 한 번 본 사람은 태어난 날로 나이를 센다(시간이 흐른 만큼 나이를 먹는다) */
+  const r = personOf(t.who, {gender, look, age:t.age, job:t.job});
+  if(t.job && t.job !== r.job) r.job = t.job;          /* 일이 바뀌었으면(승진·이직) 새로 */
+  r.gender = r.gender || gender; r.look = r.look || look;
+  r.n = (r.n || 0) + 1; r.last = S.days; r.say = String(t.say || "").slice(0, 50);
+  if(t.aff) bumpAff(t.who, t.aff);
+  else if(r.n > 1 && rnd(3) === 0) r.aff = clamp(r.aff + 1, -100, 100);   /* 자주 보면 조금씩 익숙해진다 */
+  trimPeople();
+  return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(r.look, OF[t.who]), gender:r.gender, age:npcAge(r)};
 }
 /* 다른 사람 옷차림 기억: 가족은 가족 이름으로 */
 function setOutfit(who, outfit){
@@ -3036,7 +3235,15 @@ function judgeUrgent(n){
 }
 function applyNarr(n, forcedDays, shownDays){
   S.flowNote = "";
+  const wasUrgent = !!S.urgent;
   S.urgent = !n.passiveDone && judgeUrgent(n);
+  /* 위급했던 일이 끝났으면 '끝난 일'로 적어 둔다(같은 위험이 다시 되풀이되지 않게) */
+  if(wasUrgent && !S.urgent){
+    const prev = S.log.filter(e => e.t === "narr").slice(-1)[0];
+    const threat = prev ? String(prev.text || "").split(/(?<=[.!?])\s+/).filter(Boolean).slice(-1)[0] || "" : "";
+    const end = String(n.narration || "").split(/(?<=[.!?])\s+/).filter(Boolean).slice(-1)[0] || "";
+    if(threat){ S.ended = S.ended || []; S.ended.push({d:S.days, t:`${threat.slice(0, 70)} → ${end.slice(0, 70)}`}); if(S.ended.length > 8) S.ended.shift(); }
+  }
   /* 체력·정신력은 회복이 느리다: 오르는 양은 40%만 */
   for(const k of ["hp", "sp"]) if(n[k] > 0) n[k] = Math.max(1, Math.round(n[k] * 0.4 * regenFactor()));
   /* 다치는 건 더 아프다 */
@@ -3077,6 +3284,10 @@ async function summarize(text){
   if(currentProv === "webllm" || currentProv === "chrome") return null;
   try{
     const j = await runAI(local => ({sys: SUM_RULES, user: text.slice(0, local ? 2500 : 8000)}), 300, SUM_SCHEMA, true);
+    if(j && (j.situation || j.outcome)){
+      const f = (k, v) => v && String(v).trim() && !/^(없음|-)$/.test(String(v).trim()) ? `${k}: ${String(v).trim()}` : "";
+      return [f("때·곳", j.where), f("상황", j.situation), f("인물", j.people), f("결과", j.outcome), f("아직", j.pending)].filter(Boolean).join(" | ").slice(0, 500);
+    }
     if(j && typeof j.summary === "string" && j.summary.trim()) return j.summary.trim().slice(0, 400);
   }catch(e){ console.warn("기억 요약 실패", e); }
   return null;
@@ -3105,7 +3316,11 @@ function relevantMem(list, query, k){
 function knownPeopleText(n){
   const ps = Object.entries(S.people || {}).sort((a, b) => (b[1].last || 0) - (a[1].last || 0)).slice(0, n);
   if(!ps.length) return "";
-  return ps.map(([name, p]) => { const bond = (S.tags || []).find(t => t.startsWith("인연:" + name)); const rel = bond ? bond.split("/")[1] || "아는 사이" : ""; return `${name}${rel ? "(" + rel + ")" : ""}: ${p.n}번 만남, 마지막 ${agoText(S.days - (p.last || S.days))}${p.say ? `, 마지막 말 "${p.say}"` : ""}`; }).join(" / ");
+  return ps.map(([name, p]) => {
+    const bond = (S.tags || []).find(t => t.startsWith("인연:" + name)); const rel = bond ? bond.split("/")[1] || "아는 사이" : "";
+    const r = S.npcs && S.npcs[name];
+    const info = r ? `${r.gender || "?"}, ${npcAge(r)}세, ${r.job || "직업 모름"}, 호감 ${r.aff > 0 ? "+" : ""}${r.aff || 0}(${affWord(r.aff || 0)}), 외모 ${String(r.look || "").slice(0, 50)}${r.stats ? `, 힘${r.stats.str} 방어${r.stats.def} 속도${r.stats.spd} 지력${r.stats.int}` : ""}` : "";
+    return `${name}${rel ? "(" + rel + ")" : ""}[${info}]: ${p.n}번 만남, 마지막 ${agoText(S.days - (p.last || S.days))}${p.say ? `, 전에 한 말 "${p.say}"(같은 말을 되풀이하지 말 것)` : ""}`; }).join(" / ");
 }
 async function memoryTick(){
   if(memBusy || !S || S.turn % 6 !== 0) return;
@@ -3122,7 +3337,7 @@ async function memoryTick(){
     /* 단기 기억이 4개 쌓이면 오래된 3개를 장기 기억 하나로 */
     if(game.stm.length >= 4){
       const three = game.stm.splice(0, 3);
-      const sum = await summarize("[단기 기억 세 개를 하나의 장기 기억으로 합쳐라. 사람·관계·아직 끝나지 않은 일은 빠뜨리지 마라]\n" + three.join("\n"));
+      const sum = await summarize("[단기 기억 세 개를 하나의 장기 기억으로 합쳐라. 같은 칸끼리 합치고, 사람·관계·결과·아직 끝나지 않은 일은 빠뜨리지 마라. 이미 끝난 일은 '끝남'으로 남겨라]\n" + three.join("\n"));
       game.ltm.push((sum ? three[0].match(/^\(\d+세\) /)?.[0] || "" : "") + (sum || three.join(" ").slice(0, 400)));
       /* 장기 기억이 너무 많으면 가장 오래된 두 개를 하나로 */
       if(game.ltm.length > 60){ const two = game.ltm.splice(0, 2); game.ltm.unshift(two.join(" ").slice(0, 500)); }
@@ -3660,6 +3875,7 @@ function renderStatus(){
     const np = S.npcs && S.npcs[b.nm]; if(np && np.look) row.title = np.look;
     bd.appendChild(row);
   }
+  renderPeople();
   $("#sTagsN").textContent = (S.tags || []).length ? `${S.tags.length}개` : "";
   const tg = $("#sTags"); tg.replaceChildren();
   if(!S.tags.length) tg.appendChild(el("div", "note", "아직 없음"));
@@ -4456,6 +4672,29 @@ function applySerums(list){
 }
 /* 앰플 보급: 한 달에 25씩 */
 function serumMonth(){ if(!S.claw) return; for(const k of ["W", "R", "K"]) S.claw[k] = Math.min(100, S.claw[k] + SERUM_MONTHLY); }
+function renderPeople(){
+  const box = $("#sPeople"); if(!box) return;
+  box.replaceChildren();
+  const ents = Object.entries(S.npcs || {}).filter(([, r]) => r && (r.n || r.aff)).map(([n]) => [n, personOf(n)]).sort((a, b) => (b[1].last || b[1].at || 0) - (a[1].last || a[1].at || 0));
+  $("#sPeopleN").textContent = ents.length ? `${ents.length}명` : "";
+  if(!ents.length){ box.appendChild(el("div", "note", "아직 없음")); return; }
+  for(const [name, r] of ents.slice(0, 40)){
+    const bond = (S.tags || []).find(t => t.startsWith("인연:" + name));
+    const row = el("details", "person" + (r.dead ? " gone" : ""));
+    const sum = el("summary");
+    const aff = r.aff || 0, ac = aff >= 15 ? "var(--good)" : aff <= -15 ? "var(--bad)" : "var(--muted)";
+    const af = el("span", "p-aff", (aff > 0 ? "♥ +" : aff < 0 ? "♥ " : "♥ ") + aff); af.style.color = ac;
+    sum.append(el("b", null, name), el("span", "p-meta", `${r.gender || "?"} · ${npcAge(r)}세 · ${r.job || "직업 모름"}${bond ? " · " + (bond.split("/")[1] || "인연") : ""}`), af);
+    row.appendChild(sum);
+    const det = el("div", "p-det");
+    det.append(el("div", null, `호감도 ${aff} (${affWord(aff)}) · ${r.n || 0}번 만남${r.last != null ? " · 마지막 " + agoText(S.days - r.last) : ""}`),
+      el("div", null, "외모 · " + (r.look || "알 수 없음")),
+      el("div", "p-stats", STAT_KEYS.map(k => `${STAT_KO[k]} ${r.stats ? r.stats[k] : "?"}`).join(" · ")));
+    if(r.say) det.appendChild(el("div", "note", `마지막 말: “${r.say}”`));
+    row.appendChild(det);
+    box.appendChild(row);
+  }
+}
 function renderPresBar(){
   const b = document.getElementById("presBar"); if(!b) return;
   const pr = S && fingerOf() === "index" && S.prescript ? prescriptOf() : null;
@@ -4823,6 +5062,9 @@ const ACHS = [
   ["custom1", "나만의 장비", "공방에 맞춤 장비를 주문했다", () => cnt("customOrder") >= 1, "u", "장비"],
   ["custom5", "단골 의뢰인", "맞춤 장비를 다섯 번 주문했다", () => cnt("customOrder") >= 5, "r", "장비"],
   ["customLegend", "전설의 장인에게", "전설의 장인에게 장비를 맡겼다", () => (S.custom || []).some(it => /전설의 장인/.test(it.shop)), "e", "장비"],
+  ["aff70", "깊은 신뢰", "누군가의 호감도가 70을 넘었다", () => Object.values(S.npcs || {}).some(r => (r.aff || 0) >= 70), "r", "가족과 사람"],
+  ["affNeg70", "원수", "누군가의 호감도가 −70 아래로 떨어졌다", () => Object.values(S.npcs || {}).some(r => (r.aff || 0) <= -70), "u", "가족과 사람"],
+  ["people30", "얼굴이 넓다", "서른 명을 만났다", () => Object.values(S.npcs || {}).filter(r => r.n).length >= 30, "r", "가족과 사람"],
   ["firstBuy", "첫 구매", "공방에서 물건을 샀다", () => cnt("buy") >= 1, "c", "장비"],
   ["bigSpender", "큰손", "공방에서 열 번 샀다", () => cnt("buy") >= 10, "r", "장비"],
   ["luxury", "명품 장비", "2천만 안이 넘는 장비를 샀다", () => cnt("bigBuy") >= 1, "r", "장비"],
@@ -5009,7 +5251,12 @@ async function doAction(input, opt = {}){
   const actInput = sp.act || (sp.says.length ? "" : input);
   const sayLine = sp.says.length ? `\n[주인공이 한 말(플레이어가 직접 적음, 그대로 말한 것)] ${sp.says.map(x => `"${x}"`).join(" ")}` : "";
   let done = thinking(passive ? "그냥 넘긴 결과를 따져 보는 중…" : "난이도를 가늠하는 중…");
-  if(passive){
+  if(passive && opt.danger){
+    /* 위급한 상황을 그냥 넘김: 상황에 맞는 능력치로 주사위를 굴려, 그대로 두었을 때의 결과를 정한다 */
+    const last = String((lastNarr() || {}).text || "");
+    const stat = /(쫓아|쫓긴|도망|추격|불길|불이 |연기|무너|물이 차|홍수)/.test(last) ? "spd" : /(속삭|유혹|협박|겁을|환상체|정신|목소리|설득)/.test(last) ? "int" : "def";
+    actions = [{text:"아무것도 하지 않고 버틴다", stat, dc:12, why:"위급한 상황에 대응하지 않음", trivial:false, passiveDanger:true}];
+  }else if(passive){
     /* 아무것도 하지 않음: 주사위 없이, 상황이 저절로 흘러가는 대로 */
     actions = [{text:"아무것도 하지 않는다", stat:"int", dc:0, why:"대응하지 않음", trivial:true}];
   }else if(!actInput){
@@ -5022,7 +5269,7 @@ async function doAction(input, opt = {}){
   }
   done();
   if(!actions) actions = ruleJudge(actInput || input);
-  actions = sanitizeActions(actions, actInput || input);
+  if(!(passive && opt.danger)) actions = sanitizeActions(actions, actInput || input);
   /* 도시는 냉혹하다: 굴려야 하는 행동은 난이도 +2 */
   for(const a of actions || []) if(!a.trivial && a.dc != null) a.dc = Number(a.dc) + 2;
   /* 신(心)과 망(望) */
@@ -5044,7 +5291,7 @@ async function doAction(input, opt = {}){
     log({t:"sys", text:`☀ 망(望) ${mangN}개 · 정신력 −${cost}`});
     S._mangNote = mangN;
   }
-  if(passive) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
+  if(passive && !opt.danger) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
   else for(const r of results){
     /* 굴릴 필요 없는 행동은 주사위를 보여 주지 않는다 */
     if(r.auto) continue;
@@ -5072,9 +5319,9 @@ async function doAction(input, opt = {}){
     done = thinking("결과를 서술하는 중…");
     try{
       ev = passive || wo ? null : (rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0));
-      const rl = passive ? "- 플레이어는 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 상황이 어떻게 흘러가는지(좋든 나쁘든 그럴 법한 결과) 서술하고, 그 일이 일단락된 상태로 끝내라. 이번 장면만은 '장면 끝에 반응해야 할 상황을 남기라'는 규칙을 따르지 마라: 위협은 지나가거나(포기하고 떠난다, 다른 곳으로 간다, 누군가 막아 준다) 결과가 확정되어(다치거나 빼앗기는 등) 조용히 끝난 상태로 마무리하고, 새 위협이나 새 사건을 만들지 마라. 마지막 문장은 상황이 정리된 지금의 모습이다. urgent는 false." : results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
+      const rl = passive && opt.danger ? `- 플레이어는 위급한 상황에 아무 대응도 하지 않았다. 그대로 두었을 때의 결과를 주사위 결과대로 그려라: ${results.map(r => `${r.text}(${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join(", ")}. 대성공이면 위협이 스스로 물러가거나 누군가 도와준다. 성공이면 큰 탈 없이 지나간다. 아슬아슬한 실패·실패면 다치거나 무언가를 잃는다. 대실패면 크게 다치거나 큰 것을 잃는다. 일이 흐지부지되지 않게 분명한 결과로 끝내고, 결과에 맞게 hp 등 수치 칸을 채워라. 새 위협은 만들지 말고 urgent는 false.` : passive ? "- 플레이어는 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 상황이 어떻게 흘러가는지(좋든 나쁘든 그럴 법한 결과) 서술하고, 그 일이 일단락된 상태로 끝내라. 이번 장면만은 '장면 끝에 반응해야 할 상황을 남기라'는 규칙을 따르지 마라: 위협은 지나가거나(포기하고 떠난다, 다른 곳으로 간다, 누군가 막아 준다) 결과가 확정되어(다치거나 빼앗기는 등) 조용히 끝난 상태로 마무리하고, 새 위협이나 새 사건을 만들지 마라. 마지막 문장은 상황이 정리된 지금의 모습이다. urgent는 false." : results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
       n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
-        user: plainContext() + (passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + (actInput || "(말만 한다)") + (sp.says.length ? "\n주인공이 한 말(그대로 말한 것, 바꾸지 말 것): " + sp.says.map(x => `"${x}"`).join(" ") : "") + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + (wo ? warpPlain(wo) : plainEvent(ev)))}
+        user: plainContext() + (passive && opt.danger ? `\n\n주인공은 위급한 상황에 아무 대응도 하지 않았다. 결과(이대로 그려라): ${results.map(r => r.tier).join(", ")}. 대성공은 위협이 물러감, 성공은 큰 탈 없음, 실패는 다치거나 잃음, 대실패는 크게 다침. 분명한 결과로 끝내고 새 위협은 만들지 마라.` : passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + (actInput || "(말만 한다)") + (sp.says.length ? "\n주인공이 한 말(그대로 말한 것, 바꾸지 말 것): " + sp.says.map(x => `"${x}"`).join(" ") : "") + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + (wo ? warpPlain(wo) : plainEvent(ev)))}
         : {sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
         user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + sayLine + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + (wo ? warpLine(wo) : eventLine(ev))}, 700, NARR_SCHEMA, false, done.live), 3);
       if(n && n.plain){ tierEffects(n, input, results); if(!n.options.length) n.options = ruleOptions(); n.shop = visitsShop(input) || SHOP_EVENTS.includes(ev); n.tag_add = plainStatusFromText(n.narration); }
@@ -5082,7 +5329,7 @@ async function doAction(input, opt = {}){
     done();
   }
   if(!aiOK && !passive && !wo) ev = rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0);
-  const fin = guardNarr(n || (passive ? passiveNarr() : ruleEvent(ruleNarrate(input, results), ev)), results);
+  const fin = guardNarr(n || (passive ? (opt.danger ? dangerPassiveNarr(results) : passiveNarr()) : ruleEvent(ruleNarrate(input, results), ev)), results);
   fin.event = !!ev;
   S.awaitEvent = !!ev;
   if(isKidnap(ev)){ fin.urgent = true; chron("납치당할 뻔했다"); bump("kidnapTry"); }
@@ -5095,7 +5342,7 @@ async function doAction(input, opt = {}){
   if(isStarFind(ev)) S.starOffer = true;
   if(wo) warpFin(fin, wo, !!n);
   /* 그냥 넘긴 결과는 그 일이 끝난 것으로 본다(다시 위급 판정을 하지 않는다) */
-  if(passive){ fin.urgent = false; fin.passiveDone = true; }
+  if(passive){ fin.urgent = false; fin.passiveDone = true; if(opt.danger) bump("dangerPass"); }
   if(!passive && fin.outfit === undefined){ const o = outfitFromInput(input); if(o) fin.outfit = o; }
   if(!passive && fin.blood == null){ const b = bloodFromInput(input, results); if(b) fin.blood = b; }
   /* 피를 실제로 마신 장면이 아니면 혈액은 오르지 않는다(AI가 다른 회복과 헷갈려 넣는 경우를 막는다) */
@@ -5238,9 +5485,9 @@ async function birth(){
   let n = null;
   try{
     n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
-      user: plainContext() + "\n\n방금 주인공이 태어났다. 위 가족(부모)이 등장하는, 태어나는 순간의 장면을 써라. 집안 형편에 맞는 집과 살림으로 그려라. 아기는 말을 못 하고 울거나 꼼지락거릴 뿐이다." + (S.bornKindred ? " 아기는 혈귀로 태어났다(아직 갈증은 없다). 그 낌새를 한 문장 넣어라(예: 유난히 차가운 살결, 붉은 눈빛)." : "")}
+      user: plainContext() + "\n" + birthInfoText() + "\n\n방금 주인공이 태어났다. 위 [부모와 환경]의 부모의 일·성격, 집, 태어난 곳, 그날 있었던 일을 꼭 넣어 이 삶만의 장면을 써라. '첫 울음을 터뜨린다', '지친 얼굴로 내려다본다' 같은 흔한 표현은 쓰지 마라. 아기는 말을 못 하고 울거나 꼼지락거릴 뿐이다." + (S.bornKindred ? " 아기는 혈귀로 태어났다(아직 갈증은 없다). 그 낌새를 한 문장 넣어라(예: 유난히 차가운 살결, 붉은 눈빛)." : "")}
       : ({sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
-      user: stateSummary(local) + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [가족]의 부모를 그대로 등장시키고, [집안 형편]에 맞는 집과 살림을 그려라(태그는 게임이 정하니 tag_add는 \"\")." + (S.bornKindred ? " 아기는 혈귀로 태어났다(아직 갈증은 없고 다섯 살부터 목이 마르기 시작한다). 그 낌새를 한 문장 넣어라(예: 유난히 차가운 살결, 붉은 눈빛)." : "") + " spouse, family_dead는 \"\", child_born은 false. 변화는 모두 \"없음\", days도 \"없음\"."}), 700, NARR_SCHEMA, false, done.live), 0);
+      user: stateSummary(local) + "\n\n" + birthInfoText() + "\n\n[출생] 이 캐릭터가 태어나는 장면을 서술하라. [부모와 환경]의 부모의 일·성격, 사는 집, 태어난 곳, 그날 있었던 일을 반드시 장면에 녹여라(이 삶만의 장면이 되게). 부모는 성격에 맞는 말과 행동을 하게 하라(talk에 부모의 짧은 말 1~2개). 다음 같은 흔한 표현은 쓰지 마라: " + BIRTH_CLICHES.join(", ") + ". 태그는 게임이 정하니 tag_add는 \"\"." + (S.bornKindred ? " 아기는 혈귀로 태어났다(아직 갈증은 없고 다섯 살부터 목이 마르기 시작한다). 그 낌새를 한 문장 넣어라(예: 유난히 차가운 살결, 붉은 눈빛)." : "") + " spouse, family_dead는 \"\", child_born은 false. 변화는 모두 \"없음\", days도 \"없음\"."}), 700, NARR_SCHEMA, false, done.live), 0);
     if(n){ const rb = ruleBirth(); n.location = rb.location; if(n.plain && !n.options.length) n.options = ruleOptions(); n.tag_add = rb.tag_add; }
   }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message + (aiOn() ? "" : " 규칙 기반으로 진행합니다.")}); }
   done();
@@ -6528,6 +6775,19 @@ function checkBig(){
   if(rand01() < bigRate(y) / 365) return {kind:"event", text:pickEvent(y, seasonOf(S.days))};
   return null;
 }
+/* AI 없이: 위급한 상황을 그냥 넘긴 결과(주사위대로) */
+function dangerPassiveNarr(results){
+  const r = results[0] || {cls:"fail"};
+  const T = {crit:["버티고 서 있자, 상대가 오히려 머뭇거리다 물러난다. 지나가던 누군가가 끼어든 덕도 있다.", 0, 0],
+    ok:["몸을 웅크리고 버틴다. 위험은 당신을 스치고 지나갔다. 큰 탈은 없다.", 0, -2],
+    close:["버텨 보지만 완전히 피하지는 못한다. 몸 여기저기가 욱신거린다.", -8, -4],
+    fail:["아무것도 하지 않은 대가는 컸다. 피할 틈도 없이 얻어맞고, 가진 것 일부를 빼앗겼다.", -14, -6],
+    fumble:["버티지 못했다. 크게 다쳐 바닥에 쓰러진다. 정신을 차렸을 때는 이미 모든 일이 끝나 있다.", -24, -10]};
+  const [t, hp, sp] = T[r.cls] || T.fail;
+  const n = blankNarr(t);
+  n.hp = hp; n.sp = sp; n.options = ruleOptions(); n.passiveDone = true;
+  return n;
+}
 function passiveNarr(){
   const n = blankNarr("당신은 아무것도 하지 않는다. 상황은 당신을 비켜 가고, 잠시 뒤 골목은 다시 조용해진다.");
   n.sp = -2; n.options = ruleOptions();
@@ -6540,7 +6800,7 @@ async function startFlow(){
   /* 위급한 장면(공격이 다가오는 중 등)도 마찬가지: 가만히 있었던 것으로 결과를 먼저 */
   if(S.awaitEvent || S.urgent){
     S.urgent = false;
-    await doAction(PASSIVE_INPUT, {passive:true});
+    await doAction(PASSIVE_INPUT, {passive:true, danger:true});
     if(S.dead || busy) return;
   }
   resolvePendingChild();
@@ -7303,6 +7563,7 @@ async function createLife(){
   for(const f of S.family) f.look = randLook(f.gender);
   /* 이름(가족 이름 짓기)이 주사위를 얼마나 썼든, 여기서부터의 삶은 시드만으로 정해진다 */
   S.rng = hashStr(seed + "|삶");
+  makeBirthInfo();
   showGame();
   log({t:"sys", text:`시드 ${seed} · ${corpOf(S.district)} 구역 ${originKo(origin)}. 출생 능력치: ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${S[k]}`).join(", ")});
   if(bornStar){ S.star = {name:bornStar, how:"태생", born:true, at:0, blade:false}; S.tags.push("별의 이름:" + bornStar); }
@@ -7598,6 +7859,8 @@ function fillSettings(){
   $("#optAnKey").value = CFG.anthropic.key; $("#optAnModel").value = CFG.anthropic.model;
   $("#optOaBase").value = CFG.openai.base; $("#optOaKey").value = CFG.openai.key; $("#optOaModel").value = CFG.openai.model;
   $("#optGmKey").value = CFG.gemini.key; $("#optGmModel").value = CFG.gemini.model;
+  $("#optGqKey").value = CFG.groq.key; $("#optGqModel").value = CFG.groq.model; $("#optGqJudge").value = CFG.groq.judge;
+  { const g = store.get("dosi_groq_tok"); $("#gqTok").textContent = g && g.m ? "오늘 이 기기에서 쓴 토큰: " + Object.entries(g.m).map(([m, n]) => `${m.replace(/^openai\//, "")} ${n.toLocaleString()}`).join(", ") + (g.last ? ` · 마지막 한 번 ${g.last.toLocaleString()}` : "") : ""; }
   $("#optPolliModel").value = CFG.polli.model; renderPolliState();
   $("#optRemember").checked = CFG.remember;
   $("#optLang").value = langNow();
@@ -7611,6 +7874,7 @@ function readSettings(){
   CFG.anthropic.key = $("#optAnKey").value.trim(); CFG.anthropic.model = $("#optAnModel").value.trim();
   CFG.openai.base = $("#optOaBase").value.trim() || "https://api.openai.com/v1"; CFG.openai.key = $("#optOaKey").value.trim(); CFG.openai.model = $("#optOaModel").value.trim();
   CFG.gemini.key = $("#optGmKey").value.trim(); CFG.gemini.model = $("#optGmModel").value.trim();
+  CFG.groq.key = $("#optGqKey").value.trim(); CFG.groq.model = $("#optGqModel").value.trim() || CFG_DEFAULT.groq.model; CFG.groq.judge = $("#optGqJudge").value.trim() || CFG_DEFAULT.groq.judge;
   CFG.remember = $("#optRemember").checked;
   readSound();
   saveCfg();
