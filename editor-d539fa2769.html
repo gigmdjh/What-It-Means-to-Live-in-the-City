@@ -473,6 +473,8 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .serumbar .track{height:6px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
 .serumbar .fill{height:100%;transition:width .3s}
 .serumbar .ser:nth-child(1) .g-top span:first-child{color:#6aa6ec}.serumbar .ser:nth-child(2) .g-top span:first-child{color:#eb9d55}.serumbar .ser:nth-child(3) .g-top span:first-child{color:#74c47e}
+.presbar{margin:-2px 0 8px;padding:6px 10px;border:1px dashed #b9a679;border-radius:6px;background:rgba(240,230,200,.06);font:500 .78rem/1.4 var(--f-display);color:#e6d7b0}
+.presbar.done{opacity:.5;text-decoration:line-through}
 /* 업적 */
 .achs{display:grid;gap:8px;margin-top:18px}
 .achs h3{margin:0}
@@ -648,6 +650,7 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
     <div class="yearbar" id="yearBarH" aria-label="올해 흐름"></div>
     <div class="warpbar" id="warpBar" hidden></div>
     <div class="serumbar" id="serumBar" hidden></div>
+    <div class="presbar" id="presBar" hidden></div>
     <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><span class="hname-wrap"><b id="hName"></b><span class="htitle" id="hTitle" hidden></span></span><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
     <div class="hud-g" id="hGauges"></div>
     <div class="hud-career" id="hCareer" hidden></div>
@@ -957,11 +960,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2235"></script>
+<script src="parts.js?v=20261107-2310"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-2235";
+const BUILD = "20261107-2310";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -970,7 +973,12 @@ const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - '뒷골목의 밤': 매일 새벽 3시 13분부터 4시 34분까지 81분간 무슨 짓을 해도 처벌받지 않는다. 기록은 금지되고, 신고하려는 자는 '발톱'에게 입막음 당한다. 이때 '청소부'(사람이 변한 존재)가 세 차례 거리를 휩쓸며 산 것이든 죽은 것이든 쓸어 간다. 밤엔 실내에 있어야 한다.
 - '머리'(통치), '눈'(감시), '발톱'(집행)이 도시의 규칙과 '금기'를 지킨다. 금기를 어기면 발톱이 온다.
 - '해결사': 돈을 받고 의뢰를 처리하는 계약직. 하나 협회의 자격증이 필요하고 20세 이상이어야 한다. 9급에서 1급까지 등급이 있고, 그 위를 넘어선 자에게는 '색'이 붙는다. 보통 '사무소'에 속하며 사무소는 '협회'(하나, 츠바이, 트레스, 시, 친크, 리우, 세븐, 데뱌트, 디에치, 외피 등 12개)와 일한다. 하나 협회는 위험을 도시 괴담 < 도시 전설 < 도시 질병 < 도시 악몽 < 도시의 별 로 등급 매긴다.
-- '조직'(신디케이트): 절차 없는 폭력 집단. 최하층 건달은 '쥐'. 뒷골목 최강은 '다섯 손가락'(날개만큼 강함): 엄지(윗사람 존중, 위계), 검지(사도가 전하는 지령을 따르면 보호), 중지(예의와 의리, 철저한 보복), 약지(22구역에 영향력), 새끼.
+- '조직'(신디케이트): 절차 없는 폭력 집단. 최하층 건달은 '쥐'. 뒷골목 최강은 '다섯 손가락'(날개만큼 강함):
+  · 엄지: 위계가 절대적이다. 허락 없이 윗사람 앞에서 말하거나 눈을 마주치지 않는다. 윗사람을 모욕하면 몸 일부를 잃고, 명령에 의문을 품으면 숙청된다. 계급은 솔다토·카포·소토카포·카포 데이 카피. 비싼 특수 탄환을 쓰는 머스킷과 총검.
+  · 검지: 어디서 오는지 모를 '지령'을 따른다. 지령은 쪽지 등으로 아무 때나 오며 평범한 일부터 잔혹한 일까지 다양하다. 어기면 보호를 잃고 대행자가 처벌하러 온다. 계급은 사도(눈가리개를 쓰고 대행자 밑에서 훈련)·전령·대행자, 그리고 도시의 '신'에게 직접 신탁을 받는 듯한 신탁 대행자. 승급하면 맞춤 검을 받고 눈가리개를 벗는다. 검은 정장에 흰 망토.
+  · 중지: 절대 잊지 않는 복수. 작은·젊은·큰·위대한 형제라는 가족 같은 계급, 적을 벌하는 법을 적은 '복수의 서'.
+  · 약지: 22구역. 인간의 고통을 소재로 한 예술. 학생·도슨트·마에스트로, 마감 있는 과제와 비평회, 흰 옷.
+  · 소지(새끼): 인(仁)의 덕목. 구성원은 사회 곳곳과 다른 조직에도 숨어 있고 서로를 잘 모른다. 각자 '별'의 자리를 가지며, 별의 자리는 별벼림 칼과 묶여 있다. 칼을 자기 것으로 삼으면 그 별의 이름을 얻고, 주인이 죽으면 자리가 빈다. 자기 칼 말고 다른 별의 칼을 쓰는 건 흉조다.
 - 구역 예: 8구역(거대한 하나의 구조물 안), 9구역('음악의 거리', 피아니스트 사건으로 약 30만 명 사망), 10구역(도박, 소원력 기술을 화폐처럼 씀), 12구역(L사, 중독성 에너지 엔케팔린), 14구역(기억을 정제하는 통조림 공장), 18구역(R사, 다른 날개에 병력을 파는 사병 기업), 20구역(무채색 벽돌 거리, 흑운회·검계 활동), 21구역(탁한 습지, 플라즈마 장벽), 23구역(WARP사, 10초 만에 이동하는 워프 열차 / 뒷골목은 인육을 파는 '맛의 거리'), 25구역(혹한과 빈곤).
 - 의체(신체 개조)와 공방(무기 제작)이 흔하다. 총기는 법으로 엄격히 규제되어 매우 비싸다.
 - 화폐는 '안(眼)'. 이 게임에서 1안은 1원과 같은 가치다. 빵 2,000안, 국밥 9,000안, 뒷골목 단칸방 월세 30만안, 하급 해결사 의뢰 수십만~수백만안 정도.
@@ -981,7 +989,7 @@ const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 협회(해결사 단체, 구역마다 지부): 하나(모든 협회를 이끌고 해결사·사무소 등급을 매김), 츠바이(치안·방어, 경찰 같은 역할), 트레스(공방과 무기 심사), 시(암살·은밀 작전), 생크(결투로 분쟁 해결), 리우(다수 상대 전투), 세븐(정보 수집), 데뱌트(배송·운송), 디에치(지식 수집·연구, 자선 협회), 우피(거래·계약). 해결사는 협회 지부나 사무소에 들어가 일할 수 있다.
 - 환상체: L사가 특이점과 코기토로 사람의 공포·욕망·이야기를 괴물로 만든 존재. 죽지 않고 제압될 뿐이며, 제압되면 알로 돌아갔다가 다시 깨어난다. L사가 등급(ZAYIN < TETH < HE < WAW < ALEPH)을 매겼고 대체로 위험도와 비례한다. L사가 무너진 뒤에는 더 만들어지지 않지만, 무너진 지부 시설의 잔재로 남아 있거나 드물게 뒤틀림이나 강에서 새로 생겨난다. 환상체에게서 에고(E.G.O) 장비가 나온다.`;
 
-const LORE_SHORT = `[세계관: 프로젝트 문의 '도시'] 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않으며, 이미 지닌 인물(게부라 등)에게서만 얻을 수 있다(그때만 tag_add "에고 무기:무기이름"). 환상체(L사의 특이점으로 사람의 공포·욕망·이야기가 괴물이 된 존재, 죽지 않고 제압될 뿐, 등급 ZAYIN<TETH<HE<WAW<ALEPH)가 무너진 L사 지부의 잔재로 남아 있다. 혈귀(사람 피를 마시는 불로의 괴물, 물린 사람은 권속(혈귀)이나 피주머니(기억 없는 하수인)가 됨, 해결사가 토벌함)와 뒤틀림(감정에 삼켜진 사람이 괴물로 변하는 현상, 이겨내면 에고(E.G.O)를 발현)이 있다. 머리·눈·발톱이 다스리는 인류 최후의 도시, 26개 구역. 각 구역 중심엔 거대기업 '날개'가 지키는 부유한 '둥지', 바깥엔 가난하고 위험한 '뒷골목'. 매일 새벽 3:13~4:34 '뒷골목의 밤'엔 무슨 짓도 처벌받지 않고 '청소부'가 거리를 쓸어 간다. '해결사'는 하나 협회 자격증(20세 이상, 9급~1급, 그 위는 '색')을 받고 의뢰를 처리한다. 범죄 '조직'과 최강 조직 '다섯 손가락'(엄지·검지·중지·약지·새끼)이 뒷골목을 쥔다. 화폐는 '안', 1안=1원 가치(빵 2,000안, 월세 30만안). 분위기는 냉혹하고 건조하다.`;
+const LORE_SHORT = `[세계관: 프로젝트 문의 '도시'] 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않으며, 이미 지닌 인물(게부라 등)에게서만 얻을 수 있다(그때만 tag_add "에고 무기:무기이름"). 환상체(L사의 특이점으로 사람의 공포·욕망·이야기가 괴물이 된 존재, 죽지 않고 제압될 뿐, 등급 ZAYIN<TETH<HE<WAW<ALEPH)가 무너진 L사 지부의 잔재로 남아 있다. 혈귀(사람 피를 마시는 불로의 괴물, 물린 사람은 권속(혈귀)이나 피주머니(기억 없는 하수인)가 됨, 해결사가 토벌함)와 뒤틀림(감정에 삼켜진 사람이 괴물로 변하는 현상, 이겨내면 에고(E.G.O)를 발현)이 있다. 머리·눈·발톱이 다스리는 인류 최후의 도시, 26개 구역. 각 구역 중심엔 거대기업 '날개'가 지키는 부유한 '둥지', 바깥엔 가난하고 위험한 '뒷골목'. 매일 새벽 3:13~4:34 '뒷골목의 밤'엔 무슨 짓도 처벌받지 않고 '청소부'가 거리를 쓸어 간다. '해결사'는 하나 협회 자격증(20세 이상, 9급~1급, 그 위는 '색')을 받고 의뢰를 처리한다. 범죄 '조직'과 최강 조직 '다섯 손가락'(엄지: 절대적 위계 / 검지: 매일 오는 지령, 어기면 대행자의 처벌 / 중지: 절대 잊지 않는 복수 / 약지: 고통의 예술 / 소지: 숨어 사는 별의 이름들)이 뒷골목을 쥔다. 화폐는 '안', 1안=1원 가치(빵 2,000안, 월세 30만안). 분위기는 냉혹하고 건조하다.`;
 
 const JUDGE_RULES = `
 너는 이 세계관의 텍스트 RPG 판정관이다. 서술은 하지 않고, 플레이어가 하려는 행동의 난이도만 정한다.
@@ -1043,12 +1051,6 @@ const NARR_RULES = `
 - [장비]의 무기·방어구·의체를 장면에 반영하라. [집안 형편]에 맞는 집과 살림으로 그려라.
 - [외모] 글 전체를 직접 읽고, 그 생김새·인상·차림이 이 도시에서 어떻게 보일지 판단해 사람들의 반응과 사건에 반영하라([외모에 더해진 것]도 함께). 주인공의 외모에 따라 다가오는 사람도 달라진다: 눈에 띄는 외모면 어릴 때부터 아이들과 어른들이 더 좋아하고 잘 다가오며(순수한 호감·친절), 험한 인상이면 사람들이 꺼린다. [인연]에 '다가오는 사람'이 있으면 그 성별로 그려라. 15세까지는 우정과 순수한 호감으로만, 16~17세는 또래끼리의 풋풋한 설렘까지만(성적인 내용 금지) 그린다. 어른이 미성년(18세 미만)에게 연애·이성적인 관심을 보이는 장면은 절대 쓰지 마라. 18세부터는 이성으로서의 관심과 연애도 그릴 수 있다. 외모 묘사를 장면에 끼워 넣지는 말고, 다른 사람이 외모에 반응할 때만 언급한다.
 - 추출 E.G.O 무기는 L사가 무너져 더 만들어지지 않는다. 이미 지닌 인물(게부라 등)에게서 물려받거나 거래하거나 빼앗을 때만 tag_add에 "에고 무기:무기이름"을 적어라. 다른 방법으로는 절대 주지 마라.
-- 납치: 붙잡혀 끌려가면 tag_add에 "납치:잡혀 있음"(어디에 누구에게), 빠져나오면 tag_remove로 지우고 "탈출:납치". 몸값·노동·장기 밀매 같은 도시의 범죄로 그리고, 성적인 의미나 암시는 절대 넣지 마라.
-- 뒤틀린 주인공([뒤틀림]이 있으면): 아무도 주인공을 알아보지 못한다. 가족도 이름을 불러도 모르는 괴물로 대한다. 사람들은 도망치거나 공격하거나 해결사를 부른다. 상점·학교·사무소 같은 곳에 평범하게 들어갈 수 없다. 주인공의 대사는 사람들에게 알아듣기 힘든 소리로 들린다. 몸은 강해졌다. 속삭임을 따르는 쪽이면 충동이 서술에 스며들게 하고, 자기 나름대로 사는 쪽이면 사람이었던 습관을 붙드는 모습을 그려라. 잔혹 묘사는 절제한다.
-- 신(心)과 망(望): [心]이 있으면 주인공이 힘을 쓸 때 금빛 불꽃 같은 기운이 몸에 인다. 망을 쓰면 무기나 몸 둘레에 따뜻한 빛의 고리가 생겨 공격이 크게 강해지고, 끝난 뒤 머리가 지끈거릴 만큼 정신이 지친다. [心]이 없는 주인공이 心을 수련하면, 마음을 비우고 강렬한 기억을 끌어올리는 수련으로 그려라(성공 여부는 게임이 정한다).
-- 라만차랜드([라만차랜드]가 있으면): 라만차랜드의 일원이어도 바깥에서 해결사로 일할 수 있다. 다른 조직에 속해 있으면 규율 때문에 라만차랜드에 드나들기 어렵게 그려라. 주인공이 그곳에 가면 location에 "라만차랜드"와 구역 이름을 넣어라(예: "라만차랜드 3구역 퍼레이드", "라만차랜드 관람차"). 그곳의 혈귀들(이발사, 사제, 둘시네아, 안내원, 다른 권속들)과 인연을 맺으면 tag_add에 "인연:이름/라만차랜드 ○○". 지위가 오를수록 그들은 주인공을 더 가족처럼, 장로면 윗사람으로 대한다. 사람 손님을 해치는 장면은 짧고 절제해서.
-- 혈귀인 주인공: 보통 사람보다 몇 배 강하고 빠르고 단단하다(맨손으로 강철을 구기고, 평범한 해결사 여럿을 혼자 상대할 만큼). 혈액 게이지가 있다. 사람의 피만 갈증을 채운다(밥·동물 피·다른 혈귀의 피로는 안 된다). 혈액바(사람과 동물의 피를 눌러 굳힌 막대, 묽다)는 blood "약간 회복", 혈액팩은 "회복", 사람에게서 직접 마시면 "크게 회복". 피를 마시지 않았으면 blood는 "없음". 혈액바·혈액팩은 혈귀 가문이 쥔 가게나 암시장에서 비싸게 판다. 피가 모자라면 미쳐 가고 시든다. 물을 두려워한다. 어린 혈귀는 보호자가 혈액팩·혈액바를 구해다 주는 식으로 그리고, 아이가 사람을 무는 장면은 그리지 마라.
-- 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀". 권속은 피를 마셔야 하고 물을 두려워한다.
 
 [6. 다른 인물과 대화]
 - talk: 다른 인물(가족·이웃·의뢰인 등)이 말하면 그 말과 행동을 1~3개 넣어라: [{"who":"이름(모르면 '낯선 사내' 같은 호칭)","say":"대사(따옴표 없이)","act":"말하면서 하는 짧은 행동","look":"처음 나오는 인물만 짧은 외모(머리색·머리 모양·눈색·체격·옷), 이미 나온 인물은 \"\"","gender":"남성/여성"}]. 말하는 사람이 없으면 [].
@@ -1086,6 +1088,19 @@ const NARR_RULES = `
 - 공무원(관청·날개 등 공적 기관): 되면 tag_add "공무원:기관 이름", 그만두면 tag_remove.
 - 협회 지부에 들어가면 "협회:협회 이름", 남의 사무소에 들어가면 "소속 사무소:사무소 이름". 나오면 tag_remove.
 - 자기 사무소는 하나 협회 4급 이상만 차릴 수 있다. 성공하면 tag_add에 "사무소:새로 차림"만(이름은 플레이어가 짓는다). 사람을 고용하면 "고용:이름/역할"(예: "고용:한서진/해결사").
+- 해결사 승급은 게임이 정한다: 실적이 차면 협회가 호출하고 승급 시험을 본다. 특색은 1급 중에서도 충분히 강한 자에게 협회가 부여한다. 스스로 급수를 올리거나 특색을 붙이지 마라.
+- 다섯 손가락에 들어가면 tag_add에 "조직:엄지"처럼 손가락 이름을 넣어라(엄지·검지·중지·약지·소지). 계급은 게임이 정한다.
+
+[11. 특별한 처지와 신분] [신분·힘]과 아래 칸에 해당하는 것이 있을 때만 적용한다.
+- 납치: 붙잡혀 끌려가면 tag_add에 "납치:잡혀 있음"(어디에 누구에게), 빠져나오면 tag_remove로 지우고 "탈출:납치". 몸값·노동·장기 밀매 같은 도시의 범죄로 그리고, 성적인 의미나 암시는 절대 넣지 마라.
+- 뒤틀린 주인공([뒤틀림]이 있으면): 아무도 주인공을 알아보지 못한다. 가족도 이름을 불러도 모르는 괴물로 대한다. 사람들은 도망치거나 공격하거나 해결사를 부른다. 상점·학교·사무소 같은 곳에 평범하게 들어갈 수 없다. 주인공의 대사는 사람들에게 알아듣기 힘든 소리로 들린다. 몸은 강해졌다. 속삭임을 따르는 쪽이면 충동이 서술에 스며들게 하고, 자기 나름대로 사는 쪽이면 사람이었던 습관을 붙드는 모습을 그려라. 잔혹 묘사는 절제한다.
+- 신(心)과 망(望): [心]이 있으면 주인공이 힘을 쓸 때 금빛 불꽃 같은 기운이 몸에 인다. 망을 쓰면 무기나 몸 둘레에 따뜻한 빛의 고리가 생겨 공격이 크게 강해지고, 끝난 뒤 머리가 지끈거릴 만큼 정신이 지친다. [心]이 없는 주인공이 心을 수련하면, 마음을 비우고 강렬한 기억을 끌어올리는 수련으로 그려라(성공 여부는 게임이 정한다).
+- 라만차랜드([라만차랜드]가 있으면): 라만차랜드의 일원이어도 바깥에서 해결사로 일할 수 있다. 다른 조직에 속해 있으면 규율 때문에 라만차랜드에 드나들기 어렵게 그려라. 주인공이 그곳에 가면 location에 "라만차랜드"와 구역 이름을 넣어라(예: "라만차랜드 3구역 퍼레이드", "라만차랜드 관람차"). 그곳의 혈귀들(이발사, 사제, 둘시네아, 안내원, 다른 권속들)과 인연을 맺으면 tag_add에 "인연:이름/라만차랜드 ○○". 지위가 오를수록 그들은 주인공을 더 가족처럼, 장로면 윗사람으로 대한다. 사람 손님을 해치는 장면은 짧고 절제해서.
+- 혈귀인 주인공: 보통 사람보다 몇 배 강하고 빠르고 단단하다(맨손으로 강철을 구기고, 평범한 해결사 여럿을 혼자 상대할 만큼). 혈액 게이지가 있다. 사람의 피만 갈증을 채운다(밥·동물 피·다른 혈귀의 피로는 안 된다). 혈액바(사람과 동물의 피를 눌러 굳힌 막대, 묽다)는 blood "약간 회복", 혈액팩은 "회복", 사람에게서 직접 마시면 "크게 회복". 피를 마시지 않았으면 blood는 반드시 "없음"(판정 성공, 휴식, 식사, 치료는 혈액과 상관없다). 혈액바·혈액팩은 혈귀 가문이 쥔 가게나 암시장에서 비싸게 판다. 피가 모자라면 미쳐 가고 시든다. 물을 두려워한다. 어린 혈귀는 보호자가 혈액팩·혈액바를 구해다 주는 식으로 그리고, 아이가 사람을 무는 장면은 그리지 마라.
+- 혈귀에게 물려 권속이 되면 tag_add에 "혈귀:권속", 피주머니가 되면 "혈귀:피주머니"(그 삶은 끝난다). 혈귀를 토벌하면 "토벌:혈귀". 권속은 피를 마셔야 하고 물을 두려워한다.
+- 다섯 손가락: [엄지]면 윗사람 앞의 예법(허락 없이 말하지 않기, 눈 마주치지 않기)을 장면에 녹여라. [검지]면 지령 쪽지가 삶의 중심이고, 받은 지령과 관련된 행동이면 그 지령을 수행하는 장면으로 그려라. [중지]면 형제를 건드린 자를 잊지 않는다. [약지]면 작품과 비평회, 마감에 쫓긴다. [소지]면 정체를 숨기고 산다. 처벌·숙청은 짧고 절제해서.
+- 별의 이름: [별의 이름]이 있으면 그 별의 칼이 주인공의 무기다. 다른 별의 칼을 쥐면 불길한 기운을 그려라.
+- 발톱: [발톱]이 있으면 사람들은 주인공을 두려워하고 피한다. 앰플을 쓰면 그 색의 효과를 그대로 그려라.
 
 반드시 JSON만 출력: {"narration":"서술","hp":"없음","sp":"약간 감소","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"한 시간","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","urgent":false,"shop":false,"merit":"없음","blood":"없음","outfit":"","npc_outfit":"","talk":[]}`;
 
@@ -1100,6 +1115,7 @@ const NARR_RULES_LOCAL = `
 [시간] 며칠·몇 달이 지났으면 음식·포장지 같은 자잘한 물건은 이미 없고 가벼운 상처는 아물었다. 지난 장면을 지금 일처럼 이어 쓰지 마라.
 [대사] 짧은 구어체 1~2문장. 나이와 관계에 맞는 말투(부모는 아이에게 반말, 낯선 어른끼리는 존댓말).
 [외모] [외모] 글을 읽고 그 인상이 사람들의 반응과 사건에 영향을 주게 하라.
+[특별한 신분] [혈귀]·[뒤틀림]·[心]·[발톱]·[엄지]·[검지]·[중지]·[약지]·[소지]·[별의 이름]·[라만차랜드]·[워프열차] 같은 칸이 있으면 그 설정을 장면에 반영하라. 급수·계급·특색·별의 이름은 게임이 정하니 스스로 바꾸지 마라.
 [칸] 변화는 말로: hp·sp·en·rep는 "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복", ahn은 "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎", str·def·spd·int는 "없음/오름/내림", days는 "없음/하루/며칠/일주일/한 달/몇 달". options: 할 법한 행동 3개를 "|"로. tag_add/tag_remove: "분류:내용" 또는 "". shop: 공방 안에서 끝나면 true.
 JSON만 출력: {"narration":"서술","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","location":"장소","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"행동1|행동2|행동3","shop":false}`;
 
@@ -1457,6 +1473,7 @@ function rollEvent(daysAhead){
   if(!daysAhead && warpEligible() && rand01() < 0.03) return WARP_OFFER;
   if(!daysAhead && lmEligible() && rand01() < 0.05) return LM_INVITE;
   if(!daysAhead && !S.shin && !S.shinTaught && !S.distorted && ageY() >= 13 && rand01() < 0.012) return SHIN_TEACH;
+  if(!daysAhead && !S.star && !S.distorted && ageY() >= 16 && rand01() < (fingerOf() === "pinky" ? 0.03 : 0.006)) return STAR_FIND;
   if(!daysAhead && S.claw && !S.distorted && rand01() < 0.08){ bump("order"); return CLAW_ORDERS[rnd(CLAW_ORDERS.length)]; }
   if(!daysAhead && rand01() < scoutChance()) return scoutEvent();
   if(!daysAhead && rand01() < commissionChance()) return COMMISSIONS[rnd(COMMISSIONS.length)];
@@ -1590,6 +1607,7 @@ function plainEvent(ev){
   return `\n그리고 장면 끝에 갑작스러운 일이 생긴다. 지금 상황에 맞게 구체적으로 지어내라(무엇을 하던 중 무엇을 마주쳤는지). 예: "${evText(ev)}"`;
 }
 function eventLine(ev){
+  if(isStarFind(ev)) return `\n\n[별벼림 칼] 장면 끝에 주인공이 주인을 잃은 별벼림 칼(칼날에 별이 새겨진 칼, 소지의 별의 자리와 묶인 유물)을 발견한다. 손에 쥘지 고르는 순간에서 멈춰라.`;
   if(isShinTeach(ev)) return `\n\n[心 스승] 장면 끝에 낡은 도장의 백발 노인이 주인공에게 '신(心)'(감정과 의지를 몸의 힘으로 바꾸는 기술, 금빛 기운)을 배워 보겠냐고 묻는다. 대답을 고르는 순간에서 멈춰라.`;
   if(ev === LM_INVITE) return `\n\n[라만차랜드 초대] 장면 끝에 주인공(혈귀)에게 라만차랜드의 초대장이 온다: 굳은 피처럼 매끈한 붉은 종이, "같은 피를 나눈 이여, 라만차랜드에서 꿈을 꾸러 오세요", 16구역 뒷골목에 오후 4시에 문이 열린다. 응할지 고르는 순간에서 멈춰라. 아직 가지 마라.`;
   if(isDistortHunt(ev)) return `\n\n[뒤틀림 토벌] 장면 끝에 이 일이 닥친다: ${String(ev).split("|")[0]} 상대는 주인공을 사람으로 알아보지 못하고 괴물로 대한다. 주인공이 어떻게 할지 고르는 순간에서 멈춰라. urgent는 true.`;
@@ -2484,6 +2502,7 @@ function stateSummary(local){
   if(S.lm) lines.push(lmState());
   if(S.claw) lines.push(clawState());
   if(S.shin) lines.push(shinState());
+  { const fs = fingerState(); if(fs) lines.push(fs); }
   if(S.distorted) lines.push(`[뒤틀림] 주인공은 ${S.distorted.age}세에 감정에 삼켜져 뒤틀림이 되었고, 뒤틀린 채 살아가고 있다(${S.distorted.path === "follow" ? "머릿속 여자의 속삭임을 따르며 충동대로 산다" : S.distorted.path === "self" ? "속삭임을 밀어내고 자기 나름대로 살려 애쓴다" : "아직 속삭임을 따를지 정하지 않았다"}). 겉모습은 괴물로 변해, 가족과 지인을 포함한 누구도 주인공을 알아보지 못한다. 주인공이 말을 걸어도 사람들은 괴물이 내는 소리로 듣고 겁먹거나 공격한다. 해결사·협회 토벌대·조직·날개 보안 부대가 곳곳에서 노린다. 머릿속에는 늘 낯선 여자의 목소리가 속삭인다.`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
   lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
@@ -2583,6 +2602,8 @@ function rollCheck(a){
   if(a.stat !== "int" && yy >= 60 && !isKindred()) mods.push({label:"노쇠", v:-Math.min(3, Math.floor((yy - 50) / 10))});
   if(S.hp < 25) mods.push({label:"부상", v:-2});
   if(S.shin && !S.distorted && S.sp >= 10 && a.stat !== "int") mods.push({label:"心", v:2});
+  if(S.star && S.star.blade && S.equip && S.equip.weapon && S.equip.weapon !== "star:" + S.star.name && /^star:/.test(S.equip.weapon)) mods.push({label:"흉조", v:-3});
+  if(S.vendetta && fingerOf() === "middle" && /(복수|되갚|앙갚|원수)/.test(a.text || "")) mods.push({label:"복수의 서", v:3});
   if(S._mang) mods.push({label:`望 ×${S._mang}`, v:3 * S._mang});
   if(S._serum && S._serum.length){
     if(S._serum.length === 3) mods.push({label:"앰플 칵테일", v:8});
@@ -3206,7 +3227,11 @@ function checkMilestones(input, results){
   }
   syncCareers();
   /* 특색: 1급 해결사 + 평판 90 이상 */
-  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 90 && S.license === 1) requestName("color");
+  /* 특색: 1급 중에서도 충분히 강할 때 협회가 부여한다 */
+  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 80 && S.license === 1 && ["str", "def", "spd"].reduce((a, k) => a + eff(k), 0) / 3 >= 35){
+    log({t:"narr", text:"하나 협회 본부에서 사람이 찾아왔다. 정중하지만 무게 있는 목소리로 말한다. \"당신의 실력은 이제 등급으로 잴 수 없습니다. 협회는 당신에게 특색을 부여하기로 했습니다.\"", deltas:[], options:[]});
+    requestName("color");
+  }
 }
 /* ───────── 소속 · 등급 · 실적 ─────────
    해결사(하나 협회 자격), 조직(조직: 태그), 공무원(공무원: 태그)이면 소속마다 실적 게이지(0~100)가 생긴다.
@@ -3228,7 +3253,8 @@ function syncCareers(){
     C.fixer.org = [assoc || "하나 협회", S.office ? `${S.office}(대표)` : joined].filter(Boolean).join(" · ");
   }
   const syn = S.tags.find(t => /^조직:/.test(t)) || S.tags.find(t => /^(소속|직업|일):/.test(t) && ORG_RE.test(t));
-  if(syn){ const org = syn.replace(/^[^:]+:/, "").trim(); if(!C.syndicate) C.syndicate = {org, rank:0, merit:0}; else C.syndicate.org = org; }
+  if(syn){ const org = syn.replace(/^[^:]+:/, "").trim(); if(!C.syndicate) C.syndicate = {org, rank:0, merit:0}; else C.syndicate.org = org;
+    C.syndicate.finger = fingerOf(); C.syndicate.rank = Math.min(C.syndicate.rank, ranksOf("syndicate").length - 1); }
   else delete C.syndicate;
   const ap = apprenticeOf();
   if(ap && !S.license){ if(!C.apprentice) C.apprentice = {org:ap, rank:0, merit:0}; else C.apprentice.org = ap; }
@@ -3238,15 +3264,17 @@ function syncCareers(){
   else delete C.official;
 }
 function careerLabel(type){
-  const c = S.careers[type], d = CAREER[type];
-  if(type === "apprentice") return `${c.org} ${d.ranks[c.rank]}`;
-  return type === "fixer" ? `${c.org} 해결사 ${d.ranks[c.rank]}` : type === "syndicate" ? `${c.org} ${d.ranks[c.rank]}` : `${c.org} ${d.ranks[c.rank]} 공무원`;
+  const c = S.careers[type], rk = ranksOf(type)[c.rank];
+  if(type === "apprentice") return `${c.org} ${rk}`;
+  return type === "fixer" ? `${c.org} 해결사 ${rk}` : type === "syndicate" ? `${c.org} ${rk}` : `${c.org} ${rk} 공무원`;
 }
 function addMerit(type, delta){
   const c = S.careers && S.careers[type]; if(!c || !delta) return;
-  const d = CAREER[type], before = c.merit;
+  const ranks = ranksOf(type), before = c.merit;
   c.merit = clamp(c.merit + delta, 0, 100);
-  if(c.merit >= 100 && c.rank < d.ranks.length - 1){
+  /* 해결사는 실적이 차면 협회에서 호출해 승급 시험을 본다 */
+  if(type === "fixer" && c.merit >= 100 && c.rank < ranks.length - 1){ promoCall(); return; }
+  if(c.merit >= 100 && c.rank < ranks.length - 1){
     c.rank++; c.merit = 30;
     if(type === "fixer"){ S.license = 9 - c.rank; setLicenseTag(); }
     log({t:"sys", text:`실적을 인정받아 ${careerLabel(type)}(으)로 올랐다.`});
@@ -3462,7 +3490,7 @@ function renderCareers(){
     tr.setAttribute("role", "meter"); tr.setAttribute("aria-valuenow", c.merit); tr.setAttribute("aria-valuemin", 0); tr.setAttribute("aria-valuemax", 100); tr.setAttribute("aria-label", careerLabel(t) + " 실적");
     w.append(top, tr); box.appendChild(w);
     const h = el("div", "g-merit");
-    const ht = el("div", "g-top"); ht.append(el("span", null, `${CAREER[t].ko} · ${CAREER[t].ranks[c.rank]}`), el("span", null, String(c.merit)));
+    const ht = el("div", "g-top"); ht.append(el("span", null, `${t === "syndicate" && c.finger ? FINGERS[c.finger].ko : CAREER[t].ko} · ${ranksOf(t)[c.rank]}`), el("span", null, String(c.merit)));
     const htr = el("div", "track"); const hf = el("div", "fill"); hf.style.width = c.merit + "%"; htr.appendChild(hf);
     h.append(ht, htr); hc.appendChild(h);
   }
@@ -3477,7 +3505,7 @@ function migrateSave(){
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
-  renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar();
+  renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar(); renderPresBar();
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
   const spriteKey = [S.name, S.look, S.outfit || "", S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
@@ -3499,6 +3527,8 @@ function renderStatus(){
     if(S.color){ const sp = el("span", null, "특색 · " + S.color); sp.style.color = colorOfName(S.color); ht.appendChild(sp); }
     if(S.ego){ const sp = el("span", null, "E.G.O · " + S.ego); sp.style.color = colorOfName(S.ego); ht.appendChild(sp); }
     if(S.distorted){ const sp = el("span", null, "뒤틀림"); sp.style.color = "#ff4a55"; ht.appendChild(sp); }
+    if(fingerOf()){ const sp = el("span", null, `${FINGERS[fingerOf()].ko}${fingerRank() && fingerOf() !== "pinky" ? " · " + fingerRank() : ""}`); sp.style.color = "#c9b38a"; ht.appendChild(sp); }
+    if(S.star){ const sp = el("span", null, "★ " + S.star.name); sp.style.color = "#9fc2ff"; ht.appendChild(sp); }
     if(S.shin){ const sp = el("span", null, "心 · 望 " + "○".repeat(S.shin.rings)); sp.style.color = "#ffcf5a"; ht.appendChild(sp); }
     if(S.claw){ const sp = el("span", null, "머리의 발톱"); sp.style.color = "#cfd6e6"; ht.appendChild(sp); }
     if(S.lm && S.lm.rank >= 1){ const sp = el("span", null, "라만차랜드 " + LM_RANKS[S.lm.rank]); sp.style.color = "#e0455a"; ht.appendChild(sp); }
@@ -3615,7 +3645,7 @@ function shortPlace(loc){
   return (ws[ws.length - 1] || rest).slice(0, 6);
 }
 function renderLite(){
-  renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar();
+  renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar(); renderPresBar();
   $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
   $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
@@ -4027,6 +4057,7 @@ function bloodDay(){
   }
 }
 /* AI가 blood를 주지 않았을 때(기기 AI·규칙 진행) 입력으로 어림한다 */
+const DRINK_BLOOD_RE = /(피|혈액|헤모 ?바|목덜미|핏물)[^.!?\n]{0,24}(마시|마셔|마셨|마신|먹|삼키|삼켜|삼켰|빨아|빨았|들이켜|들이켰|깨물|씹|핥)/;
 function bloodFromInput(input, results){
   if(!isKindred()) return 0;
   const t = String(input || "");
@@ -4106,6 +4137,175 @@ function lmPromote(){
   log({t:"sys", text:`라만차랜드 지위가 올랐다: ${LM_RANKS[L.rank]}`});
   chron(`라만차랜드의 ${LM_RANKS[L.rank]}이 되었다`);
   checkAch();
+}
+
+/* ───────── 다섯 손가락 ───────── */
+const FINGERS = {
+  thumb:{ko:"엄지", re:/엄지/, ranks:["솔다토", "카포", "소토카포", "카포 데이 카피"]},
+  index:{ko:"검지", re:/검지/, ranks:["사도", "전령", "대행자", "신탁 대행자"]},
+  middle:{ko:"중지", re:/중지/, ranks:["작은 형제", "젊은 형제", "큰 형제", "위대한 형제"]},
+  ring:{ko:"약지", re:/약지/, ranks:["학생", "도슨트", "마에스트로"]},
+  pinky:{ko:"소지", re:/(소지|새끼)/, ranks:["별의 자리"]}
+};
+function fingerOf(){
+  if(!S || !S.tags) return null;
+  const t = S.tags.find(t => /^(조직|소속):/.test(t) && /(엄지|검지|중지|약지|소지|새끼손가락|새끼 손가락)/.test(t));
+  if(!t) return S.star && S.star.blade ? "pinky" : null;
+  for(const k in FINGERS) if(FINGERS[k].re.test(t)) return k;
+  return null;
+}
+const ranksOf = type => type === "syndicate" && S.careers && S.careers.syndicate && S.careers.syndicate.finger ? FINGERS[S.careers.syndicate.finger].ranks : CAREER[type].ranks;
+const fingerRank = () => { const c = S.careers && S.careers.syndicate; return c && c.finger ? FINGERS[c.finger].ranks[c.rank] : ""; };
+
+/* 검지: 지령 쪽지 (신탁 대행자는 신탁) */
+const PRESCRIPTS = [
+  ["해가 지기 전에 노란 물건 세 개를 산다.", /노란/], ["처음 마주친 사람에게 그의 이름을 묻는다.", /이름을 (묻|물)/],
+  ["오늘은 왼손으로만 밥을 먹는다.", /왼손/], ["골목 고양이 한 마리에게 먹이를 준다.", /고양이/],
+  ["해 질 녘, 다리 위에서 뒤로 열 걸음 걷는다.", /(뒤로 걷|뒷걸음|다리 위)/], ["모르는 사람의 신발 끈을 묶어 준다.", /신발 ?끈/],
+  ["빨간 문을 세 번 두드리고 아무 말 없이 떠난다.", /(빨간 문|문을 (세 번 )?두드)/], ["오늘 처음 들은 노래를 끝까지 흥얼거린다.", /(노래|흥얼)/],
+  ["오늘 만나는 세 번째 사람에게 우산을 건넨다.", /우산/], ["동전 하나를 강물에 던진다.", /(동전|강물|강에)/],
+  ["흰 꽃 한 송이를 꺾어 낯선 집 문 앞에 둔다.", /(흰 ?꽃|꽃을 (꺾|두))/], ["가게 주인에게 오늘 날씨를 칭찬한다.", /(날씨|칭찬)/],
+  ["지나가는 사람의 모자를 빼앗아 다른 사람에게 씌운다.", /모자/], ["정해진 골목의 가로등 하나를 깬다.", /가로등/],
+  ["낯선 사람과 끝말잇기를 다섯 번 이어 간다.", /끝말잇기/], ["오늘 밤 창밖으로 촛불 하나를 켜 둔다.", /(촛불|초를 켜)/]];
+const ORACLES = [
+  ["신탁: 쥐 패거리 하나의 우두머리를 무릎 꿇린다.", /(우두머리|두목|무릎)/], ["신탁: 지령을 어긴 자 한 명을 찾아내 처벌한다.", /(처벌|벌을 내|찾아내)/],
+  ["신탁: 가장 높은 건물 꼭대기에서 해 뜨는 것을 맞는다.", /(꼭대기|옥상|해 ?뜨|일출)/], ["신탁: 9구역 음악의 거리에서 연주 하나를 끝까지 듣는다.", /(연주|음악)/],
+  ["신탁: 오래된 무덤 하나를 찾아가 이름을 닦는다.", /(무덤|묘비)/], ["신탁: 사도 다섯을 모아 하룻밤 훈련시킨다.", /(사도|훈련)/]];
+function prescriptDay(){
+  if(fingerOf() !== "index" || S.distorted || S.dead) return;
+  const P = S.prescript;
+  if(P && !P.done && S.days > P.due) prescriptFail();
+  if(typeof flow !== "undefined" && flow.on) return;       /* 시간을 흘려보내는 동안의 지령은 다른 사도가 맡는다 */
+  if(!S.prescript || S.prescript.done || S.days > S.prescript.due){
+    const oracle = (S.careers && S.careers.syndicate && S.careers.syndicate.rank >= 3);
+    const pool = oracle ? ORACLES : PRESCRIPTS, i = rnd(pool.length);
+    S.prescript = {i, oracle, due:S.days + 1, done:false};
+    log({t:"sys", text:`📜 ${oracle ? "신탁" : "지령"} 쪽지가 날아들었다: “${pool[i][0]}” (내일까지)`});
+  }
+}
+const prescriptOf = () => S.prescript ? (S.prescript.oracle ? ORACLES : PRESCRIPTS)[S.prescript.i] : null;
+function prescriptCheck(input, results){
+  const P = S.prescript; if(!P || P.done || fingerOf() !== "index") return;
+  const pr = prescriptOf(); if(!pr || !pr[1].test(String(input || ""))) return;
+  if(!(results || []).some(r => r.auto || r.cls === "ok" || r.cls === "crit")) return;
+  P.done = true; bump("prescriptDone"); if(P.oracle) bump("oracleDone");
+  S.sp = gclamp("sp", S.sp + 3);
+  addMerit("syndicate", P.oracle ? 25 : 12);
+  log({t:"sys", text:`📜 ${P.oracle ? "신탁" : "지령"}을 수행했다. 지령의 은혜가 함께한다. (정신력 +3)`});
+}
+function prescriptFail(){
+  S.prescript.done = true; bump("prescriptFail");
+  S.hp = Math.max(1, S.hp - 15); S.sp = gclamp("sp", S.sp - 6);
+  addMerit("syndicate", -25);
+  log({t:"narr", text:"문이 소리 없이 열린다. 흰 망토의 대행자가 서 있다. \"지령을 따르지 않았군요.\" 그는 아무 감정 없이 칼등을 들어 올린다. 처벌은 짧고 정확하다.", deltas:[{k:"체력", v:-15}, {k:"정신력", v:-6}], options:ruleOptions()});
+}
+/* 엄지: 윗사람을 거스르면 처벌, 명령에 따르면 실적 */
+const THUMB_DISRESPECT = /(대들|말대꾸|반말|거역|명령을 (어기|무시|거부|거절)|윗사람을 (무시|비웃|모욕)|(카포|소토카포|윗사람)에게 (대들|따지|덤비)|눈을 똑바로 (보|쳐다|마주)|건방|비웃)/;
+function thumbCheck(input, results){
+  if(fingerOf() !== "thumb") return;
+  const t = String(input || "");
+  if(THUMB_DISRESPECT.test(t)){
+    bump("thumbPunish");
+    S.hp = Math.max(1, S.hp - 20); addMerit("syndicate", -40);
+    if(!S.tags.some(t => /엄지의 처벌/.test(t))) S.tags.push("부상:손가락 한 마디를 잃음(엄지의 처벌)");
+    log({t:"narr", text:"공기가 얼어붙는다. 윗사람은 아무 말도 하지 않는다. 대신 옆에 선 카포가 당신의 손을 탁자 위에 눌러 붙인다. 엄지에서 위계는 절대적이다. 칼날이 내려오고, 당신은 그 값을 손가락 한 마디로 치른다.", deltas:[{k:"체력", v:-20}], options:["고개를 숙인다", "이를 악문다", "용서를 구한다"]});
+  }else if(/(명령|지시)/.test(t) && /(따르|수행|복종|받들|완수)/.test(t) && (results || []).some(r => r.auto || r.cls === "ok" || r.cls === "crit")) addMerit("syndicate", 6);
+}
+/* 중지: 다치게 한 자는 복수의 서에 */
+function middleAfter(input, results, fin){
+  if(fingerOf() !== "middle") return;
+  if(fin && fin.hp <= -8 && !S.vendetta){ S.vendetta = true; log({t:"sys", text:"📕 복수의 서에 이름 하나를 적었다. 중지는 절대 잊지 않는다."}); }
+  if(S.vendetta && /(복수|되갚|앙갚|원수)/.test(String(input || "")) && (results || []).some(r => r.cls === "ok" || r.cls === "crit")){
+    S.vendetta = false; bump("vengeance"); addMerit("syndicate", 15);
+    log({t:"sys", text:"📕 복수의 서의 한 줄을 지웠다."});
+  }
+}
+/* 약지: 한 달 마감의 과제와 비평회 */
+function ringMonth(){
+  if(fingerOf() !== "ring" || S.distorted) return;
+  const A = S.assign;
+  if(A && !A.done){ bump("critiqueFail"); addMerit("syndicate", -30); S.sp = gclamp("sp", S.sp - 5); log({t:"sys", text:"🖌 비평회. 마감까지 작품을 내지 못했다. 마에스트로의 차가운 눈길이 꽂힌다. (실적 −30)"}); }
+  S.assign = {due:S.days + 30, done:false};
+  log({t:"sys", text:"🖌 이번 달 과제가 나왔다. 한 달 안에 작품을 만들어 비평회에 내야 한다."});
+}
+function ringCheck(input, results){
+  const A = S.assign; if(!A || A.done || fingerOf() !== "ring") return;
+  if(!/(작품|그림|조각|전시|과제|그린다|그려|빚어|만든다|비평회)/.test(String(input || ""))) return;
+  if(!(results || []).some(r => r.cls === "ok" || r.cls === "crit")) return;
+  A.done = true; bump("artDone"); addMerit("syndicate", (results || []).some(r => r.cls === "crit") ? 30 : 18);
+  log({t:"sys", text:"🖌 과제를 냈다. 비평회에서 이름이 불린다."});
+}
+/* 소지: 별의 이름과 별벼림 칼 */
+const STARS = ["천괴성","천강성","천기성","천한성","천용성","천웅성","천맹성","천위성","천영성","천귀성","천부성","천만성","천고성","천상성","천립성","천첩성","천암성","천우성","천공성","천속성","천이성","천살성","천미성","천구성","천퇴성","천수성","천검성","천평성","천죄성","천손성","천패성","천뢰성","천혜성","천폭성","천곡성","천교성",
+  "지괴성","지살성","지용성","지걸성","지웅성","지위성","지영성","지기성","지맹성","지문성","지정성","지활성","지혜성","지폭성","지묵성","지강성","지주성","지비성","지광성","지진성","지찰성","지은성","지유성","지복성","지속성"];
+const STAR_FIND = "버려진 사당 안, 먼지 쌓인 제단 위에 칼 한 자루가 놓여 있다. 칼날에 별 하나가 새겨져 있고, 손을 뻗자 낮은 울림이 손끝을 타고 오른다. 주인을 잃은 별벼림 칼이다.|칼을 자기 것으로 삼는다/그냥 둔다/누가 두었는지 살핀다";
+const isStarFind = ev => ev === STAR_FIND;
+function grantStarBlade(){
+  const it = itemById("star:" + S.star.name); if(!it) return;
+  if(S.equip.weapon && S.equip.weapon !== it.id){ S.inv = S.inv || []; if(!S.inv.includes(S.equip.weapon)) S.inv.push(S.equip.weapon); }
+  S.equip.weapon = it.id; S.star.blade = true;
+  if(!S.tags.some(t => /^조직:.*소지/.test(t))) S.tags.push("조직:소지");
+}
+function claimStar(name, how){
+  S.star = {name, how, at:S.days, blade:false};
+  grantStarBlade();
+  bump("starClaim");
+  sfx("good");
+  log({t:"narr", text:`칼자루를 쥐는 순간, 칼날의 별이 희미하게 빛난다. 비어 있던 자리 하나가 당신을 알아본다. 이제 당신은 소지의 ${name}이다. 별의 이름과 칼은 하나이니, 다른 별의 칼을 쥐는 것은 흉조다.`, deltas:[], options:ruleOptions()});
+  chron(`소지의 ${name}이 되었다`);
+  checkAch();
+}
+function starAge(){
+  if(S.star && !S.star.blade && S.star.born && ageY() >= 16){
+    grantStarBlade();
+    log({t:"narr", text:`열여섯 번째 생일 밤, 문 앞에 길쭉한 천 꾸러미가 놓여 있다. 풀어 보니 칼날에 별이 새겨진 칼 한 자루. 태어날 때부터 당신에게 붙어 있던 별, ${S.star.name}의 칼이다. 이제 당신은 소지의 한 자리를 차지한다.`, deltas:[], options:ruleOptions()});
+    chron(`${S.star.name}의 별벼림 칼을 받았다`);
+    checkAch();
+  }
+}
+function fingerState(){
+  const f = fingerOf(); const out = [];
+  if(f){
+    const r = fingerRank();
+    if(f === "thumb") out.push(`[엄지] 주인공은 엄지의 ${r}이다. 위계가 절대적이라 윗사람 앞에서 허락 없이 말하지 않고 눈을 마주치지 않는다. 윗사람을 모욕하면 몸 일부를 잃고, 명령에 의문을 품으면 숙청된다. 탄환은 비싸서 꼭 필요할 때만 쏜다.`);
+    if(f === "index"){ const pr = prescriptOf(); out.push(`[검지] 주인공은 검지의 ${r}이다. 지령이 삶의 중심이다.${pr && !S.prescript.done ? ` 지금 받은 ${S.prescript.oracle ? "신탁" : "지령"}: "${pr[0]}"(기한: ${S.prescript.due > S.days ? "내일까지" : "오늘까지"}).` : ""} 지령을 어기면 대행자가 처벌하러 온다.`); }
+    if(f === "middle") out.push(`[중지] 주인공은 중지의 ${r}이다. 형제를 건드린 자는 절대 잊지 않고 '복수의 서'에 따라 되갚는다.${S.vendetta ? " 지금 복수의 서에 갚아야 할 이름이 하나 있다." : ""}`);
+    if(f === "ring") out.push(`[약지] 주인공은 약지의 ${r}이다. 인간의 고통을 소재로 예술을 한다. 매달 마감이 있는 과제를 비평회에 내야 한다${S.assign && !S.assign.done ? `(이번 달 과제 아직 안 냄, 마감까지 ${Math.max(0, S.assign.due - S.days)}일)` : ""}.`);
+    if(f === "pinky") out.push(`[소지] 주인공은 소지의 일원이다. 소지는 사회 곳곳과 다른 조직에 숨어 있고, 구성원끼리도 서로를 잘 모른다.`);
+  }
+  if(S.star) out.push(`[별의 이름] 주인공은 '${S.star.name}'의 자리를 가진다${S.star.blade ? `. 그 별벼림 칼(${S.star.name}의 별벼림 칼)을 지니고 있다` : `(아직 칼을 받지 못했다)`}. 다른 별의 칼을 쓰는 건 흉조다.`);
+  return out.join("\n");
+}
+
+/* ───────── 해결사 승급 시험 ───────── */
+function promoCall(){
+  if(S.promo) return;
+  S.promo = {to:S.license - 1};
+  log({t:"narr", text:`하나 협회 지부에서 호출이 왔다. 그동안의 실적을 검토했다며, ${S.license - 1}급 승급 시험을 보러 오라고 한다.`, deltas:[{k:"돌발", v:0, event:true}], options:["시험을 보러 간다", "준비할 시간을 달라고 한다", "거절한다"]});
+}
+function promoAnswer(input){
+  const P = S.promo; S.promo = null;
+  const c = S.careers.fixer;
+  log({t:"me", text:input});
+  if(/(거절|안 ?(가|봐|볼)|싫|미루|나중|준비할 시간)/.test(input)){
+    c.merit = 85;
+    log({t:"narr", text:"협회 직원은 서류를 덮는다. \"알겠습니다. 실적이 다시 차면 연락드리죠.\"", deltas:[], options:ruleOptions()});
+    save(); renderStatus(); return;
+  }
+  const best = ["str", "spd", "def", "int"].sort((a, b) => eff(b) - eff(a))[0];
+  const dc = 9 + (9 - P.to) * 1.4 | 0;
+  const r = Object.assign({text:`${P.to}급 승급 시험`, stat:best, dc}, rollCheck({text:`${P.to}급 승급 시험`, stat:best, dc}));
+  log({t:"roll", data:r}); sfx("dice");
+  bump("promoTest");
+  if(r.cls === "ok" || r.cls === "crit"){
+    c.rank++; c.merit = 20; S.license = P.to; setLicenseTag(); S.rep = gclamp("rep", S.rep + 5);
+    log({t:"narr", text:`시험관이 고개를 끄덕인다. 새 자격증에 ${P.to}급이라는 숫자가 찍혀 나온다.`, deltas:[{k:"평판", v:5}], options:ruleOptions()});
+    log({t:"sys", text:`승급 시험에 합격했다: 하나 협회 해결사 ${P.to}급`});
+  }else{
+    c.merit = 50; bump("promoFail");
+    log({t:"narr", text:"시험관은 짧게 고개를 젓는다. \"아직입니다. 실적을 다시 채워 오세요.\"", deltas:[], options:ruleOptions()});
+  }
+  checkAch(); save(); renderStatus();
 }
 
 /* ───────── 신(心)과 망(望) ─────────
@@ -4195,6 +4395,14 @@ function applySerums(list){
 }
 /* 앰플 보급: 한 달에 25씩 */
 function serumMonth(){ if(!S.claw) return; for(const k of ["W", "R", "K"]) S.claw[k] = Math.min(100, S.claw[k] + SERUM_MONTHLY); }
+function renderPresBar(){
+  const b = document.getElementById("presBar"); if(!b) return;
+  const pr = S && fingerOf() === "index" && S.prescript ? prescriptOf() : null;
+  const asg = S && fingerOf() === "ring" && S.assign && !S.assign.done;
+  b.hidden = !pr && !asg; if(b.hidden) return;
+  b.classList.toggle("done", !!(pr && S.prescript.done));
+  b.textContent = pr ? `📜 ${S.prescript.oracle ? "신탁" : "지령"}: ${pr[0]}${S.prescript.done ? " (수행함)" : ""}` : `🖌 약지 과제: 마감까지 ${Math.max(0, S.assign.due - S.days)}일`;
+}
 function renderSerumBar(){
   for(const id of ["serumBar", "serumBarS"]){
     const b = document.getElementById(id); if(!b) continue;
@@ -4348,7 +4556,7 @@ function renderWarpBar(){
 /* ───────── 업적 ─────────
    한 삶에서 이룬 것(S.ach)은 전기에, 모든 삶을 합친 것은 첫 화면에 남는다 */
 const ACH_KEY = "dosi_ach";
-const ACH_CATS = ["삶", "태생", "일과 신분", "돈과 평판", "능력", "장비", "가족과 사람", "만남", "전투", "장소와 시간", "몸과 마음", "혈귀", "라만차랜드", "발톱", "心과 望", "뒤틀림", "워프열차", "마지막"];
+const ACH_CATS = ["삶", "태생", "일과 신분", "돈과 평판", "능력", "장비", "가족과 사람", "만남", "전투", "장소와 시간", "몸과 마음", "혈귀", "라만차랜드", "발톱", "心과 望", "다섯 손가락", "뒤틀림", "워프열차", "마지막"];
 const cnt = k => (S.cnt && S.cnt[k]) || 0;
 function bump(k, n){ S.cnt = S.cnt || {}; S.cnt[k] = (S.cnt[k] || 0) + (n || 1); }
 const RARITY = {c:{ko:"흔함", col:"#8b8f9c"}, u:{ko:"고급", col:"#5fb36a"}, r:{ko:"희귀", col:"#4f8fd6"}, e:{ko:"영웅", col:"#a86be0"}, l:{ko:"전설", col:"#e0a83c"}};
@@ -4507,6 +4715,29 @@ const ACHS = [
   ["shinEgo", "마음의 두 얼굴", "心을 깨치고 에고도 발현했다", () => !!S.shin && !!S.ego, "l", "心과 望"],
   ["shinClaw", "마음을 쥔 발톱", "발톱이면서 心을 깨쳤다", () => !!S.shin && !!S.claw, "l", "心과 望"],
   ["shinKin", "피와 마음", "혈귀이면서 心을 깨쳤다", () => !!S.shin && isKindred(), "e", "心과 望"],
+  ["promo1", "승급 시험", "협회의 승급 시험을 보았다", () => cnt("promoTest") >= 1, "u", "일과 신분"],
+  ["promoFail", "재수생", "승급 시험에 떨어졌다", () => cnt("promoFail") >= 1, "c", "일과 신분"],
+  ["thumb", "엄지", "엄지에 몸담았다", () => fingerOf() === "thumb", "r", "다섯 손가락"],
+  ["thumbTop", "카포 데이 카피", "엄지의 정점에 올랐다", () => fingerOf() === "thumb" && fingerRank() === "카포 데이 카피", "l", "다섯 손가락"],
+  ["thumbPunish", "위계의 값", "엄지의 처벌을 받았다", () => cnt("thumbPunish") >= 1, "u", "다섯 손가락"],
+  ["index", "검지", "검지에 몸담았다", () => fingerOf() === "index", "r", "다섯 손가락"],
+  ["prescript1", "첫 지령", "지령을 수행했다", () => cnt("prescriptDone") >= 1, "u", "다섯 손가락"],
+  ["prescript30", "지령의 은혜", "지령을 서른 번 수행했다", () => cnt("prescriptDone") >= 30, "e", "다섯 손가락"],
+  ["prescriptFail", "대행자의 방문", "지령을 어겨 처벌받았다", () => cnt("prescriptFail") >= 1, "u", "다섯 손가락"],
+  ["proxy", "대행자", "검지의 대행자가 되었다", () => fingerOf() === "index" && ["대행자", "신탁 대행자"].includes(fingerRank()), "e", "다섯 손가락"],
+  ["oracle", "신탁 대행자", "도시의 신탁을 받는 자리에 올랐다", () => fingerOf() === "index" && fingerRank() === "신탁 대행자", "l", "다섯 손가락"],
+  ["oracleDone", "신탁의 손", "신탁을 수행했다", () => cnt("oracleDone") >= 1, "l", "다섯 손가락"],
+  ["middle", "중지", "중지에 몸담았다", () => fingerOf() === "middle", "r", "다섯 손가락"],
+  ["vengeance", "복수의 서", "복수를 갚았다", () => cnt("vengeance") >= 1, "r", "다섯 손가락"],
+  ["middleTop", "위대한 형제", "중지의 위대한 형제가 되었다", () => fingerOf() === "middle" && fingerRank() === "위대한 형제", "l", "다섯 손가락"],
+  ["ring", "약지", "약지에 몸담았다", () => fingerOf() === "ring", "r", "다섯 손가락"],
+  ["artDone", "첫 출품", "약지의 과제를 냈다", () => cnt("artDone") >= 1, "u", "다섯 손가락"],
+  ["maestro", "마에스트로", "약지의 마에스트로가 되었다", () => fingerOf() === "ring" && fingerRank() === "마에스트로", "l", "다섯 손가락"],
+  ["pinky", "소지", "소지에 몸담았다", () => fingerOf() === "pinky", "r", "다섯 손가락"],
+  ["starBorn", "별을 품고 태어나다", "별의 이름을 받고 태어났다", () => !!S.star && S.star.born, "e", "다섯 손가락"],
+  ["starBlade", "별벼림 칼", "별의 이름과 칼을 함께 지녔다", () => !!S.star && S.star.blade, "e", "다섯 손가락"],
+  ["starFound", "빈자리의 주인", "주인을 잃은 별벼림 칼을 자기 것으로 삼았다", () => !!S.star && S.star.how === "발견", "e", "다섯 손가락"],
+  ["fiveFingers", "손가락 사이에서", "손가락에 몸담은 채 해결사 1급이 되었다", () => !!fingerOf() && S.license === 1, "l", "다섯 손가락"],
   ["starve", "시든 혈귀", "혈액이 바닥났다", () => isKindred() && S.blood != null && S.blood <= 0, "r", "혈귀"],
   ["hunter", "혈귀 사냥꾼", "혈귀를 토벌했다", () => S.tags.some(t => /^토벌:.*혈귀/.test(t)), "r", "전투"],
   /* 몸 */
@@ -4622,6 +4853,13 @@ async function doAction(input, opt = {}){
   if(busy || S.dead) return;
   /* 뒤틀린 직후: 속삭임을 따를지 */
   if(S.distortPending && S.distorted && !opt.passive){ resolveDistortChoice(input); return; }
+  /* 해결사 승급 시험 호출에 대한 대답 */
+  if(S.promo && !opt.passive){ promoAnswer(input); return; }
+  /* 별벼림 칼을 발견했을 때 */
+  if(S.starOffer){
+    S.starOffer = false;
+    if(!opt.passive && /(삼는|쥔|쥐|집어|가진|가지|챙긴|챙기|든다|들어 올)/.test(input) && !/(둔다|두고|놔|안 )/.test(input)){ log({t:"me", text:input}); claimStar(STARS[rnd(STARS.length)], "발견"); save(); renderStatus(); return; }
+  }
   /* 心을 가르쳐 주겠다는 제안 */
   if(S.shinOffer){
     S.shinOffer = false;
@@ -4733,11 +4971,15 @@ async function doAction(input, opt = {}){
   if(ev === WARP_OFFER){ S.warpOffer = true; S.warpOffered = true; }
   if(ev === LM_INVITE){ S.lmOffer = true; S.lmInvited = true; }
   if(isShinTeach(ev)) S.shinOffer = true;
+  if(isStarFind(ev)) S.starOffer = true;
   if(wo) warpFin(fin, wo, !!n);
   /* 그냥 넘긴 결과는 그 일이 끝난 것으로 본다(다시 위급 판정을 하지 않는다) */
   if(passive){ fin.urgent = false; fin.passiveDone = true; }
   if(!passive && fin.outfit === undefined){ const o = outfitFromInput(input); if(o) fin.outfit = o; }
   if(!passive && fin.blood == null){ const b = bloodFromInput(input, results); if(b) fin.blood = b; }
+  /* 피를 실제로 마신 장면이 아니면 혈액은 오르지 않는다(AI가 다른 회복과 헷갈려 넣는 경우를 막는다) */
+  if(fin.blood > 0 && !DRINK_BLOOD_RE.test(String(input || "") + " " + String(fin.narration || ""))) fin.blood = 0;
+  if(passive && fin.blood > 0 && !DRINK_BLOOD_RE.test(String(fin.narration || ""))) fin.blood = 0;
   recordAbno(ev); recordFamous(ev);
   if(!(fin.days > 0)) advanceMins(timeWordMins(fin.time, input));
   else S.mins = 8 * 60 + rnd(10 * 60);
@@ -4746,7 +4988,8 @@ async function doAction(input, opt = {}){
   if(wo || results.some(r => !r.auto && inCombat(r, input)) || (fin.event && FIGHT_RE.test(fin.narration || ""))) fxAfter(fin);
   S._mangNote = 0;
   if(wo) warpAfter(wo);
-  else { checkMilestones(input, results); applyMerit(input, results, fin); notePlace(); lmAfter(results); shinTrain(actInput || input, results); }
+  else { checkMilestones(input, results); applyMerit(input, results, fin); notePlace(); lmAfter(results); shinTrain(actInput || input, results);
+    prescriptCheck(actInput || input, results); thumbCheck(actInput || input, results); middleAfter(actInput || input, results, fin); ringCheck(actInput || input, results); }
   checkAch();
   save(); setBusy(false);
   memoryTick();
@@ -4868,6 +5111,11 @@ const ITEMS = [
 const EGO_FX = {"미미크리(시제품)":{str:8, def:1}, "다 카포":{str:7, int:2}, "스마일":{str:9, spd:-1}, "저스티티아":{str:7, spd:2}, "등불":{str:5, def:1}, "회절":{str:5, spd:1}, "여우비":{str:3, def:1}, "붉은 시트":{str:3, int:1}};
 const EGO_LOOK = {"미미크리(시제품)":"greatsword", "다 카포":"blade", "스마일":"hammer", "저스티티아":"sword", "등불":"mace", "회절":"blade", "여우비":"blade", "붉은 시트":"knife"};
 for(const w of EGO_WEAPONS) ITEMS.push({id:"ego:" + w[0], slot:"weapon", name:w[0], shop:"추출 E.G.O · " + w[3] + "에게서", fx:EGO_FX[w[0]] || {str:4}, price:0, age:0, look:EGO_LOOK[w[0]] || "sword", ego:w[1], hidden:true});
+/* 소지: 별마다 별벼림 칼 한 자루 */
+for(const st of STARS){
+  const h = hashStr(st);
+  ITEMS.push({id:"star:" + st, slot:"weapon", name:`${st}의 별벼림 칼`, shop:"소지 · 별의 자리", fx:{str:6 + (h % 4), spd:1 + ((h >> 3) % 3)}, price:0, age:0, look:["sword", "blade", "greatsword"][h % 3], hidden:true, star:st});
+}
 const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
@@ -5952,10 +6200,11 @@ function pickSmall(y){
 function oneDay(){
   const monthBefore = monthOf(S.days);
   applyDays(1);
-  S.en = Math.min(100, S.en + 3); if(S.days % 3 === 0) S.hp = Math.min(100, S.hp + 1);
-  bloodDay(); if(monthOf(S.days) !== monthBefore) serumMonth();
+  S.en = Math.min(100, S.en + 3); if(S.days % 20 === 0) S.hp = Math.min(100, S.hp + 1);
+  bloodDay(); if(monthOf(S.days) !== monthBefore){ serumMonth(); ringMonth(); }
+  prescriptDay(); starAge();
   /* 정신력은 시간이 지나면 0(평온) 쪽으로 아주 천천히 돌아온다 */
-  if(S.days % 5 === 0 && S.sp < 0) S.sp++; else if(S.days % 6 === 0 && S.sp > 0) S.sp--;
+  if(S.days % 24 === 0 && S.sp < 0) S.sp++; else if(S.days % 24 === 12 && S.sp > 0) S.sp--;
   /* 견습 수당: 13~19세 견습생은 매달 30만 안 */
   if(monthOf(S.days) !== monthBefore && apprenticeOf() && !S.license && ageY() < 20){ S.ahn += 300000; flow.ahn += 300000; }
   if(monthOf(S.days) !== monthBefore && ageY() >= 18){
@@ -6284,7 +6533,7 @@ function lastStatus(){
   const g = shownGauges().map(k => ({k, ko:GAUGE_KO[k], v:Math.round(S[k] || 0), pct:Math.max(0, Math.min(100, k === "sp" ? (S.sp + 45) / 90 * 100 : (S[k] || 0)))}));
   if(S.claw) for(const k of ["W", "R", "K"]) g.push({k:"ser" + k, ko:SERUMS[k].ko, v:Math.round(S.claw[k]), pct:S.claw[k], col:SERUMS[k].col});
   return {gauges:g, stats:STAT_KEYS.map(k => [STAT_KO[k], eff(k)]), ahn:S.ahn, time:timeText(), loc:S.location || "", equip:equipText(),
-    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : "", S.distorted ? "뒤틀림" : "", S.lm ? "라만차랜드 " + LM_RANKS[S.lm.rank] : "", S.claw ? "머리의 발톱" : "", S.shin ? `心 · 望 ${S.shin.rings}개` : ""].filter(Boolean)};
+    titles:[S.license ? `해결사 ${S.license}급` : "", S.color ? `특색 「${S.color}」` : "", S.ego ? `E.G.O 「${S.ego}」` : "", isKindred() ? "혈귀" : "", S.distorted ? "뒤틀림" : "", S.lm ? "라만차랜드 " + LM_RANKS[S.lm.rank] : "", S.claw ? "머리의 발톱" : "", S.shin ? `心 · 望 ${S.shin.rings}개` : "", fingerOf() ? `${FINGERS[fingerOf()].ko} ${fingerRank()}` : "", S.star ? `★ ${S.star.name}` : ""].filter(Boolean)};
 }
 let ending = false;
 async function endLife(){
@@ -6648,6 +6897,8 @@ async function createLife(){
   const bornKindred = rand01() < 0.02;
   /* C사 구역에서 태어나면 드물게 머리의 발톱으로 뽑혀 스무 살부터 시작한다 */
   const bornClaw = district === 3 && rand01() < 0.2;
+  /* 드물게 별의 이름을 받고 태어난다(칼은 열여섯 살에 찾아온다) */
+  const bornStar = rand01() < 0.01 ? STARS[rnd(STARS.length)] : null;
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
     str:1 + rnd(3), def:1 + rnd(3), spd:1 + rnd(3), int:1 + rnd(3), log:[], dead:null,
@@ -6667,6 +6918,7 @@ async function createLife(){
   for(const f of S.family) f.look = randLook(f.gender);
   showGame();
   log({t:"sys", text:`시드 ${seed} · ${corpOf(S.district)} 구역 ${originKo(origin)}. 출생 능력치: ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${S[k]}`).join(", ")});
+  if(bornStar){ S.star = {name:bornStar, how:"태생", born:true, at:0, blade:false}; S.tags.push("별의 이름:" + bornStar); }
   if(bornClaw){ await clawStart(); return; }
   await birth();
 }
