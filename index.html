@@ -454,6 +454,8 @@ body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:no
 .warpbar .wcar.now{background:#cfe2ff;animation:wblink 1s ease-in-out infinite}
 @keyframes wblink{50%{opacity:.45}}
 /* 뒤틀림: 붉은 배경에 검은 연기, 속삭임 */
+.fx-faint{position:fixed;inset:0;background:#000;animation:fxFaint 2.6s ease-in-out forwards;pointer-events:none}
+@keyframes fxFaint{0%{opacity:0}35%{opacity:1}75%{opacity:1}100%{opacity:0}}
 body.backnight{--bg:rgba(6,4,6,.62);--panel:rgba(12,6,8,.84);--panel-2:rgba(22,8,10,.86);--line:#8e1c1c;background:#050304}
 body.backnight::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 35%,#1c0d10 0,#0b0507 55%,#020102 100%)}
 body.backnight::after{content:"";position:fixed;inset:0;z-index:40;pointer-events:none;box-shadow:inset 0 0 0 2px #a01c1c,inset 0 0 70px rgba(170,20,20,.38);animation:bnPulse 6s ease-in-out infinite}
@@ -1010,10 +1012,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0410"></script>
+<script src="parts.js?v=20261108-0420"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0410";
+const BUILD = "20261108-0420";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1122,6 +1124,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - str, def, spd, int (stats): "없음", "오름", "내림". Mostly "없음". "오름" for meaningful training or experience, "내림" for a serious injury.
 - days (days taken): "없음" (within the day), "하루", "며칠", "일주일", "몇 주", "한 달", "몇 달", "일 년". If the player wrote a duration ("for a few days", "a week later") or time passed in the scene (sick in bed for days, worked for weeks, agreed to meet tomorrow), you must reflect it.
 - time (time taken within the day): "잠깐", "한 시간", "몇 시간", "반나절", "밤새" (until next morning). Follow the flow: a short greeting is 잠깐, a long talk or a meal 한 시간, work or travel 몇 시간.
+- en (stamina) recovers fast with rest and sleep; the game also adds recovery for the time that passes, so do not exaggerate en recovery. If en reaches 0 the game makes the protagonist faint; do not write fainting yourself.
 - Baseline: an ordinary action is en "약간 감소". Injury lowers hp; shock, fear or guilt lowers sp. Sleep, meals and rest recover, but hp and sp recover slowly: one sleep or rest is "약간 회복"; an injured body or big shock heals bit by bit over days or weeks. "크게 회복" only with treatment or long rest. Reputation moves only when others see it or rumors spread.
 - merit: if the player did work for their affiliation (fixer, syndicate, public office in [신분·힘]), the change in performance ("없음" to "크게 회복"; 회복 = up). Otherwise "없음".
 
@@ -3427,9 +3430,115 @@ function applyNarr(n, forcedDays, shownDays){
   const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
   if(talk.length) n.narration = dedupeTalk(n.narration, talk);
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
+  enCalcNote();
   applyDays(days);
   applyFamily(n);
   checkDeath();
+}
+
+/* ───────── 기력: 빨리 회복되고, 바닥나면 기절한다 ─────────
+   깨어 있는 동안 한 시간에 3, 자는 동안 한 시간에 12, 하루를 통째로 보내면 25(나이가 들면 줄지만 절반 아래로는 안 준다) */
+const enRF = () => Math.max(0.5, regenFactor());
+const enDayRegen = () => 25 * enRF();
+function isSleepAct(w, input){ return /(밤새|다음 날|아침까지|잠)/.test(String(w || "")) || /(잠을 잔다|잔다|자러|잠든다|눈을 붙인다|낮잠|쉰다|휴식)/.test(input || ""); }
+function enInDay(fin, mins, sleeping){
+  if(!(mins > 0)) return;
+  const g = Math.round(mins / 60 * (sleeping ? 12 : 3) * enRF());
+  if(g <= 0) return;
+  fin.en = sleeping ? Math.max(fin.en || 0, (fin.en || 0) + g) : (fin.en || 0) + g;
+}
+/* 긴 시간을 건너뛸 때: 그동안 매일 쓴 기력과 매일 회복한 기력을 하루씩 셈해 결과를 낸다 */
+function enOverDays(fin, days){
+  if(!(days > 0)) return;
+  const load = Math.max(0, -(fin.en || 0));                 /* AI가 준 소모는 '그 기간 동안 날마다 이만큼 힘들었다'로 읽는다 */
+  const perDrain = 8 + load * 0.5, perGain = enDayRegen();
+  let en = S.en, used = 0, got = 0;
+  const n = Math.min(days, 400);
+  for(let i = 0; i < n; i++){
+    /* 지치면 사람은 쉰다: 긴 기간 동안엔 25 아래로 떨어지기 전에 몸을 사린다 */
+    const d = Math.max(0, Math.min(en - 25, perDrain)); en -= d; used += d;
+    const g = Math.min(100 - en, perGain); en += g; got += g;
+  }
+  /* 마지막 날의 수고는 아직 다 풀리지 않았다 */
+  const tail = Math.round(load * 0.8); en = Math.max(0, en - tail); used += tail;
+  if(days > n){ used = Math.round(used * days / n); got = Math.round(got * days / n); }
+  const end = Math.round(clamp(en, 0, 100));
+  fin.en = end - Math.round(S.en);
+  S._enCalc = {days, used:Math.round(used), got:Math.round(got), start:Math.round(S.en), end};
+}
+function enCalcNote(){
+  const c = S._enCalc; S._enCalc = null; if(!c) return;
+  log({t:"sys", text:`기력 계산 (${dayLabel(c.days)}): 지낸 동안 ${c.used} 소모, ${c.got} 회복 → ${c.start} → ${c.end}`});
+}
+/* 기절: 깨어나는 곳과 상황은 그때의 장소·위험·형편에 따라 갈린다 */
+const homeLoc = () => `${corpOf(S.district)} 구역 ${originKo(S.origin)} 집`;
+function faintPlan(){
+  const loc = String(S.location || ""), y = ageY();
+  const atHome = /집/.test(loc), outside = !atHome && !/(병원|진료소|사무소|라만차)/.test(loc);
+  const danger = !!S.urgent || backNight(), back = inBackstreet();
+  const opts = [
+    ["same", atHome ? 7 : danger ? 1 : 3],
+    ["home", atHome ? 0 : y < 18 ? 6 : 2],
+    ["hospital", (S.hp < 40 ? 5 : 1) + (danger ? 2 : 0) + (S.origin === "nest" ? 1 : 0)],
+    ["stranger", outside ? 2 : 0],
+    ["robbed", outside && back && S.ahn > 0 ? 3 : 0],
+    ["kidnap", outside && back && y >= 5 && !S.tags.some(t => /^납치:/.test(t)) ? (danger ? 3 : 1) : 0]];
+  const tot = opts.reduce((a, o) => a + o[1], 0);
+  let r = rand01() * tot, kind = "same";
+  for(const [k, w] of opts){ if((r -= w) < 0){ kind = k; break; } }
+  const hours = kind === "hospital" ? 12 + rnd(30) : kind === "kidnap" ? 6 + rnd(12) : 3 + rnd(10);
+  const P = {kind, hours, loc:loc || homeLoc(), ahn:0, tag:"", urgent:false, hp:kind === "hospital" ? 6 : kind === "robbed" || kind === "kidnap" ? -4 : 0};
+  if(kind === "home") P.loc = homeLoc();
+  if(kind === "hospital"){ P.loc = `${corpOf(S.district)} 구역 ${S.origin === "nest" ? "둥지" : "뒷골목"} 병원`; P.ahn = y < 18 && parentsAlive() ? 0 : -Math.min(S.ahn, S.origin === "nest" ? 300000 : 120000); }
+  if(kind === "stranger") P.loc = `${corpOf(S.district)} 구역 ${back ? "뒷골목" : "둥지"} ${["낯선 사람의 집", "작은 진료소", "구호소", "가게 뒷방"][rnd(4)]}`;
+  if(kind === "robbed") P.ahn = -Math.round(S.ahn * (0.3 + rand01() * 0.5));
+  if(kind === "kidnap"){ P.loc = `${corpOf(S.district)} 구역 뒷골목 ${["창고", "지하실", "폐공장", "컨테이너"][rnd(4)]}`; P.tag = "납치:잡혀 있음"; P.urgent = true; }
+  return P;
+}
+const FAINT_SCENE = {
+  same:"쓰러졌던 그 자리에서 깨어난다. 아무도 건드리지 않았다. 주변은 시간이 지난 만큼 달라져 있다.",
+  home:"눈을 뜨니 집이다. 누군가(가족, 이웃, 지나가던 사람 등 그럴 법한 사람) 쓰러진 주인공을 집까지 데려다 놓았다. 그 사람이 곁에 있거나 소식을 남겼다.",
+  hospital:"눈을 뜨니 병원 침대다. 누군가 신고하거나 데려왔다. 간호사나 의사가 상태를 알려 준다.",
+  stranger:"눈을 뜨니 낯선 곳이다. 쓰러진 주인공을 처음 보는 사람이 거두어 주었다. 그 사람과 처음 마주하는 순간이다.",
+  robbed:"쓰러진 자리에서 깨어난다. 몸은 무사하지만 주머니가 털렸다. 지닌 돈 일부가 사라졌다.",
+  kidnap:"눈을 뜨니 묶인 채 낯선 곳에 갇혀 있다. 쓰러진 사이 누군가 주인공을 끌고 왔다. 몸값이나 노동, 장기 매매 같은 도시의 범죄를 노린 자들이다(성적인 의미는 절대 없음). 납치범의 기척이 들리는 순간에서 끝낸다."};
+const FAINT_RULE = {
+  same:"눈을 뜬다. 쓰러졌던 그 자리다. 몸이 무겁지만 움직일 수는 있다.",
+  home:"눈을 뜨니 익숙한 천장이 보인다. 누군가 쓰러진 당신을 집까지 데려다 놓았다.",
+  hospital:"소독약 냄새에 눈을 뜬다. 병원 침대다. 간호사가 다가와 당신이 길에서 쓰러져 실려 왔다고 알려 준다.",
+  stranger:"낯선 천장 아래에서 눈을 뜬다. 누군가 쓰러진 당신을 거두어 담요를 덮어 주었다.",
+  robbed:"차가운 바닥에서 눈을 뜬다. 쓰러졌던 그 자리다. 주머니를 더듬어 보니 돈이 줄어 있다.",
+  kidnap:"눈을 뜨니 손목이 묶여 있다. 습한 창고 안이다. 문 너머에서 누군가 낮게 이야기하는 소리가 들린다."};
+async function faintScene(){
+  bump("faint");
+  const P = faintPlan(), before = timeText();
+  log({t:"sys", text:"기력이 다해 의식을 잃었다…"});
+  try{ fxAdd('<div class="fx-faint"></div>', 2600); sfx("death"); }catch(e){}
+  await sleep(reduceMotion ? 200 : 1400);
+  advanceMins(P.hours * 60);
+  const wake = Math.round(clamp((P.kind === "hospital" ? 45 : 25) + P.hours * 1.5 * enRF(), 15, 70));
+  S.location = P.loc;
+  let n = null;
+  if(aiOn()){
+    const done = thinking("깨어나는 중…");
+    const what = `[기절] 주인공은 기력이 바닥나 ${before}에 쓰러졌고, ${P.hours}시간쯤 지나 ${timeText()}에 깨어난다. 깨어난 곳: ${P.loc}. 상황: ${FAINT_SCENE[P.kind]} 깨어나는 순간부터 서술하고, 쓰러지기 전 장면을 다시 쓰지 마라. location은 "${P.loc}".${P.urgent ? " urgent는 true." : ""}`;
+    try{
+      n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN, user:plainContext() + "\n\n" + what}
+        : {sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES, user:stateSummary(local) + "\n\n" + what}, 600, NARR_SCHEMA, false, done.live), 3);
+      if(n && n.plain && !n.options.length) n.options = ruleOptions();
+    }catch(e){ n = null; }
+    done();
+  }
+  const fin = n || blankNarr(FAINT_RULE[P.kind]);
+  fin.days = 0; fin.location = P.loc; fin.en = wake - S.en;
+  fin.hp = (fin.hp || 0) > 0 ? Math.max(fin.hp, P.hp) : P.hp + Math.min(0, fin.hp || 0);
+  fin.ahn = P.ahn; fin.urgent = P.urgent || !!fin.urgent;
+  for(const k of STAT_KEYS) fin[k] = 0;
+  if(P.tag) fin.tag_add = [P.tag, fin.tag_add].filter(Boolean).join(",");
+  if(P.kind === "kidnap"){ chron("쓰러진 사이 납치당했다"); bump("kidnapTry"); }
+  if(P.kind === "hospital") bump("faintHosp");
+  applyNarr(fin, 0);
+  return true;
 }
 
 /* ───────── 숨은 기억 시스템: 10턴마다 단기기억, 30턴마다 단기기억 3개 → 장기기억 ───────── */
@@ -5363,7 +5472,10 @@ const ACHS = [
   ["commission50", "의뢰가 끊이지 않는다", "의뢰를 쉰 번 받았다", () => cnt("commission") >= 50, "e", "전투"],
   ["bigHurt", "깊은 상처", "한 번에 크게 다쳤다", () => cnt("bigHurt") >= 1, "c", "몸과 마음"],
   ["bigHurt10", "흉터투성이", "크게 다친 게 열 번", () => cnt("bigHurt") >= 10, "r", "몸과 마음"],
-  ["exhausted", "기진맥진", "기력이 바닥났다", () => S.en <= 0, "c", "몸과 마음"],
+  ["exhausted", "기진맥진", "기력이 바닥났다", () => S.en <= 0 || cnt("faint") >= 1, "c", "몸과 마음"],
+  ["faint1", "픽 쓰러지다", "기력이 다해 기절했다", () => cnt("faint") >= 1, "u", "몸과 마음"],
+  ["faint5", "쓰러지는 게 일상", "다섯 번 기절했다", () => cnt("faint") >= 5, "r", "몸과 마음"],
+  ["faintHosp", "병원 천장", "기절했다가 병원에서 깨어났다", () => cnt("faintHosp") >= 1, "u", "몸과 마음"],
   ["ironMind", "철의 정신", "정신력이 +45에 닿았다", () => S.sp >= 45, "e", "몸과 마음"],
   ["sweeper", "청소부를 보다", "뒷골목의 밤, 청소부와 마주쳤다", () => cnt("sweeper") >= 1, "r", "장소와 시간"],
   ["night30", "밤을 걷는 자", "뒷골목의 밤에 서른 번 움직였다", () => cnt("night") >= 30, "e", "장소와 시간"],
@@ -5662,8 +5774,8 @@ async function doAction(input, opt = {}){
     }
   }
   recordAbno(ev); recordFamous(ev);
-  if(!(fin.days > 0)) advanceMins(timeWordMins(fin.time, input));
-  else S.mins = 8 * 60 + rnd(10 * 60);
+  if(!(fin.days > 0)){ const mm = timeWordMins(fin.time, input); enInDay(fin, mm, isSleepAct(fin.time, input)); advanceMins(mm); }
+  else { enOverDays(fin, fin.days); S.mins = 8 * 60 + rnd(10 * 60); }
   applyNarr(fin);
   /* 다친 연출은 싸우던 중일 때만 */
   if(wo || results.some(r => !r.auto && inCombat(r, input)) || (fin.event && FIGHT_RE.test(fin.narration || ""))) fxAfter(fin);
@@ -5672,9 +5784,11 @@ async function doAction(input, opt = {}){
   if(wo) warpAfter(wo);
   else { checkMilestones(input, results); applyMerit(input, results, fin); notePlace(); lmAfter(results); shinTrain(actInput || input, results);
     prescriptCheck(actInput || input, results); thumbCheck(actInput || input, results); middleAfter(actInput || input, results, fin); ringCheck(actInput || input, results); }
+  const fainted = !S.dead && S.en <= 0 ? await faintScene() : false;
   checkAch();
   save(); setBusy(false);
   memoryTick();
+  if(fainted) return;
   /* 공방은 버튼이 없다. 직접 찾아가야 열린다.
      찾아갔는지는 AI 서술자가 장면을 보고 정한다(shop). AI가 없을 때(규칙 진행)만 문장으로 어림한다 */
   const atShop = wo ? false : n ? n.shop : (visitsShop(input) || SHOP_EVENTS.includes(ev));
@@ -7036,7 +7150,7 @@ function oneDay(){
   if(S.seed) S.rng = hashStr(S.seed + "|d" + (S.days + 1));
   const monthBefore = monthOf(S.days);
   applyDays(1);
-  { const rf = regenFactor(); S.enAcc = (S.enAcc || 0) + 3 * rf; const ge = Math.floor(S.enAcc); S.enAcc -= ge; S.en = Math.min(100, Math.round(S.en) + ge); S.regenAcc = (S.regenAcc || 0) + rf; if(S.regenAcc >= 20){ S.regenAcc -= 20; S.hp = Math.min(100, S.hp + 1); } }
+  { const rf = regenFactor(); S.enAcc = (S.enAcc || 0) + enDayRegen(); const ge = Math.floor(S.enAcc); S.enAcc -= ge; S.en = Math.min(100, Math.round(S.en) + ge); S.regenAcc = (S.regenAcc || 0) + rf; if(S.regenAcc >= 20){ S.regenAcc -= 20; S.hp = Math.min(100, S.hp + 1); } }
   bloodDay(); if(monthOf(S.days) !== monthBefore){ serumMonth(); ringMonth(); }
   prescriptDay(); starAge(); ageDeath();
   /* 정신력은 시간이 지나면 0(평온) 쪽으로 아주 천천히 돌아온다 */
@@ -7213,6 +7327,7 @@ async function flowNarrate(elapsed, big){
   fin.child_born = false;
   applyNarr(fin, 0, elapsed);
   if(FIGHT_RE.test(fin.narration || "")) fxAfter(fin);
+  if(!S.dead && S.en <= 0){ await faintScene(); save(); setBusy(false); memoryTick(); return; }
   save(); setBusy(false);
   memoryTick();
   /* 흘려보내다 공방에 들르게 된 경우 */
