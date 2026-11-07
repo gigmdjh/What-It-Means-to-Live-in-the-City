@@ -678,6 +678,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
         <label class="field"><span>겉옷 색</span><select id="leOuterC"></select></label>
         <label class="field"><span>아래옷</span><select id="leBot"><option value="없음">없음</option><option value="바지">바지</option><option value="청바지">청바지</option><option value="반바지">반바지</option><option value="치마">치마</option></select></label>
         <label class="field"><span>아래옷 색</span><select id="leBotC"><option value="">자동</option></select></label>
+        <label class="field"><span>속옷</span><select id="leUnder"><option value="">기본</option><option value="스포츠 속옷">스포츠</option><option value="사각 속옷">사각</option><option value="수영복">수영복</option><option value="붕대 속옷">붕대 감기</option></select></label>
+        <label class="field"><span>속옷 색</span><select id="leUnderC"><option value="">자동</option></select></label>
         <label class="field"><span>모자</span><select id="leHat"><option value="">없음</option><option>중절모</option><option>베레모</option><option>비니</option><option>캡</option><option>밀짚모자</option><option>왕관</option><option value="후드를 쓴">후드 쓰기</option></select></label>
         <label class="field"><span>안경</span><select id="leGlass"><option value="">없음</option><option value="안경">네모 안경</option><option value="동그란 안경">동그란 안경</option><option value="반무테 안경">반무테</option><option value="금테 안경">금테</option><option value="모노클">외알 안경</option><option value="선글라스">선글라스</option><option value="고글">고글</option></select></label>
         <label class="field"><span>흉터</span><select id="leScar"><option value="">없음</option><option value="왼쪽 눈 흉터">왼쪽 눈</option><option value="오른쪽 눈 흉터">오른쪽 눈</option><option value="왼뺨 흉터">왼뺨</option><option value="오른뺨 흉터">오른뺨</option><option value="왼뺨 십자 흉터">왼뺨 십자</option><option value="오른뺨 십자 흉터">오른뺨 십자</option><option value="오른쪽 볼에 긴 흉터">길게(오른쪽)</option><option value="왼쪽 볼에 긴 흉터">길게(왼쪽)</option><option value="이마 흉터">이마</option><option value="콧등 흉터">콧등</option><option value="입가 흉터">입가</option><option value="목의 흉터">목</option></select></label>
@@ -781,11 +783,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1458"></script>
+<script src="parts.js?v=20261107-1501"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261107-1458";
+const BUILD = "20261107-1501";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3525,6 +3527,9 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   tr.headwrap = /머리에 붕대|이마에 붕대|붕대를 감은 머리/.test(t);
   tr.accColor = findColor(t, /(리본|머리띠|머리핀|넥타이|목걸이|초커)/);
   tr.belt = /벨트|허리띠/.test(t);
+  /* 속옷: 상의·하의가 없을 때 보인다(속옷은 늘 입고 있음) */
+  tr.under = /수영복/.test(t) ? "swim" : /스포츠 ?(속옷|브라)/.test(t) ? "sport" : /붕대 ?속옷|사라시|가슴에 붕대/.test(t) ? "wrap" : /사각 ?(속옷|팬티)|트렁크/.test(t) ? "boxer" : "basic";
+  tr.underColor = findColor(t, /(속옷|수영복|브라|팬티|트렁크)/);
   tr.apron = /앞치마|에이프런/.test(t);
   tr.apronColor = findColor(t, /(앞치마|에이프런)/) || "#efede6";
   return tr;
@@ -3977,6 +3982,7 @@ function drawSprite(cv, opt){
   const ACC = hexRGB(tr.accColor || (OT === "school" ? "#b8333f" : OT === "uniform" ? "#d2a943" : OT === "suit" ? "#8a2a2c" : "#c9a24a"));
   const WHITE = [238, 236, 230], DARK = OUT.map(c => c * 0.55);
   const OUTR = hexRGB(tr.outerColor || "#3a3a42");
+  const UND = tr.under || "basic", UC = hexRGB(tr.underColor || (UND === "wrap" ? "#ece6d6" : UND === "swim" ? "#2c3e74" : "#34323a"));
   const longLeg = OT === "robe" || OT === "priest" ? 0.86 : 0;
   const outerLen = OUTER === "trench" || OUTER === "labcoat" ? 0.62 : OUTER === "coat" ? 0.45 : 0;
   const GAP = OUTER === "vest" ? 3 : OUTER === "jacket" || OUTER === "leather" ? 2 : 1.5;
@@ -3987,7 +3993,7 @@ function drawSprite(cv, opt){
     if(dress) return t < (OT === "nurse" ? 0.42 : 0.38) ? OUT : t > 0.78 ? SOCK : null;
     if(outerLen && t < outerLen){ const ax = Math.abs(x - cxB), g2 = GAP + 1 + t * 4; if(ax > g2 + 1) return OUTR; if(ax > g2) return shade3(OUTR, 0.72); }
     if(longLeg && t < longLeg) return OUT;
-    if(BT === "none") return null;
+    if(BT === "none") return (UND === "boxer" || UND === "sport") && t < 0.14 ? UC : null;
     if(BT === "skirt") return t < 0.4 ? PANT : t > 0.8 ? SOCK : null;
     if(BT === "shorts") return t < 0.32 ? PANT : null;
     if(OT === "track" && (x === (RB[8] || [0])[0] || x === (RB[9] || [0, 0, 0])[2])) return WHITE;
@@ -4011,7 +4017,14 @@ function drawSprite(cv, opt){
   const innerTorso = (x, y) => {
     const ty = (y - torT) / (torB - torT), dx = x - cxB, ax = Math.abs(dx);
     /* 상의 없음: 맨살. 여성 몸은 가슴 가리개 한 줄 */
-    if(OT === "none") return tr.gender === "여성" && stage > 0 && ty > 0.12 && ty < 0.4 ? [44, 42, 50] : null;
+    if(OT === "none"){
+      const female = tr.gender === "여성" || (tr.gender !== "남성" && stage > 0);
+      if(UND === "swim" && female) return ty > 0.1 ? UC : null;
+      if(UND === "wrap" && (female || stage > 0)) return ty > 0.1 && ty < 0.46 ? ((y % 2) ? shade3(UC, 0.85) : UC) : null;
+      if(!female) return null;
+      if(UND === "sport") return ty > 0.06 && ty < 0.46 ? (ty < 0.12 && ax > 2 ? shade3(UC, 0.8) : UC) : null;
+      return ty > 0.12 && ty < 0.4 ? UC : null;
+    }
     switch(OT){
       case "suit": if(ty < 0.5 && ax <= (0.5 - ty) * 6 + 0.5){ if(ax < 1 && ty > 0.06) return ACC; return IN; } if(ax < 1 && ty > 0.5) return shade3(OUT, 0.7); return OUT;
       case "school": if(ty < 0.18 && ax <= 2) return ACC; if(ty < 0.3 && ax >= 3) return OUT; if(ty < 0.34 && ax >= 3) return [238, 236, 230]; return IN;
@@ -4067,7 +4080,7 @@ function drawSprite(cv, opt){
       if(OT === "robe") return ACC;
       if(dress || OT === "priest" || OT === "overall") return OUT;
       /* 하의 없음: 속옷만 */
-      if(BT === "none") return [52, 50, 58];
+      if(BT === "none") return UC;
       if(OT === "none" && y === (RB[12] || [0, 0])[1] && BT !== "skirt") return [44, 38, 34];
       return PANT;
     }
@@ -5039,7 +5052,7 @@ function leFill(){
   opt($("#leEyeR"), EYE_COLORS.filter(c => c[1] !== "odd").map(c => c[0]));
   opt($("#leClothC"), LE_CLOTH_COLORS);
   opt($("#leOuterC"), LE_CLOTH_COLORS);
-  for(const [id, list] of [["#leBotC", LE_CLOTH_COLORS], ["#leAccC", LE_ACC_COLORS]]){ const sel = $(id); while(sel.options.length > 1) sel.remove(1); for(const v of list){ const o = document.createElement("option"); o.value = o.textContent = v; sel.appendChild(o); } }
+  for(const [id, list] of [["#leBotC", LE_CLOTH_COLORS], ["#leAccC", LE_ACC_COLORS], ["#leUnderC", LE_CLOTH_COLORS]]){ const sel = $(id); while(sel.options.length > 1) sel.remove(1); for(const v of list){ const o = document.createElement("option"); o.value = o.textContent = v; sel.appendChild(o); } }
   $("#leAcc").replaceChildren(...LE_ACC.map(([k]) => { const l = document.createElement("label"); const c = document.createElement("input"); c.type = "checkbox"; c.value = k; l.append(c, k); return l; }));
 }
 function leLookText(){
@@ -5055,8 +5068,11 @@ function leLookText(){
   const bot = onePiece ? "" : $("#leBot").value === "없음" ? "하의 없음" : `${$("#leBotC").value ? $("#leBotC").value + " " : ""}${$("#leBot").value}`;
   const top = cl === "없음" ? "상의 없음" : `${$("#leClothC").value} ${cl}`;
   const ou = $("#leOuter").value, outer = ou ? `${$("#leOuterC").value} ${ou === "가운" ? "실험복" : ou}` : "";
+  /* 속옷은 상의나 하의가 없을 때만 글에 넣는다 */
+  const uv = $("#leUnder").value, uc = $("#leUnderC").value;
+  const under = (cl === "없음" || $("#leBot").value === "없음") && (uv || uc) ? `${uc ? uc + " " : ""}${uv || "속옷"}` : "";
   const hat = $("#leHat").value, hatTxt = hat && hat !== "후드를 쓴" ? `${ac && hat !== "왕관" && hat !== "밀짚모자" ? ac + " " : ""}${hat}` : hat === "후드를 쓴" ? "후드를 쓴" : "";
-  return [hair, $("#leFringe").value, eyes, $("#leEyeS").value, $("#leSkin").value, $("#leBuild").value, outer, top, bot === "바지" ? "" : bot, hatTxt, $("#leGlass").value, $("#leScar").value, ...acc, $("#leExtra").value.trim()].filter(Boolean).join(", ");
+  return [hair, $("#leFringe").value, eyes, $("#leEyeS").value, $("#leSkin").value, $("#leBuild").value, outer, top, bot === "바지" ? "" : bot, under, hatTxt, $("#leGlass").value, $("#leScar").value, ...acc, $("#leExtra").value.trim()].filter(Boolean).join(", ");
 }
 const leSeedStr = () => ($("#leName").value.trim() || "인물") + (leSeedN ? "#" + leSeedN : "");
 function leDraw(){
@@ -5066,7 +5082,7 @@ function leDraw(){
 }
 function leForm(){
   const f = {};
-  for(const id of ["leGender", "leAge", "leHairC", "leHairS", "leFringe", "leEyeS", "leEyeL", "leEyeR", "leSkin", "leBuild", "leCloth", "leClothC", "leOuter", "leOuterC", "leBot", "leBotC", "leHat", "leGlass", "leScar", "leAccC", "leExtra"]) f[id] = $("#" + id).value;
+  for(const id of ["leGender", "leAge", "leHairC", "leHairS", "leFringe", "leEyeS", "leEyeL", "leEyeR", "leSkin", "leBuild", "leCloth", "leClothC", "leOuter", "leOuterC", "leBot", "leBotC", "leUnder", "leUnderC", "leHat", "leGlass", "leScar", "leAccC", "leExtra"]) f[id] = $("#" + id).value;
   f.acc = [...$("#leAcc").querySelectorAll("input:checked")].map(c => c.value);
   return f;
 }
@@ -5133,7 +5149,7 @@ function leRenderRoster(){
 function leApplyForm(c){
   if(!c || !c.form){
     /* 처음 꾸미는 인물: 기본값으로 */
-    for(const id of ["leFringe", "leEyeS", "leSkin", "leExtra", "leBotC", "leHat", "leGlass", "leScar", "leAccC", "leOuter"]) $("#" + id).value = "";
+    for(const id of ["leFringe", "leEyeS", "leSkin", "leExtra", "leBotC", "leHat", "leGlass", "leScar", "leAccC", "leOuter", "leUnder", "leUnderC"]) $("#" + id).value = "";
     $("#leBot").value = "바지";
     $("#leAge").value = "28"; $("#leHairS").value = "긴 머리"; $("#leBuild").value = "보통 체격"; $("#leCloth").value = "셔츠";
     $("#leAcc").querySelectorAll("input").forEach(x => { x.checked = false; });
