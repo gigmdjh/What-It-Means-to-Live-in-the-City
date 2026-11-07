@@ -503,6 +503,9 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .tour-card p{margin:0;font-size:.88rem;line-height:1.6}
 .tour-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .tour-step{font:500 .74rem var(--f-mono);color:var(--muted)}
+/* 라만차랜드 안: 어두운 분홍빛 */
+body.lmland{--bg:rgba(58,14,38,.55);--panel:rgba(48,12,32,.78);--panel-2:rgba(72,20,48,.8);--line:#7a2c58;background:#2a0a1c}
+body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,#6e1f4e 0,#3a0d28 55%,#1a0510 100%),repeating-radial-gradient(circle at 50% 120%,transparent 0 38px,rgba(255,140,200,.05) 38px 40px);background-blend-mode:screen}
 /* 업적 */
 .achs{display:grid;gap:8px;margin-top:18px}
 .achs h3{margin:0}
@@ -542,7 +545,7 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
 .fx-vignette{position:absolute;inset:0;box-shadow:inset 0 0 70px 24px rgba(200,20,30,var(--a,.5));animation:fxFade .9s ease-out forwards}
 .fx-blood{position:absolute;inset:0}
 .fx-drop{position:absolute;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 35% 35%,#d0262f,#7a0a10 70%);opacity:0;animation:fxDrop 1.1s ease-out forwards}
-.fx-shake{animation:fxShake .34s linear}
+.fx-shake{animation:fxShake .5s linear}
 @keyframes fxDraw{to{stroke-dashoffset:0}}
 @keyframes fxFade{to{opacity:0}}
 @keyframes fxPop{60%{transform:scale(1.6);opacity:1}100%{transform:scale(2.2);opacity:0}}
@@ -1003,11 +1006,11 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0210"></script>
+<script src="parts.js?v=20261108-0225"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-0210";
+const BUILD = "20261108-0225";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -3243,6 +3246,7 @@ function applyDays(n){
       if(g){ S[k] = Math.max(0, S[k] + g); grown.push(`${STAT_KO[k]} ${g > 0 ? "+" : ""}${g}`); }
     }
     log({t:"sys", text:`${y}세가 되었다.` + (grown.length ? " 자연 성장: " + grown.join(", ") : "")});
+    if(n < 120) try{ sfx("levelup"); }catch(e){}
     if(y === 20) log({t:"sys", text:"성인이 되었다. 이제 하나 협회 해결사 자격 시험을 볼 수 있다(예: \"해결사 자격 시험을 본다\")."});
   }
 }
@@ -3276,6 +3280,7 @@ function applyNarr(n, forcedDays, shownDays){
   const deltas = [];
   for(const k of GAUGE_KEYS) if(n[k]) deltas.push({k:GAUGE_KO[k], v:n[k]});
   if(n.ahn) deltas.push({k:"안", v:n.ahn});
+  if(n.ahn > 0) try{ sfx("coin"); }catch(e){}
   if(n.blood > 0 && isKindred() && (!S.bornKindred || S.kindredAwake)){ bump("bloodDrink"); bump(n.blood >= 60 ? "bloodHuman" : n.blood >= 35 ? "bloodPack" : "bloodBar"); }
   if(n.blood && isKindred() && (!S.bornKindred || S.kindredAwake)){ ensureBlood(); const b0 = S.blood; S.blood = clamp(Math.round(S.blood + n.blood), 0, 100); if(S.blood !== b0) deltas.push({k:"혈액", v:S.blood - b0}); if(S.blood >= 30) S.bloodWarn = 0; }
   for(const k of STAT_KEYS) if(n[k]) deltas.push({k:STAT_KO[k], v:n[k]});
@@ -3574,7 +3579,7 @@ function addMerit(type, delta){
   if(c.merit >= 100 && c.rank < ranks.length - 1){
     c.rank++; c.merit = 30;
     if(type === "fixer"){ S.license = 9 - c.rank; setLicenseTag(); }
-    log({t:"sys", text:`실적을 인정받아 ${careerLabel(type)}(으)로 올랐다.`});
+    log({t:"sys", text:`실적을 인정받아 ${careerLabel(type)}(으)로 올랐다.`}); sfx("fanfare");
   }else if(delta < 0 && before === 0 && c.rank > 0){
     c.rank--; c.merit = 50;
     if(type === "fixer"){ S.license = 9 - c.rank; setLicenseTag(); }
@@ -4023,17 +4028,21 @@ function attackKind(t){
   return null;
 }
 const FX_SVG = (inner, cls) => `<svg class="${cls}" viewBox="0 0 100 100" preserveAspectRatio="none">${inner}</svg>`;
+/* 연출은 원래보다 느리게(오래 남게) 재생한다 */
+const FX_RATE = 0.6;
 function fxAdd(html, ms){
   const box = document.getElementById("fx"); if(!box) return;
   const d = document.createElement("div"); d.className = "fx-item"; d.innerHTML = html;
-  box.appendChild(d); setTimeout(() => d.remove(), ms);
+  box.appendChild(d);
+  try{ requestAnimationFrame(() => { for(const a of d.getAnimations({subtree:true})) a.playbackRate = FX_RATE; }); }catch(e){}
+  setTimeout(() => d.remove(), ms / FX_RATE);
 }
 function fxShake(power){
   if(reduceMotion) return;
   const g = document.getElementById("game") || document.body;
   g.style.setProperty("--shake", (power || 1) * 6 + "px");
   g.classList.remove("fx-shake"); void g.offsetWidth; g.classList.add("fx-shake");
-  setTimeout(() => g.classList.remove("fx-shake"), 360);
+  setTimeout(() => g.classList.remove("fx-shake"), 520);
 }
 const R = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -4262,11 +4271,12 @@ function whisperTick(){
   const on = !!(S && S.distorted && !S.dead && document.body.classList.contains("in-game"));
   if(!on) return;
   const box = document.getElementById("whispers"); if(!box) return;
-  if(box.children.length > 5) return;
+  if(box.children.length > 9) return;
   const w = whisperEl(pick(WHISPERS), {x:R(2, 35), t:R(6, 9), o:(R(0.25, 0.5)).toFixed(2)});
   box.appendChild(w); setTimeout(() => w.remove(), 9500);
 }
 function renderDistort(){
+  document.body.classList.toggle("lmland", !!(S && !S.dead && !S.distorted && !S.warp && S.lm && atLM() && document.body.classList.contains("in-game")));
   const on = !!(S && S.distorted && !S.dead);
   document.body.classList.toggle("distort", on && document.body.classList.contains("in-game"));
   const sm = document.getElementById("smoke");
@@ -4274,7 +4284,7 @@ function renderDistort(){
     sm.hidden = !(on && document.body.classList.contains("in-game"));
     if(!sm.hidden && !sm.children.length) for(let i = 0; i < 7; i++){ const b = document.createElement("i"); b.style.left = (i * 15 - 10) + "%"; b.style.setProperty("--t", (18 + i * 3) + "s"); b.style.setProperty("--d", (-i * 4) + "s"); b.style.setProperty("--x", (i % 2 ? 8 : -8) + "vw"); sm.appendChild(b); }
   }
-  if(on && !whisperTimer) whisperTimer = setInterval(whisperTick, 3800);
+  if(on && !whisperTimer) whisperTimer = setInterval(() => { whisperTick(); if(Math.random() < 0.5) setTimeout(whisperTick, 700); }, 2200);
   if(!on && whisperTimer){ clearInterval(whisperTimer); whisperTimer = null; const b = document.getElementById("whispers"); if(b) b.replaceChildren(); }
 }
 function becomeDistorted(){
@@ -4400,7 +4410,7 @@ function lmAccept(input){
   S.location = "16구역 뒷골목 라만차랜드 입구";
   S.mins = 16 * 60 + 5;
   S.lm.visits = 1; S.lm.inside = true;
-  sfx("event");
+  sfx("carnival");
   log({t:"narr", text:"오후 4시. 16구역 뒷골목, 아무것도 없던 공터에 카니발 음악이 흘러나온다. 핏빛 아치 위로 'LA MANCHALAND'라는 글자가 반짝이고, 굳은 피로 쌓은 담장 너머에서 관람차가 천천히 돈다.\n\n입구에 선 안내원이 당신의 냄새를 맡고는 활짝 웃는다. \"같은 피의 손님이시군요! 어서 오세요. 이곳에서는 누구도 목마를 일이 없답니다.\"",
     deltas:[{k:"돌발", v:0, event:true}], options:["1구역 '예쁘고 멋져요'로 간다", "퍼레이드 소리를 따라간다", "안내원에게 이곳에 대해 묻는다"]});
   chron("라만차랜드의 초대에 응했다");
@@ -4434,7 +4444,7 @@ function lmPromote(){
     S.blood = 100; S.rep = gclamp("rep", S.rep + 20);
     log({t:"narr", text:`관람차 꼭대기, 도시의 불빛이 발아래 깔린다. 라만차의 혈귀들이 무릎을 꿇는다. 이제 당신은 누군가의 권속이 아니라, 권속을 이끄는 쪽이다. 「${L.family}」의 장로로서, 당신의 피가 새 가문의 첫 피가 된다.`, deltas:[{k:"힘", v:8}, {k:"방어력", v:8}, {k:"속도", v:8}, {k:"평판", v:20}], options:ruleOptions()});
   }
-  log({t:"sys", text:`라만차랜드 지위가 올랐다: ${LM_RANKS[L.rank]}`});
+  log({t:"sys", text:`라만차랜드 지위가 올랐다: ${LM_RANKS[L.rank]}`}); sfx("fanfare");
   chron(`라만차랜드의 ${LM_RANKS[L.rank]}이 되었다`);
   checkAch();
 }
@@ -4480,6 +4490,7 @@ function prescriptDay(){
     const oracle = (S.careers && S.careers.syndicate && S.careers.syndicate.rank >= 3);
     const pool = oracle ? ORACLES : PRESCRIPTS, i = rnd(pool.length);
     S.prescript = {i, oracle, due:S.days + 1, done:false};
+    try{ sfx("paper"); }catch(e){}
     log({t:"sys", text:`📜 ${oracle ? "신탁" : "지령"} 쪽지가 날아들었다: “${pool[i][0]}” (내일까지)`});
   }
 }
@@ -4600,7 +4611,7 @@ function promoAnswer(input){
   if(r.cls === "ok" || r.cls === "crit"){
     c.rank++; c.merit = 20; S.license = P.to; setLicenseTag(); S.rep = gclamp("rep", S.rep + 5);
     log({t:"narr", text:`시험관이 고개를 끄덕인다. 새 자격증에 ${P.to}급이라는 숫자가 찍혀 나온다.`, deltas:[{k:"평판", v:5}], options:ruleOptions()});
-    log({t:"sys", text:`승급 시험에 합격했다: 하나 협회 해결사 ${P.to}급`});
+    log({t:"sys", text:`승급 시험에 합격했다: 하나 협회 해결사 ${P.to}급`}); sfx("fanfare");
   }else{
     c.merit = 50; bump("promoFail");
     log({t:"narr", text:"시험관은 짧게 고개를 젓는다. \"아직입니다. 실적을 다시 채워 오세요.\"", deltas:[], options:ruleOptions()});
@@ -4829,7 +4840,7 @@ function enterWarp(input){
   S.warpOffered = true; S.warpTried = true;
   S.location = "W사 워프열차 1칸";
   S.urgent = false; S.awaitEvent = false;
-  sfx("event");
+  sfx("warpIn");
   log({t:"narr", text:"W사 터미널. 둥지를 본떠 지은 역사(驛舍)는 반짝이지만, 승강장 끝에 선 열차 한 대만은 창문이 안쪽에서 시커멓게 칠해져 있다. 정리요원이 당신에게 출입증을 걸어 주며 말한다. \"안에서는 아무도 죽지 않습니다. 대신 아프긴 하죠. 끝나면 전부 되돌려 드립니다.\"\n\n문이 열린다. 바깥의 10초가 수천 년으로 늘어난 곳, 1칸의 퀴퀴한 공기 속에서 좌석마다 웅크린 승객들이 일제히 고개를 든다.",
     deltas:[{k:"돌발", v:0, event:true}], options:["앞으로 밀고 나간다", "승객들을 하나씩 제압한다", "정리요원과 발을 맞춘다"]});
   checkAch();
@@ -7427,7 +7438,7 @@ function relive(id){
 function showMenu(){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(S && !S.dead && !S.archived) save();
-  document.body.classList.remove("in-game", "show-status", "warp", "distort");
+  document.body.classList.remove("in-game", "show-status", "warp", "distort", "lmland");
   try{ renderDistort(); }catch(e){}
   $("#menu").hidden = false; $("#game").hidden = true; $("#btnMenu").hidden = true;
   renderMenu();
@@ -7827,6 +7838,13 @@ function sfx(kind, opt = {}){
     case "miss": noiseHit(0.25, {f0:1200, f1:300, q:1, vol:0.15}); break;
     case "hurt": tone(90, 0.35, {type:"sawtooth", vol:0.45, slide:0.5}); tone(180, 0.2, {type:"square", vol:0.12, slide:0.5}); noiseHit(0.2, {f0:900, f1:150, type:"lowpass", vol:0.6}); break;
     case "whisper": for(let i = 0; i < 8; i++) noiseHit(0.5, {f0:2400 + Math.random() * 2000, f1:1200, q:6, vol:0.08, at:i * 0.35}); tone(110, 3.2, {type:"sine", vol:0.12, slide:0.8}); break;
+    case "coin": tone(1320, 0.08, {type:"square", vol:0.05}); tone(1760, 0.18, {type:"square", vol:0.05, at:0.07}); break;
+    case "paper": noiseHit(0.25, {f0:5000, f1:2500, q:0.8, vol:0.18}); noiseHit(0.15, {f0:3500, f1:1800, q:0.8, vol:0.12, at:0.18}); break;
+    case "fanfare": [523, 659, 784, 1047].forEach((f, i) => tone(f, i === 3 ? 0.6 : 0.16, {type:"triangle", vol:0.11, at:i * 0.13})); break;
+    case "warpIn": tone(220, 1.2, {type:"sawtooth", vol:0.1, slide:4}); noiseHit(1.0, {f0:300, f1:6000, q:1.5, vol:0.25}); break;
+    case "carnival": [392, 494, 587, 494, 392, 330].forEach((f, i) => tone(f, 0.22, {type:"square", vol:0.05, at:i * 0.16})); break;
+    case "door": tone(90, 0.15, {vol:0.4, slide:0.7}); noiseHit(0.1, {f0:800, f1:200, type:"lowpass", vol:0.4, at:0.02}); break;
+    case "levelup": [659, 784, 988].forEach((f, i) => tone(f, 0.25, {type:"sine", vol:0.12, at:i * 0.09})); break;
     case "mang": [392, 523, 659, 784].forEach((f, i) => tone(f, 0.6, {type:"sine", vol:0.08, at:i * 0.06})); noiseHit(0.4, {f0:800, f1:3000, q:1, vol:0.15}); break;
     case "inject": tone(1800, 0.05, {type:"square", vol:0.06}); noiseHit(0.25, {f0:3000, f1:6000, q:3, vol:0.15, at:0.04}); tone(400, 0.3, {type:"sine", vol:0.12, at:0.05, slide:2}); break;
     case "heal": [523, 659, 784].forEach((f, i) => tone(f, 0.4, {type:"triangle", vol:0.09, at:i * 0.08})); break;
@@ -7852,17 +7870,48 @@ function sfx(kind, opt = {}){
 /* 배경음악: 잔잔한 도시(낮/밤)와 긴박함. 마디마다 화음을 새로 짠다 */
 const BGM_CHORDS = {calm:[[220, 261.6, 329.6], [174.6, 220, 261.6], [196, 246.9, 293.7], [164.8, 196, 246.9]],
   night:[[146.8, 174.6, 220], [130.8, 164.8, 196], [116.5, 146.8, 174.6], [110, 130.8, 164.8]],
-  tense:[[110, 130.8, 155.6], [103.8, 123.5, 155.6], [110, 130.8, 164.8], [98, 116.5, 146.8]]};
+  tense:[[110, 130.8, 155.6], [103.8, 123.5, 155.6], [110, 130.8, 164.8], [98, 116.5, 146.8]],
+  warp:[[164.8, 207.7, 246.9], [155.6, 196, 233.1], [174.6, 220, 261.6], [146.8, 185, 220]],
+  distort:[[98, 103.8, 146.8], [92.5, 98, 138.6], [87.3, 103.8, 130.8], [98, 116.5, 123.5]],
+  lmland:[[261.6, 311.1, 392], [233.1, 293.7, 349.2], [196, 233.1, 293.7], [207.7, 261.6, 311.1]]};
 function bgmMode(){
   if(!S || !S.name || S.dead) return "calm";
+  if(S.warp) return "warp";
+  if(S.distorted) return "distort";
+  if(S.lm && atLM()) return "lmland";
   if(S.urgent || (S.awaitEvent && /(환상체|혈귀|공격|습격|청소부)/.test((lastNarr() || {}).text || ""))) return "tense";
   const h = Math.floor(minsNow() / 60); return h < 5 || h >= 21 ? "night" : "calm";
 }
 function bgmBar(){
   const c = AUD.ctx; if(!c || c.state !== "running") return;
   if(!audioCfg().bgmOn) return;
-  const mode = bgmMode(), tense = mode === "tense", dur = tense ? 2.4 : 4.8;
+  const mode = bgmMode(), tense = mode === "tense", dur = tense ? 2.4 : mode === "warp" ? 3.2 : mode === "lmland" ? 3.6 : mode === "distort" ? 5.6 : 4.8;
   const ch = BGM_CHORDS[mode][AUD.bar++ % 4];
+  if(mode === "warp"){
+    /* 워프열차: 일정하게 덜컹이는 소리 + 높게 떠도는 차가운 화음 */
+    for(const f of ch) tone(f * 2, dur * 1.05, {type:"sine", vol:0.04, attack:dur * 0.3, out:AUD.bgm});
+    for(let i = 0; i < 8; i++) noiseHit(0.06, {f0:900, f1:300, type:"lowpass", vol:i % 2 ? 0.05 : 0.09, at:i * dur / 8, out:AUD.bgm});
+    tone(ch[0] / 2, dur, {type:"triangle", vol:0.06, attack:0.3, out:AUD.bgm});
+    clearTimeout(AUD.timer); AUD.timer = setTimeout(bgmBar, dur * 1000); return;
+  }
+  if(mode === "distort"){
+    /* 뒤틀림: 어긋난 낮은 화음과 가끔 스치는 높은 떨림 */
+    for(const f of ch) tone(f * (1 + (Math.random() - 0.5) * 0.02), dur * 1.1, {type:"sawtooth", vol:0.03, attack:dur * 0.5, slide:0.97, out:AUD.bgm});
+    tone(ch[0] / 2, dur, {type:"sine", vol:0.12, attack:1, out:AUD.bgm});
+    if(Math.random() < 0.6) tone(ch[2] * 4, 1.2, {type:"sine", vol:0.025, at:Math.random() * dur * 0.7, slide:1.06, out:AUD.bgm});
+    clearTimeout(AUD.timer); AUD.timer = setTimeout(bgmBar, dur * 1000); return;
+  }
+  if(mode === "lmland"){
+    /* 라만차랜드: 단조 왈츠(쿵-짝-짝)와 오르골 같은 선율 */
+    const beat = dur / 6;
+    for(let b = 0; b < 6; b++){
+      if(b % 3 === 0) tone(ch[0] / 2, beat * 0.9, {type:"triangle", vol:0.08, at:b * beat, out:AUD.bgm});
+      else for(const f of ch.slice(1)) tone(f, beat * 0.6, {type:"square", vol:0.018, at:b * beat, out:AUD.bgm});
+    }
+    const mel = ch.map(f => f * 2).concat([ch[0] * 4]);
+    for(let i = 0; i < 6; i++) if(Math.random() < 0.75) tone(mel[rndVis(mel.length)], beat * 0.9, {type:"sine", vol:0.04, at:i * beat, attack:0.005, out:AUD.bgm});
+    clearTimeout(AUD.timer); AUD.timer = setTimeout(bgmBar, dur * 1000); return;
+  }
   /* 바탕 화음(부드러운 패드) */
   for(const f of ch) tone(f, dur * 1.1, {type:tense ? "sawtooth" : "triangle", vol:tense ? 0.035 : 0.06, attack:dur * 0.35, out:AUD.bgm});
   tone(ch[0] / 2, dur * 1.05, {type:"sine", vol:tense ? 0.12 : 0.08, attack:0.4, out:AUD.bgm});
