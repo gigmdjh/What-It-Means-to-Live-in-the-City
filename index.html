@@ -959,10 +959,10 @@ body.distort .sprite{filter:saturate(.4) contrast(1.3) drop-shadow(0 0 6px #b014
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-2345"></script>
+<script src="parts.js?v=20261107-2355"></script>
 <script>
 "use strict";
-const BUILD = "20261107-2345";
+const BUILD = "20261107-2355";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -1515,9 +1515,9 @@ const OFFICE_NAMES = ["골목등 사무소","청어 사무소","녹슨 열쇠 �
 const isApprenticeEv = ev => APPRENTICE.includes(ev);
 const apprenticeOf = () => (S.tags.find(t => /^견습:/.test(t)) || "").replace(/^견습:/, "").trim();
 const isScout = ev => Object.values(SCOUTS).some(l => l.includes(ev));
-/* 나이에 기대되는 능력치(성인 남성 평균 12)에 비해 얼마나 강한가 */
+/* 나이에 기대되는 능력치(성인 평균 18)에 비해 얼마나 강한가 */
 function prodigyRatio(){
-  const y = ageY(), expect = Math.max(3, 2 + 0.5 * Math.min(y, 20));
+  const y = ageY(), expect = Math.max(3, 3 + 0.75 * Math.min(y, 20));
   const avg = STAT_KEYS.reduce((a, k) => a + eff(k), 0) / STAT_KEYS.length;
   return avg / expect;
 }
@@ -2480,8 +2480,8 @@ function gearLook(){
   return out.join(", ");
 }
 
-const STAT_AVG = 12;
-const statRel = v => v >= 35 ? "특색급" : v >= 26 ? "이름난 해결사급" : v >= 18 ? "단련된 해결사급" : v >= STAT_AVG + 3 ? "평균보다 높음" : v >= STAT_AVG - 2 ? "성인 평균" : v >= 6 ? "평균보다 낮음" : "아이 수준";
+const STAT_AVG = 18;
+const statRel = v => v >= 45 ? "특색급" : v >= 36 ? "이름난 해결사급" : v >= 27 ? "단련된 해결사급" : v >= STAT_AVG + 3 ? "평균보다 높음" : v >= STAT_AVG - 2 ? "성인 평균" : v >= 6 ? "평균보다 낮음" : "아이 수준";
 const isKindred = () => !!(S && S.tags && S.tags.some(t => /^혈귀:권속/.test(t)));
 function identityText(){
   const out = [];
@@ -2993,7 +2993,8 @@ function applyDays(n){
     const grown = [];
     for(const k of STAT_KEYS){
       let g = 0;
-      if(y <= 20) g = [0,0,1,1][rnd(4)];
+      if(y <= 20) g = [0,1,1,1][rnd(4)];
+      else if(y <= 30 && rnd(5) === 0) g = 1;
       else if(y >= 60 && (k === "str" || k === "spd") && rnd(10) < 3 && !isKindred()) g = -1;
       if(g){ S[k] = Math.max(0, S[k] + g); grown.push(`${STAT_KO[k]} ${g > 0 ? "+" : ""}${g}`); }
     }
@@ -3256,7 +3257,7 @@ function checkMilestones(input, results){
   syncCareers();
   /* 특색: 1급 해결사 + 평판 90 이상 */
   /* 특색: 1급 중에서도 충분히 강할 때 협회가 부여한다 */
-  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 80 && S.license === 1 && ["str", "def", "spd"].reduce((a, k) => a + eff(k), 0) / 3 >= 35){
+  if(!S.color && !(S.pendingNames || []).includes("color") && y >= 20 && S.rep >= 80 && S.license === 1 && ["str", "def", "spd"].reduce((a, k) => a + eff(k), 0) / 3 >= 42){
     log({t:"narr", text:"하나 협회 본부에서 사람이 찾아왔다. 정중하지만 무게 있는 목소리로 말한다. \"당신의 실력은 이제 등급으로 잴 수 없습니다. 협회는 당신에게 특색을 부여하기로 했습니다.\"", deltas:[], options:[]});
     requestName("color");
   }
@@ -4466,7 +4467,7 @@ async function clawStart(){
   for(const f of S.family) if(f.diedAt != null && f.diedAt < 0) f.diedAt = S.days - 2000;
   S.claw = {W:100, R:100, K:100, since:S.days};
   S.origin = "nest";
-  S.str = 22 + rnd(5); S.def = 20 + rnd(5); S.spd = 22 + rnd(5); S.int = 16 + rnd(4);
+  S.str = 30 + rnd(7); S.def = 28 + rnd(7); S.spd = 30 + rnd(7); S.int = 22 + rnd(5);
   S.rep = 60; S.ahn = 50000000 + rnd(50) * 1000000;
   S.tags.push("소속:머리의 발톱", "출신:C사 구역 둥지");
   S.location = "C사 구역 둥지 머리의 시설";
@@ -7045,7 +7046,7 @@ async function createLife(){
   const bornStar = rand01() < 0.01 ? STARS[rnd(STARS.length)] : null;
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, lifespan, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
-    str:1 + rnd(3), def:1 + rnd(3), spd:1 + rnd(3), int:1 + rnd(3), log:[], dead:null,
+    str:2 + rnd(3), def:2 + rnd(3), spd:2 + rnd(3), int:2 + rnd(3), log:[], dead:null,
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
     choice:{district:$("#cDistrict").value}, hairColor:swVal("hairc"), eyeColor:swVal("eyec")};
   S.doy0 = rnd(365);
