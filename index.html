@@ -414,6 +414,30 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .yb-season{font-weight:600}
 .yb-left{margin-left:auto}
 .yb-clock{font-variant-numeric:tabular-nums;white-space:nowrap}
+/* 워프열차: 푸른 공간에 검은 기둥이 지나간다 */
+body.warp{--bg:rgba(7,28,74,.5);--panel:rgba(8,26,72,.66);--panel-2:rgba(16,44,104,.72);--line:#2c5aa8;background:#071c4a}
+body.warp::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(90deg,transparent 0 210px,#02040a 210px 246px,transparent 246px 420px),
+    repeating-linear-gradient(90deg,transparent 0 90px,rgba(2,4,10,.55) 90px 104px,transparent 104px 260px),
+    radial-gradient(ellipse at 50% 50%,#2a6fe0 0,#0c3586 55%,#041233 100%);
+  background-size:420px 100%,260px 100%,100% 100%;animation:warpRun .55s linear infinite}
+@keyframes warpRun{from{background-position:0 0,0 0,0 0}to{background-position:-420px 0,-260px 0,0 0}}
+@media (prefers-reduced-motion: reduce){body.warp::before{animation:none}}
+.warpbar{display:flex;align-items:center;gap:8px;margin:-2px 0 8px;font:600 .78rem var(--f-mono);color:#9cc3ff}
+.warpbar .wcars{display:flex;gap:3px;flex:1}
+.warpbar .wcar{flex:1;height:8px;border-radius:2px;background:#0b1530;border:1px solid #3a6cc4}
+.warpbar .wcar.done{background:#5fa0ff}
+.warpbar .wcar.now{background:#cfe2ff;animation:wblink 1s ease-in-out infinite}
+@keyframes wblink{50%{opacity:.45}}
+/* 업적 */
+.achs{display:grid;gap:8px;margin-top:18px}
+.achs h3{margin:0}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.ach{display:flex;flex-direction:column;gap:1px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);min-width:0}
+.ach b{font-size:.86rem}
+.ach span{font-size:.72rem;color:var(--muted)}
+.ach.off{opacity:.42}
+.ach.on b{color:var(--accent)}
 .yb-loc{flex:1 1 0;width:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)}
 .hud-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
 .hs-card{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);min-width:0}
@@ -521,6 +545,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
       <span class="note">무료 계정의 사용량으로 AI를 씁니다. 폰에서 모델을 내려받지 않아 가볍고 빠릅니다.</span>
     </div>
   </form>
+  <section class="achs">
+    <h3 class="label">업적 <span class="note" id="achCount"></span></h3>
+    <div class="ach-grid" id="achList"></div>
+  </section>
   <section class="lives">
     <h3 class="label">지나간 삶</h3>
     <p class="note" id="livesNote"></p>
@@ -533,6 +561,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 <main class="game" id="game" hidden>
   <div class="hud" id="hud">
     <div class="yearbar" id="yearBarH" aria-label="올해 흐름"></div>
+    <div class="warpbar" id="warpBar" hidden></div>
     <div class="hud-top"><canvas class="sprite sm" id="hSprite" width="60" height="92" aria-hidden="true"></canvas><span class="hname-wrap"><b id="hName"></b><span class="htitle" id="hTitle" hidden></span></span><span class="info" id="hInfo"></span><button class="btn" type="button" id="btnStatus">상세</button></div>
     <div class="hud-g" id="hGauges"></div>
     <div class="hud-career" id="hCareer" hidden></div>
@@ -541,7 +570,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </div>
   <aside class="status" id="statusPanel">
     <div class="status-head full"><span class="label">캐릭터 상세</span><button class="btn" type="button" id="btnCloseStatus">닫기</button></div>
-    <div class="card full"><div class="label">올해</div><div class="yearbar in-card" id="yearBarS"></div></div>
+    <div class="card full"><div class="label">올해</div><div class="yearbar in-card" id="yearBarS"></div>
+      <div class="warpbar" id="warpBarS" hidden></div></div>
     <div class="card idcard full">
       <canvas class="sprite" id="sSprite" width="60" height="92" role="img" aria-label="캐릭터 모습"></canvas>
       <div class="label">시민 기록</div>
@@ -834,10 +864,10 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   </form>
 </dialog>
 
-<script src="parts.js?v=20261107-1925"></script>
+<script src="parts.js?v=20261107-1940"></script>
 <script>
 "use strict";
-const BUILD = "20261107-1925";
+const BUILD = "20261107-1940";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[세계관: 프로젝트 문의 '도시']
 - 도시는 '머리'가 다스리는 인류 최후의 거점이다. 인구 약 70억, 작은 나라만 한 크기, 26개 구역으로 나뉜다(26구역은 지도에 없다).
@@ -935,7 +965,7 @@ const NARR_RULES = `
 - str, def, spd, int(능력치): "없음", "오름", "내림". 대부분 "없음". 의미 있는 훈련·경험이면 "오름", 큰 부상이면 "내림".
 - days(걸린 날): "없음"(하루 안), "하루", "며칠", "일주일", "몇 주", "한 달", "몇 달", "일 년".
 - time(하루 안에서 걸린 시간): "잠깐", "한 시간", "몇 시간", "반나절", "밤새"(다음 날 아침까지).
-- 기준: 평범한 행동은 en "약간 감소". 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복. 평판은 남들이 보거나 소문이 날 때만 움직인다.
+- 기준: 평범한 행동은 en "약간 감소". 다치면 hp를 깎고, 충격·공포·죄책감엔 sp를 깎는다. 잠·식사·휴식은 회복하지만 체력과 정신력은 회복이 느리다: 한 번 자거나 쉬는 건 "약간 회복", 다친 몸이나 큰 충격은 며칠~몇 주에 걸쳐 조금씩 낫는다. "크게 회복"은 치료를 받거나 오래 쉬었을 때만. 평판은 남들이 보거나 소문이 날 때만 움직인다.
 - merit: 플레이어가 소속([신분·힘]의 해결사·조직·공무원)의 일을 했다면 실적 변화("없음"~"크게 회복", 회복=올라감). 소속 일이 아니면 "없음".
 
 [8. 장면 정보 칸]
@@ -1324,6 +1354,7 @@ function kidnapChance(input){
 }
 const isKidnap = ev => /^납치:/.test(String(ev || ""));
 function rollEvent(daysAhead){
+  if(!daysAhead && warpEligible() && rand01() < 0.03) return WARP_OFFER;
   if(!daysAhead && rand01() < scoutChance()) return scoutEvent();
   if(!daysAhead && rand01() < commissionChance()) return COMMISSIONS[rnd(COMMISSIONS.length)];
   const y = Math.floor((S.days + (daysAhead || 0)) / 365);
@@ -1454,6 +1485,7 @@ function plainEvent(ev){
   return `\n그리고 장면 끝에 갑작스러운 일이 생긴다. 지금 상황에 맞게 구체적으로 지어내라(무엇을 하던 중 무엇을 마주쳤는지). 예: "${evText(ev)}"`;
 }
 function eventLine(ev){
+  if(ev === WARP_OFFER) return `\n\n[W사 의뢰] 장면 끝에 W사(워프열차 회사, 23구역) 쪽에서 의뢰가 들어온다: 도착한 워프열차 한 대가 '정체' 등급이 되었으니(오래 갇혀 미친 승객들), 맨 앞 칸부터 8칸 끝까지 승객을 제압하며 돌파해 달라는 것. 끝나면 W사가 '불러오기'로 몸과 기억을 들어가기 전으로 되돌려 준다고 한다. 주인공이 받을지 거절할지 고르는 순간에서 멈춰라. 아직 열차에 들어가지 마라.`;
   if(!ev) return "";
   const shop = SHOP_EVENTS.includes(ev);
   if(isKidnap(ev)) return `\n\n[납치 시도] 주인공이 혼자 인적 드문 곳에 있는 틈을 노려, 장면 끝에서 누군가 주인공을 납치하려 한다(눈에 띄는 외모 때문에 노려졌을 수 있다). 노리는 이유는 몸값, 인신매매 조직의 노동력, 장기 밀매, 조직의 조직원 만들기 같은 것으로 그리고, 성적인 의미나 암시는 절대 넣지 마라(특히 미성년이면). 누가·몇 명이·어떻게 붙잡으려 하는지 분명히 쓰고, 주인공이 저항하거나 달아날지 고르는 순간에서 멈춰라. urgent는 true. 나이에 맞게.`;
@@ -2338,6 +2370,7 @@ function stateSummary(local){
   if(S.outfit) lines.push(`[지금 입은 옷] ${S.outfit} (외모 글의 옷 대신 이걸 입고 있다)`);
   const extra = gearLook(); if(extra) lines.push(`[외모에 더해진 것] ${extra}`);
   lines.push(`[나이] ${ageY()}세 ${ageM()}개월 (${stage(ageY())}) [출생] ${corpOf(S.district)} 구역(${S.district}구역) ${originKo(S.origin)} [현재 장소] ${S.location || "미정"} [때] ${timeText()} (밤 깊은 시간엔 어둡고 사람이 드물다. 뒷골목은 새벽 3시 13분부터 '뒷골목의 밤'이라 위험하다)`);
+  if(S.warp) lines.push(warpState());
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
   lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 18~25, 이름난 해결사 26~32, 특색급 35 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라.`);
   const idt = identityText(); if(idt) lines.push(`[신분·힘] ${idt}`);
@@ -2819,6 +2852,8 @@ function judgeUrgent(n){
 function applyNarr(n, forcedDays, shownDays){
   S.flowNote = "";
   S.urgent = !n.passiveDone && judgeUrgent(n);
+  /* 체력·정신력은 회복이 느리다: 오르는 양은 40%만 */
+  for(const k of ["hp", "sp"]) if(n[k] > 0) n[k] = Math.max(1, Math.round(n[k] * 0.4));
   for(const k of GAUGE_KEYS) S[k] = gclamp(k, S[k] + n[k]);
   for(const k of STAT_KEYS) S[k] = Math.max(0, S[k] + n[k]);
   S.ahn = Math.max(0, S.ahn + n.ahn);
@@ -2908,7 +2943,7 @@ async function memoryTick(){
 }
 
 function checkDeath(){
-  if(S.dead) return;
+  if(S.dead || S.warp) return;   /* 워프열차 안에서는 죽지 않는다(쓰러지면 불러오기) */
   if(S.hp <= 0) S.dead = "체력이 다해 숨을 거두었다.";
   else if(S.tags.some(t => /^혈귀:피주머니/.test(t))) S.dead = "혈귀에게 물려 피주머니가 되었다. 이름도 기억도 남지 않았다.";
   if(S.dead){ log({t:"death", text:S.dead}); return; }
@@ -3306,7 +3341,7 @@ function migrateSave(){
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
-  renderYearBar();
+  renderYearBar(); renderWarpBar();
   $("#sName").textContent = S.name;
   $("#sMeta").textContent = `${S.gender} · ${corpOf(S.district)} 구역 ${originKo(S.origin)} 출생`;
   const spriteKey = [S.name, S.look, S.outfit || "", S.gender, S.origin, stage(ageY()), ageY() >= 60, ageY() >= 65, JSON.stringify(S.equip)].join("|");
@@ -3429,7 +3464,7 @@ function renderYearBar(){
   }
 }
 /* 위쪽 줄에 쓰는 짧은 장소 이름: "L사 구역 뒷골목 2층집" → "집" (전체는 상세에) */
-const PLACE_SHORT = [[/(집|단칸방|저택|자택|아파트|숙소|하숙|내 방|방 안)/, "집"], [/병원|진료소|의원/, "병원"], [/학교|교실|학원/, "학교"], [/공원|놀이터/, "공원"], [/시장|장터/, "시장"], [/도서관/, "도서관"], [/사무소|사무실/, "사무소"], [/공방/, "공방"], [/식당|가게|상점|카페|빵집|술집|편의점|마트|바$/, "가게"], [/폐건물|폐공장|공사장/, "폐건물"], [/골목/, "골목"], [/거리|길|광장/, "거리"], [/둥지/, "둥지"]];
+const PLACE_SHORT = [[/워프열차/, "워프열차"], [/(집|단칸방|저택|자택|아파트|숙소|하숙|내 방|방 안)/, "집"], [/병원|진료소|의원/, "병원"], [/학교|교실|학원/, "학교"], [/공원|놀이터/, "공원"], [/시장|장터/, "시장"], [/도서관/, "도서관"], [/사무소|사무실/, "사무소"], [/공방/, "공방"], [/식당|가게|상점|카페|빵집|술집|편의점|마트|바$/, "가게"], [/폐건물|폐공장|공사장/, "폐건물"], [/골목/, "골목"], [/거리|길|광장/, "거리"], [/둥지/, "둥지"]];
 function shortPlace(loc){
   const t = String(loc || "").trim(); if(!t) return "알 수 없음";
   const rest = t.replace(/^[A-Z]사\s*구역\s*/, "").replace(/^\d+\s*구역\s*/, "").trim() || t;
@@ -3439,7 +3474,7 @@ function shortPlace(loc){
   return (ws[ws.length - 1] || rest).slice(0, 6);
 }
 function renderLite(){
-  renderYearBar();
+  renderYearBar(); renderWarpBar();
   $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
   $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
@@ -3569,9 +3604,194 @@ function splitSpeech(input){
   act = act.replace(/^[,.\s]+|[,.\s]+$/g, "");
   return {says, act};
 }
+/* ───────── 워프열차 (W사 의뢰, 인생에 한 번) ─────────
+   W사 워프열차는 도착까지 바깥 시간으로 10초지만, 안에서는 수천 년 같은 시간이 흐른다.
+   그동안 승객은 죽지도 지치지도 않고, 이코노미 칸 승객들은 대개 미쳐 버린다.
+   도착하면 W사 정리요원이 특이점의 '불러오기'로 몸과 기억을 탑승 순간으로 되돌린다.
+   여기서는 '정체' 등급 열차의 승객 제압을 해결사·조직원에게 맡기는 의뢰로 그린다. */
+const WARP_CARS = 8;
+const WARP_OFFER = "W사에서 의뢰가 들어왔다. 도착한 워프열차 한 대가 '정체' 등급이 되어, 정리요원만으로는 승객 제압이 벅차다고 한다. 맨 앞 칸부터 8칸 끝까지 밀고 나가 달라는 일이다. 안에서 무슨 일을 겪든, 끝나면 '불러오기'로 들어가기 전 모습으로 되돌려 준다고 한다.|의뢰를 받는다/보수를 묻는다/거절한다";
+const WARP_YES = /(받|맡|수락|하겠|할게|할래|가겠|갈게|간다|좋아|좋다|승낙|지원|탄다|타겠|들어간|오케이|ㅇㅋ|응|네)/;
+const WARP_NO = /(거절|안 ?(받|맡|해|할|가|탈)|않|싫|못 ?(하|가)|보수|얼마|묻)/;
+function warpEligible(){
+  if(S.warp || S.warpOffered || ageY() < 18) return false;
+  return !!S.license || S.tags.some(t => /^(소속|조직):/.test(t) || /^직업:.*(해결사|사무소|협회|조직|파$|회$)/.test(t));
+}
+function warpState(){
+  const c = S.warp.car;
+  return `[워프열차 — W사 의뢰 진행 중] 주인공은 W사의 '정체' 등급 워프열차 안에서 승객을 제압하며 칸을 돌파하는 중이다. 지금 ${c}칸째(전체 ${WARP_CARS}칸). 열차 안은 바깥의 10초가 수천 년처럼 늘어진 곳이라, 오래 갇힌 이코노미 칸 승객들은 정신이 무너져 서로를 해치고 들어오는 사람에게 달려든다. 안에서는 누구도 죽지 않는다(몸이 멈춰 있다). W사 정리요원(L2·L3)이 뒤를 받친다. 뒤쪽 칸일수록 승객이 많고 사납다.`;
+}
+/* 이번 행동으로 칸을 넘었는지, 얼마나 다쳤는지는 게임이 주사위로 정한다 */
+function warpOutcome(results, passive){
+  const c = S.warp.car, real = results.filter(r => !r.auto);
+  const best = passive || !real.length ? "none" : real.some(r => r.cls === "crit") ? "crit" : real.some(r => r.cls === "ok") ? "ok" : real.some(r => r.cls === "fumble") ? "fumble" : "fail";
+  let hp = 0, sp = 0, pass = false;
+  if(best === "crit"){ pass = true; hp = 0; }
+  else if(best === "ok"){ pass = true; hp = 2 + rnd(3) + Math.floor(c / 2); }
+  else if(best === "fumble"){ hp = 14 + c * 2 + rnd(5); sp = 6; }
+  else if(best === "fail"){ hp = 8 + c * 2 + rnd(4); sp = 3; }
+  else { hp = 6 + c + rnd(4); sp = 2; }              /* 아무것도 안 하거나 말만 했다 */
+  if(!pass && S.equip && S.equip.armor) hp = Math.max(1, hp - 2);
+  return {car:c, pass, hp, sp, best, last: pass && c >= WARP_CARS};
+}
+function warpLine(w){
+  const res = w.pass ? (w.last ? `마지막 ${w.car}칸을 돌파했다. 열차의 끝에 닿아 의뢰를 끝냈다. 장면은 끝 칸 문 앞에서 숨을 고르는 모습으로 마무리하라(곧 '불러오기'가 시작된다).` : `${w.car}칸을 돌파하고 ${w.car + 1}칸 문을 열었다. 다음 칸의 첫 모습(승객 수, 분위기)을 보여 주고 거기서 멈춰라.`)
+    : w.best === "none" ? `머뭇거리는 사이 승객들이 덮쳐 와 다쳤다. 아직 ${w.car}칸이다.` : `돌파하지 못하고 승객들에게 밀려 다쳤다${w.best === "fumble" ? "(크게)" : ""}. 아직 ${w.car}칸이다.`;
+  return `\n\n[워프열차 결과: 반드시 이대로] ${res}\n- 칸을 넘었는지와 다친 정도는 게임이 정했으니 바꾸지 마라. 수치 칸(hp, sp 등)은 모두 "없음"으로 둔다.\n- location은 "W사 워프열차 ${w.pass && !w.last ? w.car + 1 : w.car}칸".\n- 승객은 오래 갇혀 미친 사람들이다. 폭력 묘사는 짧고 절제해서 쓰고, 잔혹하게 늘어놓지 마라. days는 "없음", 결혼·출생·가족 사망은 없음.\n- options는 다음 칸을 어떻게 돌파할지 3가지.`;
+}
+function warpPlain(w){
+  return `\n이곳은 W사 워프열차 ${w.car}칸(전체 ${WARP_CARS}칸)이다. 미쳐 버린 승객들을 제압하며 나아가는 중이다. ` + (w.pass ? (w.last ? "마지막 칸을 돌파해 열차 끝에 닿았다." : `이 칸을 돌파하고 다음 칸 문을 열었다.`) : "돌파하지 못하고 밀려 다쳤다. 아직 같은 칸이다.") + " 폭력 묘사는 짧게.";
+}
+const WARP_RULE_TXT = {
+  pass:["좌석 사이로 몸을 낮춰 파고들자, 길을 막던 승객들이 하나둘 쓰러진다. 칸 끝의 문이 열린다.", "정리요원이 뒤에서 승객들을 묶어 두는 사이, 당신은 통로를 꿰뚫고 다음 칸 문을 젖힌다.", "흐릿한 눈의 승객들이 달려들지만, 당신의 움직임이 한발 빠르다. 다음 칸으로 넘어간다."],
+  fail:["좌석 위에서 뛰어내린 승객이 당신을 덮친다. 셀 수 없는 세월에 닳은 손톱이 살을 파고든다.", "통로를 막은 승객들에게 밀려 벽에 부딪힌다. 숨이 턱 막힌다.", "웃음인지 울음인지 모를 소리를 내는 승객 무리가 당신을 다시 칸 안쪽으로 밀어낸다."]
+};
+function warpFin(fin, w, aiNarr){
+  for(const k of GAUGE_KEYS) fin[k] = 0;
+  for(const k of STAT_KEYS) fin[k] = 0;
+  fin.hp = -w.hp; fin.sp = -w.sp; fin.ahn = 0; fin.days = 0; fin.time = "몇 분";
+  fin.spouse = ""; fin.child_born = false; fin.family_dead = ""; fin.shop = false; fin.event = false;
+  fin.location = `W사 워프열차 ${w.pass && !w.last ? w.car + 1 : w.car}칸`;
+  fin.urgent = false;
+  if(!aiNarr){
+    const pool = WARP_RULE_TXT[w.pass ? "pass" : "fail"];
+    fin.narration = pool[rnd(pool.length)] + (w.last ? " 마지막 칸, 열차의 끝이다. 더는 아무도 달려들지 않는다." : "");
+  }
+  if(!fin.options || !fin.options.length) fin.options = ["앞으로 밀고 나간다", "승객들을 하나씩 제압한다", "정리요원과 발을 맞춘다"];
+}
+function enterWarp(input){
+  log({t:"me", text:input});
+  const snap = Object.assign({}, S); delete snap.log;
+  S.warp = {car:1, snap:JSON.stringify(snap), startTurn:S.turn};
+  S.warpOffered = true; S.warpTried = true;
+  S.location = "W사 워프열차 1칸";
+  S.urgent = false; S.awaitEvent = false;
+  sfx("event");
+  log({t:"narr", text:"W사 터미널. 둥지를 본떠 지은 역사(驛舍)는 반짝이지만, 승강장 끝에 선 열차 한 대만은 창문이 안쪽에서 시커멓게 칠해져 있다. 정리요원이 당신에게 출입증을 걸어 주며 말한다. \"안에서는 아무도 죽지 않습니다. 대신 아프긴 하죠. 끝나면 전부 되돌려 드립니다.\"\n\n문이 열린다. 바깥의 10초가 수천 년으로 늘어난 곳, 1칸의 퀴퀴한 공기 속에서 좌석마다 웅크린 승객들이 일제히 고개를 든다.",
+    deltas:[{k:"돌발", v:0, event:true}], options:["앞으로 밀고 나간다", "승객들을 하나씩 제압한다", "정리요원과 발을 맞춘다"]});
+  checkAch();
+  save(); renderStatus();
+}
+function exitWarp(cleared){
+  const best = cleared ? WARP_CARS : Math.max(0, S.warp.car - 1);
+  const keep = {log:S.log, ach:S.ach || [], rng:S.rng, turn:S.turn, warpBest:Math.max(S.warpBest || 0, best)};
+  let back; try{ back = JSON.parse(S.warp.snap); }catch(e){ back = null; }
+  if(back){ S = Object.assign(back, keep); } else { delete S.warp; Object.assign(S, keep); }
+  delete S.warp; S.warpOffered = true; S.warpTried = true; S.warpOffer = false;
+  const pay = cleared ? 30000000 : best * 2000000;
+  S.ahn += pay; if(cleared) S.rep = gclamp("rep", S.rep + 10); else if(best >= 4) S.rep = gclamp("rep", S.rep + 3);
+  const tag = `W사 의뢰:워프열차 ${cleared ? "완주" : best + "칸 돌파"}`;
+  if(!S.tags.includes(tag)) S.tags.push(tag);
+  S.stm = S.stm || []; S.stm.push(`W사 의뢰로 정체 등급 워프열차에 들어가 ${cleared ? "8칸 끝까지 돌파했다" : best + "칸까지 돌파하고 쓰러졌다"}. 불러오기로 몸과 기억은 탑승 전으로 돌아왔지만, 해냈다는 사실은 기록으로 남았다.`);
+  chron(cleared ? "W사 워프열차를 완주했다" : `W사 워프열차 ${best}칸까지 돌파했다`);
+  S.urgent = false; S.awaitEvent = false;
+  sfx(cleared ? "good" : "hurt");
+  log({t:"narr", text:(cleared ? "열차의 끝, 마지막 문 앞에서 열차가 멎는다. " : "시야가 꺼진다. 몸이 바닥에 닿는 감각만 길게 남는다. ") + "그리고 바깥의 시간으로 10초가 지났다. 터미널의 정리요원이 장치를 켜자 특이점의 '불러오기'가 시작되고, 찢겼던 몸도, 무너지던 마음도, 열차 안의 기억도 탑승하던 그 순간으로 되감긴다.\n\n눈을 뜨니 승강장이다. 손에는 W사의 정산서 한 장이 쥐여 있다. " + (cleared ? "\"8칸 전부. 정체 등급을 혼자 뚫은 분은 오랜만이네요.\"" : `"${best}칸까지 확인됐습니다. 수고하셨습니다."`) + (pay ? ` 보수 ${fmt(pay)}안이 들어왔다.` : ""),
+    deltas: pay ? [{k:"안", v:pay}] : [], options:ruleOptions()});
+  checkAch();
+  save(); renderStatus();
+}
+function warpAfter(w){
+  if(!S.warp) return;
+  if(w.pass){
+    if(w.last){ exitWarp(true); return; }
+    S.warp.car++;
+    log({t:"sys", text:`🚆 ${w.car}칸 돌파 · ${S.warp.car} / ${WARP_CARS}칸`});
+  }
+  if(S.hp <= 0) exitWarp(false);
+}
+function renderWarpBar(){
+  const on = !!(S && S.warp);
+  document.body.classList.toggle("warp", on && document.body.classList.contains("in-game"));
+  for(const id of ["warpBar", "warpBarS"]){
+    const b = document.getElementById(id); if(!b) continue;
+    b.hidden = !on; if(!on) continue;
+    const cars = el("div", "wcars");
+    for(let i = 1; i <= WARP_CARS; i++) cars.appendChild(el("i", "wcar" + (i < S.warp.car ? " done" : i === S.warp.car ? " now" : "")));
+    b.replaceChildren(el("span", null, "🚆 워프열차"), cars, el("span", null, `${S.warp.car}/${WARP_CARS}칸`));
+  }
+}
+
+/* ───────── 업적 ─────────
+   한 삶에서 이룬 것(S.ach)은 전기에, 모든 삶을 합친 것은 첫 화면에 남는다 */
+const ACH_KEY = "dosi_ach";
+const famN = () => S.family.filter(f => f.rel === "자녀").length;
+const ACHS = [
+  ["born", "첫 울음", "도시에 태어났다", () => true],
+  ["age1", "첫돌", "한 살이 되었다", () => ageY() >= 1],
+  ["age18", "어른이 되다", "열여덟 살이 되었다", () => ageY() >= 18],
+  ["age40", "불혹", "마흔 살까지 살았다", () => ageY() >= 40],
+  ["age70", "장수", "일흔 살까지 살았다", () => ageY() >= 70],
+  ["age90", "도시의 노인", "아흔 살까지 살았다", () => ageY() >= 90],
+  ["head", "머리 아래에서", "A~C사 구역에서 태어났다", () => S.district >= 1 && S.district <= 3],
+  ["nest", "둥지의 아이", "둥지에서 태어났다", () => S.origin === "nest"],
+  ["license", "해결사", "해결사 자격을 땄다", () => !!S.license],
+  ["color", "특색", "특색으로 불리게 되었다", () => !!S.color],
+  ["ego", "E.G.O", "뒤틀림을 이겨내고 에고를 발현했다", () => !!S.ego],
+  ["married", "반려", "결혼했다", () => S.family.some(f => f.rel === "배우자")],
+  ["parent", "부모가 되다", "아이가 태어났다", () => famN() >= 1],
+  ["kids3", "대가족", "아이가 셋 이상", () => famN() >= 3],
+  ["rich", "부자", "1억 안을 모았다", () => S.ahn >= 100000000],
+  ["tycoon", "거부", "10억 안을 모았다", () => S.ahn >= 1000000000],
+  ["rep", "이름난 사람", "평판 80 이상", () => S.rep >= 80],
+  ["strong", "단련된 몸", "힘이 20을 넘었다", () => eff("str") >= 20],
+  ["abno", "환상체 목격", "환상체와 마주쳤다", () => (S.abnos || []).length >= 1],
+  ["abno5", "환상체 수집가", "환상체 다섯과 마주쳤다", () => (S.abnos || []).length >= 5],
+  ["famous", "전설과의 만남", "원작 인물을 만났다", () => (S.met || []).length >= 1],
+  ["famous10", "도시의 인맥", "원작 인물 열 명을 만났다", () => (S.met || []).length >= 10],
+  ["kidnap", "빠져나오다", "납치에서 벗어났다", () => S.tags.some(t => /^탈출:.*납치/.test(t))],
+  ["warpIn", "W사의 의뢰", "워프열차 의뢰를 받아 열차에 올랐다", () => !!S.warpTried],
+  ["warp4", "절반의 돌파", "워프열차 4칸 이상 돌파", () => (S.warpBest || 0) >= 4],
+  ["warp8", "워프열차 완주", "워프열차 8칸을 모두 돌파했다", () => (S.warpBest || 0) >= WARP_CARS]
+];
+function loadAch(){ const a = store.get(ACH_KEY); return a && typeof a === "object" ? a : {}; }
+function checkAch(){
+  if(!S || S.archived) return;
+  S.ach = S.ach || [];
+  const g = loadAch(); let changed = false;
+  for(const [id, name, desc, test] of ACHS){
+    let ok = false; try{ ok = test(); }catch(e){}
+    if(!ok || S.ach.includes(id)) continue;
+    S.ach.push(id);
+    if(!g[id]){ g[id] = {at:Date.now(), who:S.name}; changed = true; }
+  }
+  if((S.warpBest || 0) > ((g.warpBest || {}).v || 0)){ g.warpBest = {v:S.warpBest, who:S.name, at:Date.now()}; changed = true; }
+  if(changed) store.set(ACH_KEY, g);
+}
+/* 전기에 남길 업적 이름(워프열차는 몇 칸까지 갔는지) */
+function lifeAchNames(){
+  const ids = S.ach || [], out = [];
+  for(const [id, name] of ACHS){
+    if(!ids.includes(id) || id === "born" || id === "warpIn" || id === "warp4" || id === "warp8") continue;
+    out.push(name);
+  }
+  if(S.warpTried) out.push((S.warpBest || 0) >= WARP_CARS ? "워프열차 완주" : `워프열차 ${S.warpBest || 0}칸 돌파`);
+  return out;
+}
+function renderAch(){
+  const box = $("#achList"); if(!box) return;
+  const g = loadAch(); box.replaceChildren();
+  let n = 0;
+  for(const [id, name, desc] of ACHS){
+    const on = !!g[id]; if(on) n++;
+    const c = el("div", "ach " + (on ? "on" : "off"));
+    let d = desc;
+    if(id === "warp8" && !on && g.warpBest) d += ` (최고 ${g.warpBest.v}칸)`;
+    if(on && g[id].who) d += ` · ${g[id].who}`;
+    c.append(el("b", null, (on ? "🏆 " : "") + name), el("span", null, d));
+    box.appendChild(c);
+  }
+  $("#achCount").textContent = `${n} / ${ACHS.length}`;
+}
+
 async function doAction(input, opt = {}){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(busy || S.dead) return;
+  /* W사 워프열차 의뢰에 대한 대답 */
+  if(S.warpOffer){
+    S.warpOffer = false;
+    if(!opt.passive && WARP_YES.test(input) && !WARP_NO.test(input)){ enterWarp(input); return; }
+  }
   resolvePendingChild(); resolvePendingNames();
   const passive = !!opt.passive;
   S._wasEvent = !!S.awaitEvent;
@@ -3599,6 +3819,8 @@ async function doAction(input, opt = {}){
   done();
   if(!actions) actions = ruleJudge(actInput || input);
   actions = sanitizeActions(actions, actInput || input);
+  /* 워프열차: 뒤쪽 칸일수록 어렵다 */
+  if(S.warp) for(const a of actions) if(!a.trivial && a.dc != null) a.dc = Number(a.dc) + Math.floor(S.warp.car * 0.8);
   const results = actions.map(a => Object.assign({}, a, rollCheck(a)));
   if(passive) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
   else for(const r of results){
@@ -3611,24 +3833,27 @@ async function doAction(input, opt = {}){
   }
 
   let n = null, ev = null;
+  const wo = S.warp ? warpOutcome(results, passive) : null;
   if(aiOK){
     done = thinking("결과를 서술하는 중…");
     try{
-      ev = passive ? null : (rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0));
+      ev = passive || wo ? null : (rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0));
       const rl = passive ? "- 플레이어는 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 상황이 어떻게 흘러가는지(좋든 나쁘든 그럴 법한 결과) 서술하고, 그 일이 일단락된 상태로 끝내라. 이번 장면만은 '장면 끝에 반응해야 할 상황을 남기라'는 규칙을 따르지 마라: 위협은 지나가거나(포기하고 떠난다, 다른 곳으로 간다, 누군가 막아 준다) 결과가 확정되어(다치거나 빼앗기는 등) 조용히 끝난 상태로 마무리하고, 새 위협이나 새 사건을 만들지 마라. 마지막 문장은 상황이 정리된 지금의 모습이다. urgent는 false." : results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
       n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
-        user: plainContext() + (passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + (actInput || "(말만 한다)") + (sp.says.length ? "\n주인공이 한 말(그대로 말한 것, 바꾸지 말 것): " + sp.says.map(x => `"${x}"`).join(" ") : "") + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + plainEvent(ev))}
+        user: plainContext() + (passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + (actInput || "(말만 한다)") + (sp.says.length ? "\n주인공이 한 말(그대로 말한 것, 바꾸지 말 것): " + sp.says.map(x => `"${x}"`).join(" ") : "") + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + (wo ? warpPlain(wo) : plainEvent(ev)))}
         : {sys:local ? LORE_SHORT + NARR_RULES_LOCAL : LORE_FULL + NARR_RULES,
-        user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + sayLine + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + eventLine(ev)}, 700, NARR_SCHEMA, false, done.live), 3);
+        user: stateSummary(local) + "\n\n[플레이어 입력]\n" + input + sayLine + "\n\n[판정 결과: 반드시 이대로 서술]\n" + rl + (wo ? warpLine(wo) : eventLine(ev))}, 700, NARR_SCHEMA, false, done.live), 3);
       if(n && n.plain){ tierEffects(n, input, results); if(!n.options.length) n.options = ruleOptions(); n.shop = visitsShop(input) || SHOP_EVENTS.includes(ev); n.tag_add = plainStatusFromText(n.narration); }
     }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
     done();
   }
-  if(!aiOK && !passive) ev = rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0);
+  if(!aiOK && !passive && !wo) ev = rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0);
   const fin = guardNarr(n || (passive ? passiveNarr() : ruleEvent(ruleNarrate(input, results), ev)), results);
   fin.event = !!ev;
   S.awaitEvent = !!ev;
   if(isKidnap(ev)){ fin.urgent = true; chron("납치당할 뻔했다"); }
+  if(ev === WARP_OFFER){ S.warpOffer = true; S.warpOffered = true; }
+  if(wo) warpFin(fin, wo, !!n);
   /* 그냥 넘긴 결과는 그 일이 끝난 것으로 본다(다시 위급 판정을 하지 않는다) */
   if(passive){ fin.urgent = false; fin.passiveDone = true; }
   if(!passive && fin.outfit === undefined){ const o = outfitFromInput(input); if(o) fin.outfit = o; }
@@ -3637,14 +3862,15 @@ async function doAction(input, opt = {}){
   else S.mins = 8 * 60 + rnd(10 * 60);
   applyNarr(fin);
   /* 다친 연출은 싸우던 중일 때만 */
-  if(results.some(r => !r.auto && inCombat(r, input)) || (fin.event && FIGHT_RE.test(fin.narration || ""))) fxAfter(fin);
-  checkMilestones(input, results);
-  applyMerit(input, results, fin);
+  if(wo || results.some(r => !r.auto && inCombat(r, input)) || (fin.event && FIGHT_RE.test(fin.narration || ""))) fxAfter(fin);
+  if(wo) warpAfter(wo);
+  else { checkMilestones(input, results); applyMerit(input, results, fin); }
+  checkAch();
   save(); setBusy(false);
   memoryTick();
   /* 공방은 버튼이 없다. 직접 찾아가야 열린다.
      찾아갔는지는 AI 서술자가 장면을 보고 정한다(shop). AI가 없을 때(규칙 진행)만 문장으로 어림한다 */
-  const atShop = n ? n.shop : (visitsShop(input) || SHOP_EVENTS.includes(ev));
+  const atShop = wo ? false : n ? n.shop : (visitsShop(input) || SHOP_EVENTS.includes(ev));
   if(!S.dead && atShop) openShop();
 }
 /* AI 없이 진행할 때만 쓰는 대체 판단 */
@@ -4837,9 +5063,9 @@ function pickSmall(y){
 function oneDay(){
   const monthBefore = monthOf(S.days);
   applyDays(1);
-  S.en = Math.min(100, S.en + 3); S.hp = Math.min(100, S.hp + 1);
-  /* 정신력은 시간이 지나면 0(평온) 쪽으로 천천히 돌아온다 */
-  if(S.days % 2 === 0 && S.sp < 0) S.sp++; else if(S.days % 4 === 0 && S.sp > 0) S.sp--;
+  S.en = Math.min(100, S.en + 3); if(S.days % 3 === 0) S.hp = Math.min(100, S.hp + 1);
+  /* 정신력은 시간이 지나면 0(평온) 쪽으로 아주 천천히 돌아온다 */
+  if(S.days % 5 === 0 && S.sp < 0) S.sp++; else if(S.days % 6 === 0 && S.sp > 0) S.sp--;
   /* 견습 수당: 13~19세 견습생은 매달 30만 안 */
   if(monthOf(S.days) !== monthBefore && apprenticeOf() && !S.license && ageY() < 20){ S.ahn += 300000; flow.ahn += 300000; }
   if(monthOf(S.days) !== monthBefore && ageY() >= 18){
@@ -4886,6 +5112,7 @@ function passiveNarr(){
 }
 async function startFlow(){
   if(busy || S.dead || flow.on) return;
+  if(S.warp){ log({t:"sys", text:"워프열차 안에서는 시간을 흘려보낼 수 없다. 칸을 돌파하거나 쓰러져야 나간다."}); return; }
   /* 돌발 상황에 아직 대응하지 않았으면, 아무것도 안 한 것으로 결과를 먼저 서술 */
   /* 위급한 장면(공격이 다가오는 중 등)도 마찬가지: 가만히 있었던 것으로 결과를 먼저 */
   if(S.awaitEvent || S.urgent){
@@ -5161,12 +5388,13 @@ async function endLife(){
   }catch(e){ log({t:"sys", text:"AI 전기 작성 실패: " + e.message + " 기록으로 대신 씁니다."}); }
   done();
   b = b || ruleBio();
+  checkAch();
   let sprite = "";
   try{ drawSprite($("#sSprite")); sprite = $("#sSprite").toDataURL("image/png"); }catch(e){}
   const life = {id:"L" + Date.now(), name:S.name, gender:S.gender, look:S.look || "", hairColor:S.hairColor || "", eyeColor:S.eyeColor || "", choice:S.choice || null, district:S.district, origin:S.origin, seed:S.seed || "",
     age:ageY(), ageM:ageM(), cause:S.dead, title:b.title, epitaph:b.epitaph, bio:b.bio,
     stats:STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}`).join(" · ") + ` · 평판 ${S.rep} · 소지금 ${fmt(S.ahn)}안`,
-    family:familyText(), equip:equipText(), sprite, endedAt:Date.now(), fav:false};
+    family:familyText(), equip:equipText(), ach:lifeAchNames(), sprite, endedAt:Date.now(), fav:false};
   const lives = loadLives(); lives.unshift(life); saveLives(lives);
   S.archived = life.id;
   store.del("dosi_save");
@@ -5194,6 +5422,7 @@ function openBio(id){
     el("div", null, life.stats),
     el("div", null, "가족 · " + life.family),
     el("div", null, "장비 · " + life.equip),
+    ...(life.ach && life.ach.length ? [el("div", null, "업적 · " + life.ach.join(", "))] : []),
     el("div", null, "시드 · " + (life.seed || "없음") + " · " + new Date(life.endedAt).toLocaleDateString("ko-KR")));
   $("#bioFav").textContent = life.fav ? "★ 즐겨찾기됨" : "☆ 즐겨찾기";
   $("#bioFav").setAttribute("aria-pressed", String(!!life.fav));
@@ -5315,6 +5544,7 @@ function renderMenu(){
   $("#btnBorn").textContent = "태어나기"; $("#btnBorn").classList.remove("danger"); bornArmed = false;
   if(!$("#cSeed").value) $("#cSeed").value = randomSeed();
   drawPreview();
+  renderAch();
   const list = $("#livesList"); list.replaceChildren();
   const lives = loadLives();
   $("#livesNote").textContent = lives.length ? `즐겨찾기하지 않은 삶은 최근 ${MAX_LIVES}개까지만 남습니다.` : "아직 끝난 삶이 없습니다. 생을 마치면 전기가 이곳에 남습니다.";
@@ -5359,7 +5589,7 @@ function relive(id){
 function showMenu(){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(S && !S.dead && !S.archived) save();
-  document.body.classList.remove("in-game", "show-status");
+  document.body.classList.remove("in-game", "show-status", "warp");
   $("#menu").hidden = false; $("#game").hidden = true; $("#btnMenu").hidden = true;
   renderMenu();
 }
@@ -5384,7 +5614,7 @@ function showCreate(){ showMenu(); window.scrollTo(0, 0); }
 function showGame(){
   document.body.classList.add("in-game");
   $("#menu").hidden = true; $("#game").hidden = false; $("#btnMenu").hidden = false;
-  renderLog(); renderStatus();
+  renderLog(); renderStatus(); checkAch();
 }
 function newLife(){ showCreate(); }
 $("#btnMenu").addEventListener("click", showMenu);
