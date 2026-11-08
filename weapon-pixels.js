@@ -4,7 +4,7 @@
   const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
   function decode(paletteText, indices) {
     const palette = paletteText.split(";").map(hex => {
-      const rgba = hex.match(/../g).map(v => parseInt(v, 16));
+      const rgba = hex.slice(1).match(/../g).map(v => parseInt(v, 16));
       return rgba;
     });
     const rgba = new Uint8ClampedArray(32 * 32 * 4);
