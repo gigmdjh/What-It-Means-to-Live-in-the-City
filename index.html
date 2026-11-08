@@ -7548,6 +7548,44 @@ function drawSprite(cv, opt){
       for(const [dx, dy] of [[-1, 0], [0, 1], [1, 1]]) plot(lx0 + dx, lyB + dy, pk);
     }
   }
+  /* 픽셀 의상 질감: 기존 몸체 실루엣과 부위 마스크를 그대로 사용한다.
+     어두운 천에 절제된 명암, 봉제선, 작은 붉은/황동 포인트를 더한다. */
+  {
+    const seam = [105, 39, 48], brass = [184, 148, 83], glint = [205, 199, 181];
+    const isSkin = (r, g, b) => {
+      const sk = skinDefault ? skinB : skinT;
+      return Math.abs(r-sk[0]) + Math.abs(g-sk[1]) + Math.abs(b-sk[2]) < 48;
+    };
+    for(let Y = oy + B.neck + 1; Y < H - 3; Y++){
+      for(let X = Math.max(0, ox); X < Math.min(W, ox + B.w); X++){
+        const j = (Y * W + X) * 4;
+        if(!D[j+3]) continue;
+        const region = regAt(X - ox, Y - oy);
+        if(![3,4,5,8,9,12].includes(region)) continue;
+        const r = D[j], g2 = D[j+1], b = D[j+2];
+        if(isSkin(r,g2,b)) continue;
+        const localX = X - ox, localY = Y - oy;
+        const lum = (r*3 + g2*4 + b) / 8;
+        /* 작은 면 단위의 하이라이트와 그늘로 천/가죽의 픽셀 질감을 강화 */
+        if(((localX + localY * 2) % 11 === 0) && lum < 155){
+          D[j] = Math.min(255, r + 17); D[j+1] = Math.min(255, g2 + 15); D[j+2] = Math.min(255, b + 13);
+        }else if(((localX * 2 + localY) % 13 === 0) && lum > 35){
+          D[j] = Math.round(r * 0.84); D[j+1] = Math.round(g2 * 0.84); D[j+2] = Math.round(b * 0.84);
+        }
+        /* 몸통 중앙에 짧은 붉은 봉제선, 작은 황동 단추를 배치 */
+        if((region === 3 || region === 12) && Math.abs(localX - cxB) <= 1 && localY > B.neck + 3 && localY < B.crotch - 2 && localY % 7 === 0){
+          D[j] = seam[0]; D[j+1] = seam[1]; D[j+2] = seam[2];
+        }
+        if((region === 3 || region === 12) && localX === Math.round(cxB) && localY > B.neck + 5 && localY < B.crotch - 2 && localY % 6 === 0){
+          D[j] = brass[0]; D[j+1] = brass[1]; D[j+2] = brass[2];
+        }
+        /* 어깨/소매의 빛받는 가장자리는 한 픽셀로만 표시 */
+        if((region === 4 || region === 5) && localY % 9 === 0 && lum < 130){
+          D[j] = Math.min(255, D[j] + 22); D[j+1] = Math.min(255, D[j+1] + 20); D[j+2] = Math.min(255, D[j+2] + 18);
+        }
+      }
+    }
+  }
   /* 머리카락: 뒷머리는 몸 뒤(빈 칸에만), 앞머리·옆머리는 얼굴 위에 */
   if(hairLayers){
     for(const [X, Y, sd] of hairLayers.earFix || []){
