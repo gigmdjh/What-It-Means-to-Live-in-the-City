@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.2"></script>
+<script src="parts.js?v=20261108-1.0.3"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.2";
+const BUILD = "20261108-1.0.3";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1192,6 +1192,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Carry over the place, people, objects and time from the previous scene. Do not move elsewhere on your own or insert new people.
 - When the protagonist is alone with one person in a private setting (a room, a home, a car, a closed office, a rooftop), nobody else shows up unless the player calls someone, leaves, or opens the door to them. No sudden visitors, knocks, phone calls or noises from outside to bring someone in. Keep the scene between the two of them.
 - Never restart a danger or event listed in [이미 끝난 일] (already finished) in the same form. Past events in memory are past.
+- A scene recorded days or months ago is historical context, not the current scene. If [시간 경과] says time has passed, do not resume its danger, argument, pursuit, visitor, location-specific moment, or emotional beat. Continue from the protagonist's present location and circumstances. Only reintroduce a past person or problem if a new, explicit cause brings it back; do not recreate the old moment itself.
 - Always read [현재 장소] (current place) and [때] (time). The scene starts in that place at that time (dark at night, inside if at home). If the player did not move, do not start somewhere else. If they moved, put the new place in location; otherwise repeat the current place.
 
 [1. Rolls]
@@ -1329,12 +1330,12 @@ You are the narrator of a text RPG.
 [Subtext and continuity] Let words, pauses and behavior reveal possible hidden feelings or motives without claiming unconfirmed thoughts as facts. Each response must follow the previous exchange: track what each character knows, what has been answered, unresolved tension and relationship changes. Avoid resetting the scene or repeating the same emotional beat.
 [World knowledge] Treat the supplied lore and game state as authoritative. Do not contradict setting rules or recorded events. Characters only know what they witnessed, were told or could reasonably know from their role; strangers cannot know private history or hidden information. Present uncertain details as rumor or belief, not fact. Do not invent major factions, powers or canon exceptions. Use relevant lore through behavior and consequences, not exposition dumps.
 [Talk cards] Put NPC speech and speaking actions only in the structured talk array for the character cards (portrait, name, action, speech). When known, include relationship as "rel", occupation/role as "job", and age as digits in "age"; leave unknown details blank rather than guessing. Spoken Korean must sound idiomatic and conversational, not translated or unnaturally compressed. Do not repeat their dialogue in narration. Preserve speaker order; keep narration focused on gestures, reactions and consequences. Never create talk for the protagonist.
-[Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
+[Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about. However, if its recorded day is two or more days before the current game day, treat it as history, not a live scene. Resume from the current time and place; do not revive an old threat or conversation without a new cause.
 [Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
 [Ending] Usually end on a situation to react to, with the last sentence naturally showing what the protagonist faces (no labels like "지금 무엇이 문제인지"). If told the player let it pass, end settled and quiet.
 [Private scenes] Alone with one person in a private place: no one else appears unless the player calls someone, leaves, or lets them in (no sudden visitors, knocks or calls).
-[Time] After days or months, small things like food and wrappers are gone and light wounds have healed. Do not continue an old scene as if it were now.
+[Time] After days or months, small things like food and wrappers are gone and light wounds have healed. Do not continue an old scene as if it were now. Events and threats from old memories are over unless the game state explicitly says they remain unresolved; never turn a completed event into an ongoing pursuit or confrontation just because it appears in memory.
 [Dialogue] Short spoken lines, 1-2 sentences. Speech level fits age and relationship (in Korean: parents use 반말 to kids, strangers use 존댓말).
 [Looks] Read the [외모] text and let that impression affect people's reactions and events.
 [Romance] Up to 15 innocent liking only; 16-17 innocent dating between 16-17 peers only (nothing sexual); adults never with minors; 18+ may date.
@@ -2869,7 +2870,9 @@ function stateSummary(local){
   if(stm.length) lines.push("[단기 기억]\n" + stm.map(m => "- " + m).join("\n"));
   if(!local || T < 2){ const kp = knownPeopleText(local ? 3 : 8); if(kp) lines.push("[아는 사람] (이름이 같으면 같은 사람이다. 성별·나이·직업·외모를 그대로 지키고, #성격 태그대로 말하고 행동하게 하되 태그를 대사나 서술에 그대로 옮겨 적지는 마라. , 호감도에 맞는 태도로 대하게 하라. 능력치는 성인 평균 30 기준이다. 관계와 마지막 일을 이어서 그려라) " + kp); }
   if(!local && (S.chron || []).length) lines.push("[인생 연표] " + S.chron.slice(-14).map(c => `${Math.floor(c.d / 365)}세 ${c.t}`).join(" / "));
-  const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -10);
+  /* 최근 상황에는 실제로 아직 이어지는 장면만 넣는다. 며칠 지난 로그는 기억에서 참고하되 현재 장면처럼 제시하지 않는다. */
+  const recent = S.log.filter(e => (e.t === "narr" || e.t === "me") && (e.day == null || S.days - e.day < 2))
+    .slice(local ? [-3, -2, -2, -1][T] : -10);
   const cut = local ? [400, 260, 160, 120][T] : 900;
   /* 서술마다 그때 누가 무슨 말을 했는지도 같이(맥락: '그거', '그 사람'이 무엇인지) */
   const talkTxt = e => (e.talk || []).length ? " / 대사: " + e.talk.map(t => t.say ? `${t.who}: "${t.say}"` : `${t.who}(${t.act})`).join(" ") : "";
