@@ -1124,10 +1124,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.4.2"></script>
+<script src="parts.js?v=20261108-1.4.3"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.4.2";
+const BUILD = "20261108-1.4.3";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -6580,6 +6580,10 @@ const EGO_LOOK = {"미미크리(시제품)":"greatsword", "다 카포":"blade", 
 for(const w of EGO_WEAPONS) ITEMS.push({id:"ego:" + w[0], slot:"weapon", name:w[0], shop:"추출 E.G.O · " + w[3] + "에게서", fx:EGO_FX[w[0]] || {str:4}, price:0, age:0, look:EGO_LOOK[w[0]] || "sword", ego:w[1], hidden:true});
 /* 웹·위키 참고 무기: 천퇴성도. 기본 상점에는 노출하지 않고 관리자 지급·주문 제작에서 활용한다. */
 ITEMS.push({id:"tiantui", slot:"weapon", name:"천퇴성도", shop:"유물 · 천퇴성", fx:{str:12, spd:3}, price:0, age:0, look:"tiantui", hidden:true});
+/* 위키의 외형 설명을 바탕으로 별 이름 유물 3종도 별도 픽셀 디자인으로 등록 */
+ITEMS.push({id:"tiansha-arayashiki",slot:"weapon",name:"천살성도 - 아라야시키",shop:"유물 · 천살성",fx:{str:18,spd:2},price:0,age:0,look:"arayashiki",hidden:true});
+ITEMS.push({id:"tianjiu",slot:"weapon",name:"천구성도",shop:"유물 · 천구성",fx:{str:14,def:2},price:0,age:0,look:"tianjiu",hidden:true});
+ITEMS.push({id:"dihui",slot:"weapon",name:"지혜성도",shop:"유물 · 지혜성",fx:{str:13,spd:4},price:0,age:0,look:"dihui",hidden:true});
 /* 소지: 별마다 별벼림 칼 한 자루 */
 for(const st of STARS){
   const h = hashStr(st);
@@ -7860,7 +7864,36 @@ function drawSprite(cv, opt){
       grip(3, opt.gripCol);
       box(hx, hy + 4, Math.min(2, wid), 1, opt.guardCol || "#c09a3a");                        /* 칼자루 끝 */
     };
-    if(w.name === "미미크리(시제품)"){
+    if(L === "arayashiki" || w.name === "천살성도 - 아라야시키"){
+      /* 천살성도 - 아라야시키: 희고 투명한 대태도, 봉인된 칼집과 불멸의 붉은 검흔 */
+      sword(29,4,"#dce8e8",7,{fuller:true,guardCol:"#bfc8cc",gripCol:"#34353b"});
+      box(hx+1,hy-27,1,22,"#f8ffff");box(hx+2,hy-23,1,17,"#b9dce2");
+      for(const [yy,xx] of [[hy-23,0],[hy-18,1],[hy-13,-1],[hy-8,1],[hy-4,0]]){
+        box(hx+xx,yy,3,1,"#8e302f");box(hx+xx+1,yy-1,2,1,"#e05c43");
+      }
+      /* 검을 뽑지 않도록 잠그는 검집의 고정쇠 */
+      box(hx-2,hy-2,8,2,"#282a30");box(hx-1,hy-2,6,1,"#9aa4ac");box(hx+1,hy-1,2,1,"#c9a24a");
+    }
+    else if(L === "tianjiu" || w.name === "천구성도"){
+      /* 천구성도: 봉인용 검집과 금제, 붉은 대검 및 괴문자 */
+      sword(27,5,"#a52f35",9,{fuller:true,guardCol:"#e0c65a",gripCol:"#4a282b"});
+      box(hx-1,hy-23,7,2,"#e0c65a");box(hx,hy-22,5,1,"#28252a");
+      for(const [yy,xx] of [[hy-20,1],[hy-16,2],[hy-12,0],[hy-8,2],[hy-5,1]]){
+        box(hx+xx,yy,1,2,"#f1d778");box(hx+xx+1,yy+1,1,1,"#f1d778");
+      }
+      /* 봉인을 걸어 둔 검집 고리 */
+      box(hx-2,hy-3,9,2,"#39353a");box(hx-1,hy-3,7,1,"#d6b84f");
+    }
+    else if(L === "dihui" || w.name === "지혜성도"){
+      /* 지혜성도: 푸른 오오타치, 지면의 검흔을 연상시키는 푸른 빛 */
+      sword(29,3,"#3c69c5",5,{fuller:true,guardCol:"#9fc8f5",gripCol:"#253858"});
+      box(hx+1,hy-26,1,21,"#a8d9ff");box(hx+2,hy-19,1,12,"#e0f5ff");
+      for(const [yy,xx] of [[hy-22,-2],[hy-17,3],[hy-12,-2],[hy-7,3]]){
+        box(hx+xx,yy,2,1,"#72b8ff");box(hx+xx+(xx<0?-1:2),yy+1,1,1,"#d3eeff");
+      }
+      box(hx-2,hy-1,7,1,"#c4e2ff");
+    }
+    else if(w.name === "미미크리(시제품)"){
       /* 미미크리: 넓은 은회색 대검에 아무것도 없는의 살점·가시·눈을 픽셀로 얹는다 */
       sword(27,5,"#b8c0c8",9,{fuller:true,guardCol:"#672c35",gripCol:"#402a2d"});
       for(const [yy,xx] of [[hy-22,0],[hy-18,1],[hy-14,-1],[hy-10,1],[hy-6,0]]){
@@ -8243,7 +8276,7 @@ const CUSTOM_TIERS = [
   {ko:"이름난 공방", pts:12, price:15000000, age:18, days:7},
   {ko:"명장의 공방", pts:20, price:50000000, age:20, days:14},
   {ko:"전설의 장인", pts:30, price:150000000, age:22, days:30}];
-const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷", tiantui:"천퇴성도"};
+const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷", tiantui:"천퇴성도", arayashiki:"천살성도 - 아라야시키", tianjiu:"천구성도", dihui:"지혜성도"};
 const CUSTOM_SLOTS = {weapon:"무기", armor:"방어구", arm:"의수", leg:"의족", eye:"의안", body:"신체 장갑"};
 let customDraft = {slot:"weapon", tier:0, name:"", look:"sword", color:"#4a4f5e", fx:{str:6, def:0, spd:0, int:0}};
 /* 저장본에 있는 주문 장비를 장비 목록에 등록한다 */
