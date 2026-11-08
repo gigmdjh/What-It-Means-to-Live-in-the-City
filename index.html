@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.4"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.5"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.4";
+const BUILD = "20261109-1.5.5";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1735,7 +1735,7 @@ function rollEvent(daysAhead){
   if(!daysAhead && !S.shin && !S.shinTaught && !S.distorted && ageY() >= 13 && rand01() < 0.012) return SHIN_TEACH;
   if(!daysAhead && !S.star && !S.distorted && ageY() >= 16 && rand01() < (fingerOf() === "pinky" ? 0.03 : 0.006)) return STAR_FIND;
   if(!daysAhead && S.claw && !S.distorted && rand01() < 0.08){ bump("order"); return CLAW_ORDERS[rnd(CLAW_ORDERS.length)]; }
-  if(!daysAhead && rand01() < scoutChance()) return scoutEvent();
+  if(!daysAhead && !isPrivateLocation() && rand01() < scoutChance()) return scoutEvent();
   if(!daysAhead && rand01() < commissionChance()){ bump("commission"); return COMMISSIONS[rnd(COMMISSIONS.length)]; }
   const y = Math.floor((S.days + (daysAhead || 0)) / 365);
   let chance = eventChance(y);
@@ -1783,8 +1783,12 @@ function prodigyRatio(){
   const avg = STAT_KEYS.reduce((a, k) => a + eff(k), 0) / STAT_KEYS.length;
   return avg / expect;
 }
+function isPrivateLocation(){
+  const loc = String(S.location || "");
+  return /(집|단칸방|저택|자택|아파트|숙소|하숙|내 방|방 안|침실|거실|개인실|기숙사 방)/.test(loc) && !/(집 앞|집 근처|집 밖|숙소 앞|아파트 단지|저택 앞)/.test(loc);
+}
 function scoutChance(){
-  if(S.distorted || S.claw) return 0;
+  if(S.distorted || S.claw || isPrivateLocation()) return 0;
   const y = ageY(); if(y < 6) return 0;
   const over = prodigyRatio() - 1.2; if(over <= 0) return 0;
   const ageF = y < 13 ? 3 : y < 20 ? 2 : 1;        /* 어릴수록 크게 */
@@ -8200,7 +8204,7 @@ function oneDay(){
 function checkBig(){
   const y = ageY();
   /* 재생 중 스카우트: 1년에 (스카우트 확률 × 6)번 꼴 */
-  { const sc = scoutChance(); if(sc > 0 && rand01() < sc * 6 / 365) return {kind:"event", text:scoutEvent()}; }
+  { const sc = isPrivateLocation() ? 0 : scoutChance(); if(sc > 0 && rand01() < sc * 6 / 365) return {kind:"event", text:scoutEvent()}; }
   /* 재생 중 의뢰: 해결사면 1년에 (2 + 평판×0.12)번 꼴 */
   if(S.license && y >= 20 && rand01() < (2 + S.rep * 0.12) * (1 + (S.staff || []).length * 0.1) / 365){ bump("commission"); return {kind:"event", text:COMMISSIONS[rnd(COMMISSIONS.length)]}; }
   const spouse = S.family.find(f => f.rel === "배우자" && f.alive);
