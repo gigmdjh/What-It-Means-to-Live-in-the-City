@@ -1124,10 +1124,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.2.0"></script>
+<script src="parts.js?v=20261108-1.3.0"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.2.0";
+const BUILD = "20261108-1.3.0";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -6496,7 +6496,7 @@ const ITEMS = [
   {id:"pipe", slot:"weapon", name:"쇠파이프", shop:"고물상", fx:{str:2, spd:-1}, price:20000, age:12, look:"pipe"},
   {id:"lsword", slot:"weapon", name:"해결사 표준 장검", shop:"리플릿 공방", fx:{str:3}, price:1500000, age:16, look:"sword"},
   {id:"vhammer", slot:"weapon", name:"진동 망치", shop:"네스터 공방", fx:{str:4}, price:6000000, age:18, look:"hammer"},
-  {id:"hwando", slot:"weapon", name:"환도", shop:"무크 공방", fx:{str:4, spd:1}, price:9000000, age:18, look:"blade"},
+  {id:"hwando", slot:"weapon", name:"환도", shop:"무크 공방", fx:{str:4, spd:1}, price:9000000, age:18, look:"hwando"},
   {id:"mace", slot:"weapon", name:"메이스", shop:"젤코바 공방", fx:{str:5, def:1}, price:12000000, age:18, look:"mace"},
   {id:"allas", slot:"weapon", name:"가속 건틀릿", shop:"알라스 공방", fx:{str:3, spd:3}, price:20000000, age:18, look:"gauntlet"},
   {id:"stigma", slot:"weapon", name:"가열 도검", shop:"스티그마 공방", fx:{str:6}, price:28000000, age:20, look:"hotsword"},
@@ -6509,26 +6509,26 @@ const ITEMS = [
   {id:"scythe", slot:"weapon", name:"큰 낫", shop:"이름난 공방", fx:{str:7, spd:-1}, price:40000000, age:20, look:"scythe"},
   {id:"musket", slot:"weapon", name:"총검 달린 머스킷 (탄환 별도)", shop:"지하 공방", fx:{str:7, def:1}, price:55000000, age:20, look:"musket"},
   /* ── 무기 추가 ── */
-  {id:"brick", slot:"weapon", name:"묵직한 벽돌", shop:"고물상", fx:{str:1}, price:3000, age:8, look:"bat"},
-  {id:"chain", slot:"weapon", name:"녹슨 쇠사슬", shop:"고물상", fx:{str:2, spd:-1}, price:15000, age:12, look:"pipe"},
-  {id:"crowbar", slot:"weapon", name:"빠루", shop:"고물상", fx:{str:2}, price:25000, age:12, look:"pipe"},
-  {id:"cleaver", slot:"weapon", name:"고기 써는 칼", shop:"맛의 거리 정육점", fx:{str:2, spd:1}, price:120000, age:14, look:"axe"},
-  {id:"tonfa", slot:"weapon", name:"방범 톤파", shop:"츠바이 협회 납품처", fx:{str:1, def:2}, price:600000, age:16, look:"bat"},
-  {id:"dagger", slot:"weapon", name:"쌍단검", shop:"시 협회 납품 공방", fx:{str:2, spd:3}, price:3500000, age:18, look:"knife"},
-  {id:"katana", slot:"weapon", name:"흑운도", shop:"흑운회 대장간", fx:{str:4, spd:2}, price:12000000, age:18, look:"blade"},
-  {id:"zweih", slot:"weapon", name:"츠바이 방패검", shop:"츠바이 협회 납품처", fx:{str:3, def:3}, price:15000000, age:18, look:"sword"},
-  {id:"liublade", slot:"weapon", name:"리우 화염검", shop:"리우 협회 납품 공방", fx:{str:6, spd:1}, price:26000000, age:20, look:"hotsword"},
-  {id:"cinq", slot:"weapon", name:"결투 세검", shop:"섕크 협회 납품 공방", fx:{str:4, spd:4}, price:32000000, age:20, look:"rapier"},
-  {id:"halberd", slot:"weapon", name:"미늘창", shop:"올드 보이즈 공방", fx:{str:6, def:1, spd:-1}, price:20000000, age:20, look:"spear"},
+  {id:"brick", slot:"weapon", name:"묵직한 벽돌", shop:"고물상", fx:{str:1}, price:3000, age:8, look:"brick"},
+  {id:"chain", slot:"weapon", name:"녹슨 쇠사슬", shop:"고물상", fx:{str:2, spd:-1}, price:15000, age:12, look:"chain"},
+  {id:"crowbar", slot:"weapon", name:"빠루", shop:"고물상", fx:{str:2}, price:25000, age:12, look:"crowbar"},
+  {id:"cleaver", slot:"weapon", name:"고기 써는 칼", shop:"맛의 거리 정육점", fx:{str:2, spd:1}, price:120000, age:14, look:"cleaver"},
+  {id:"tonfa", slot:"weapon", name:"방범 톤파", shop:"츠바이 협회 납품처", fx:{str:1, def:2}, price:600000, age:16, look:"tonfa"},
+  {id:"dagger", slot:"weapon", name:"쌍단검", shop:"시 협회 납품 공방", fx:{str:2, spd:3}, price:3500000, age:18, look:"dagger"},
+  {id:"katana", slot:"weapon", name:"흑운도", shop:"흑운회 대장간", fx:{str:4, spd:2}, price:12000000, age:18, look:"katana"},
+  {id:"zweih", slot:"weapon", name:"츠바이 방패검", shop:"츠바이 협회 납품처", fx:{str:3, def:3}, price:15000000, age:18, look:"zweih"},
+  {id:"liublade", slot:"weapon", name:"리우 화염검", shop:"리우 협회 납품 공방", fx:{str:6, spd:1}, price:26000000, age:20, look:"liublade"},
+  {id:"cinq", slot:"weapon", name:"결투 세검", shop:"섕크 협회 납품 공방", fx:{str:4, spd:4}, price:32000000, age:20, look:"cinq"},
+  {id:"halberd", slot:"weapon", name:"미늘창", shop:"올드 보이즈 공방", fx:{str:6, def:1, spd:-1}, price:20000000, age:20, look:"halberd"},
   {id:"warhammer", slot:"weapon", name:"분쇄 망치", shop:"올드 보이즈 공방", fx:{str:8, spd:-2}, price:24000000, age:20, look:"hammer"},
-  {id:"crystal", slot:"weapon", name:"수정 장검", shop:"크리스탈 아틀리에", fx:{str:6, int:2}, price:38000000, age:20, look:"sword"},
-  {id:"rosespanner", slot:"weapon", name:"장미스패너 전동 렌치", shop:"장미스패너 공방", fx:{str:7, def:1}, price:42000000, age:20, look:"hammer"},
-  {id:"ranga", slot:"weapon", name:"랑가 톱날 단검", shop:"랑가 공방", fx:{str:5, spd:3}, price:30000000, age:20, look:"knife"},
-  {id:"shotgun", slot:"weapon", name:"단발 산탄총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:7}, price:52000000, age:20, look:"gun"},
-  {id:"dualpistol", slot:"weapon", name:"쌍권총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:6, spd:3}, price:70000000, age:20, look:"gun"},
-  {id:"durandal", slot:"weapon", name:"이름 없는 명검", shop:"전설의 공방", fx:{str:10, spd:2}, price:150000000, age:25, look:"greatsword"},
-  {id:"bigscythe", slot:"weapon", name:"처형자의 낫", shop:"휠스 인더스트리", fx:{str:10, spd:-1}, price:90000000, age:25, look:"scythe"},
-  {id:"gauntlet2", slot:"weapon", name:"충격 너클", shop:"알라스 공방", fx:{str:5, spd:2}, price:16000000, age:18, look:"gauntlet"},
+  {id:"crystal", slot:"weapon", name:"수정 장검", shop:"크리스탈 아틀리에", fx:{str:6, int:2}, price:38000000, age:20, look:"crystal"},
+  {id:"rosespanner", slot:"weapon", name:"장미스패너 전동 렌치", shop:"장미스패너 공방", fx:{str:7, def:1}, price:42000000, age:20, look:"rosespanner"},
+  {id:"ranga", slot:"weapon", name:"랑가 톱날 단검", shop:"랑가 공방", fx:{str:5, spd:3}, price:30000000, age:20, look:"ranga"},
+  {id:"shotgun", slot:"weapon", name:"단발 산탄총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:7}, price:52000000, age:20, look:"shotgun"},
+  {id:"dualpistol", slot:"weapon", name:"쌍권총 (탄환 별도)", shop:"아틀리에 로직", fx:{str:6, spd:3}, price:70000000, age:20, look:"dualpistol"},
+  {id:"durandal", slot:"weapon", name:"이름 없는 명검", shop:"전설의 공방", fx:{str:10, spd:2}, price:150000000, age:25, look:"durandal"},
+  {id:"bigscythe", slot:"weapon", name:"처형자의 낫", shop:"휠스 인더스트리", fx:{str:10, spd:-1}, price:90000000, age:25, look:"bigscythe"},
+  {id:"gauntlet2", slot:"weapon", name:"충격 너클", shop:"알라스 공방", fx:{str:5, spd:2}, price:16000000, age:18, look:"gauntlet2"},
   {id:"coat", slot:"armor", name:"두꺼운 외투", shop:"뒷골목 옷가게", fx:{def:1}, price:120000, age:0, look:"#5b6b4e"},
   {id:"vest", slot:"armor", name:"방검 조끼", shop:"뒷골목 잡화점", fx:{def:2}, price:700000, age:12, look:"#3d4048"},
   {id:"suit", slot:"armor", name:"사무소 제식 정장", shop:"해결사 사무소 납품처", fx:{def:3}, price:3000000, age:18, look:"suit"},
@@ -6590,6 +6590,30 @@ const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 /* 장비 분류 데이터: 전투 수치와 별개로 재질·무게·품질·착용 부위를 명시한다.
    textureKey는 추후 픽셀아트 파일과 연결할 안정적인 키다. */
 const ITEM_KIND_KO = {blade:"날붙이", blunt:"둔기", polearm:"장병기", firearm:"화기", gauntlet:"건틀릿", clothing:"의류", lightArmor:"경량 방호구", heavyArmor:"중장갑", arm:"의수", leg:"의족", eye:"의안", body:"신체 개조"};
+const ITEM_VISUAL_NOTES = {
+  stigma:"고열로 달아오른 날과 어두운 칼날 테두리",hwando:"한쪽 날이 휜 환도형 도검",
+  brick:"모서리가 깨진 벽돌",chain:"마디가 반복되는 녹슨 쇠사슬",crowbar:"끝이 꺾인 지렛대형 쇠막대",
+  cleaver:"넓고 무거운 정육용 칼날",tonfa:"직각 손잡이가 달린 방범 곤봉",dagger:"양손에 나눠 쥐는 쌍단검",
+  katana:"어두운 등과 곡선 날을 가진 흑운도",zweih:"츠바이식 방호 장비와 함께 쓰는 검·방패 구성",
+  liublade:"리우식 화염·열처리를 연상시키는 붉은 열점",cinq:"가드가 강조된 가느다란 결투용 세검",
+  halberd:"창끝과 도끼날이 결합된 장병기",warhammer:"보강된 타격면을 가진 망치",crystal:"푸른 결정 조각이 박힌 검날",
+  rosespanner:"턱이 벌어진 전동 렌치 머리",ranga:"등에 톱니가 난 단검",shotgun:"짧고 굵은 총열과 각진 개머리판",
+  dualpistol:"좌우 한 쌍의 소형 권총",durandal:"길고 정돈된 명검 날과 장식 가드",bigscythe:"긴 자루와 크게 휜 낫날",
+  gauntlet2:"관절 보호판과 돌출된 타격 너클",coat:"두꺼운 외투와 넓은 앞여밈",vest:"몸통에 밀착되는 방검 조끼",
+  suit:"재킷·셔츠·넥타이로 나뉘는 정장",fcoat:"강화 섬유 재킷",hcoat:"긴 기장과 넓은 옷깃의 방호 코트",
+  hoodie:"후드와 캥거루 주머니가 있는 상의",leather:"가죽 재킷의 어두운 가장자리",padded:"누빔 칸이 드러나는 조끼",
+  raincoat:"방수 원단과 목까지 올라오는 앞여밈",zweiarmor:"츠바이의 보호 역할을 반영한 제식 방호복",
+  shiarmor:"시 협회의 은밀한 활동에 맞춘 어두운 복장",liucoat:"리우식 붉은 방화 코트",
+  cinqsuit:"섕크식 결투복",oldboys:"작업용 멜빵과 두꺼운 천",crystalcoat:"푸른 수정 섬유를 연상시키는 망토",
+  plate:"가슴판과 어깨판이 분리된 중장갑",uarm:"기본 관절과 이음새가 있는 보급형 의수",
+  karm:"냉각 표시가 들어간 의수",sarm:"군용 외장과 손목 보호대를 가진 전투 의수",
+  parm:"두꺼운 유압 실린더",blarm:"손목 안쪽에 수납된 칼날 장치",garm:"갈고리 발사부와 케이블 릴이 있는 그래플 의수",
+  tarm:"티타늄 판재와 손등 보호판",jleg:"도약용 스프링 관절",kleg:"충격 흡수 패드와 넓은 발목 관절",
+  rleg:"R사 전투 장비처럼 각진 외장과 추진 관절",neye:"야간 투시용 녹색 렌즈",
+  teye:"조준 보조용 붉은 점광 렌즈",aeye:"전술 분석용 푸른 복합 렌즈",
+  bbody:"피하 장갑판",mbody:"근섬유를 보강하는 내부 구조",cbody:"인공 심폐 장치의 순환 표시",
+  hbody:"전신을 감싸는 장갑 골격",ubody:"피부 아래에 들어가는 보급형 장갑판"
+};
 function itemProfile(it){
   if(!it) return null;
   const n = String(it.name || ""), look = String(it.look || "");
@@ -6616,11 +6640,11 @@ function itemProfile(it){
   const price = Number(it.price || 0);
   const quality = /중고|녹슨|고물/.test(n) ? "중고·마모" : price >= 80000000 ? "최상급" : price >= 25000000 ? "고급" : price >= 5000000 ? "정규 규격" : "보급형";
   const coverage = ({armor:kind === "heavyArmor" ? "몸통 중심 · 높은 방호" : kind === "lightArmor" ? "몸통 · 일부 관절" : "일상복 · 제한적 방호", arm:"팔 부위", leg:"다리 부위", eye:"눈 부위", body:"몸통 내부·피하"})[it.slot] || (kind === "polearm" ? "긴 사거리" : kind === "firearm" ? "탄환·장전 필요" : kind === "blunt" ? "충격 타격" : kind === "gauntlet" ? "근접 타격" : "근접 절단");
-  return {kind, kindLabel:ITEM_KIND_KO[kind] || "장비", material, weight, quality, coverage, textureKey:it.textureKey || look || it.id || "generic"};
+  return {kind, kindLabel:ITEM_KIND_KO[kind] || "장비", material, weight, quality, coverage, note:ITEM_VISUAL_NOTES[it.id] || "", textureKey:it.textureKey || look || it.id || "generic"};
 }
 function itemProfileText(it){
   const p = itemProfile(it); if(!p) return "";
-  return `${p.kindLabel} · ${p.material} · ${p.weight} · ${p.quality} · ${p.coverage}`;
+  return `${p.kindLabel} · ${p.material} · ${p.weight} · ${p.quality} · ${p.coverage}${p.note ? " · " + p.note : ""}`;
 }
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
 /* 상점에서 현재 장비와 비교: 새 장비를 장착했을 때 변하는 능력치만 표시 */
@@ -7276,6 +7300,26 @@ function paintHair(D, layer, hairC, tie, behindOnly, ids, merge){
   }
 }
 
+const ARMOR_VISUALS = {
+ coat:{outer:"coat",outerColor:"#46513c",pants:"#353940"},vest:{outer:"vest",outerColor:"#30343d",pants:"#3b3e46"},
+ suit:{otype:"suit",color:"#26282f",pants:"#22242a",inner:"#efede6"},fcoat:{outer:"jacket",outerColor:"#4a2925",pants:"#373238"},
+ hcoat:{outer:"trench",outerColor:"#b4ad9d",pants:"#44434a"},hoodie:{otype:"hoodie",pants:"#3a3d48"},
+ leather:{outer:"leather",outerColor:"#35251f",pants:"#29272a"},padded:{outer:"vest",outerColor:"#655740",pants:"#45413c"},
+ raincoat:{outer:"trench",outerColor:"#ad8e2d",pants:"#34343a"},zweiarmor:{outer:"coat",outerColor:"#1e3157",pants:"#252a34"},
+ shiarmor:{outer:"leather",outerColor:"#121318",pants:"#191a20"},liucoat:{outer:"coat",outerColor:"#813020",pants:"#392c2b"},
+ cinqsuit:{otype:"suit",color:"#e8e2d0",pants:"#34343b",inner:"#f1ede3"},
+ oldboys:{otype:"overall",btype:"overall",color:"#5b5348",pants:"#454036"},
+ crystalcoat:{outer:"cape",outerColor:"#7896b3",pants:"#3a4859"},plate:{outer:"jacket",outerColor:"#515761",pants:"#3d424b"},
+ colorcoat:{outer:"coat",outerColor:"#30213e",pants:"#302a38"}
+};
+const AUGMENT_VISUALS = {
+ uarm:{base:"#a9b3c1",seam:"#687482"},karm:{base:"#899eae",seam:"#42d4d0"},sarm:{base:"#626b78",seam:"#d14b3d"},
+ barm:{base:"#88847b",seam:"#4f4a45"},parm:{base:"#8d949d",seam:"#c3a36b"},blarm:{base:"#69717d",seam:"#aeb6c4"},
+ garm:{base:"#7d8c95",seam:"#c7a24b"},tarm:{base:"#8b98a7",seam:"#e0c37b"},uleg:{base:"#a9b3c1",seam:"#687482"},
+ sleg:{base:"#697584",seam:"#4cbbd1"},bleg:{base:"#89857d",seam:"#554f49"},jleg:{base:"#818d99",seam:"#c8cbd2"},
+ kleg:{base:"#7b858e",seam:"#9dc3c7"},rleg:{base:"#515b69",seam:"#d64a43"},
+ ueye:{eye:"#45e0cf"},seye:{eye:"#65cda0"},beye:{eye:"#a6a9a9"},neye:{eye:"#8bd66b"},teye:{eye:"#f08c65"},aeye:{eye:"#8ac6ff"}
+};
 function drawSprite(cv, opt){
   const W = SPRITE_W, H = SPRITE_H;
   if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
@@ -7285,6 +7329,7 @@ function drawSprite(cv, opt){
   const tr = o.traits || lookTraits(), y0 = o.age != null ? o.age : ageY();
   const eq = o.equip || S.equip || {};
   const armor = eq.armor && itemById(eq.armor);
+  const armorVisual = armor ? (ARMOR_VISUALS[armor.id] || {}) : null;
   const origin = o.origin || S.origin;
   const g = tr.gender === "남성" ? "M" : tr.gender === "여성" ? "F" : "O";
   const stage = y0 < 7 ? 0 : y0 < 18 ? 1 : 2;
@@ -7294,11 +7339,11 @@ function drawSprite(cv, opt){
   const baby = y0 < 2;
   let outfit = tr.outfit || (origin === "nest" ? "#45587a" : "#6a6152");
   if(baby) outfit = "#e8dcc0";
-  if(armor) outfit = armor.look === "suit" ? "#26282f" : armor.look;
-  const OT = armor || baby ? "shirt" : (tr.otype || "shirt");
-  const BT = armor || baby ? "pants" : (tr.btype || "pants");
-  const pants = baby ? "#e8dcc0" : armor && armor.look === "suit" ? "#26282f" : tr.pants || (OT === "overall" || OT === "track" ? outfit : OT === "suit" || OT === "uniform" ? shade(outfit, 0.85) : OT === "school" ? "#2c3346" : "#4a4a55");
-  const OUTER = armor || baby ? null : tr.outer;
+  if(armor) outfit = armorVisual.color || (armor.look === "suit" ? "#26282f" : armor.look);
+  const OT = armor ? (armorVisual.otype || (armor.look === "suit" ? "suit" : "shirt")) : baby ? "shirt" : (tr.otype || "shirt");
+  const BT = armor ? (armorVisual.btype || "pants") : baby ? "pants" : (tr.btype || "pants");
+  const pants = baby ? "#e8dcc0" : armor ? (armorVisual.pants || (OT === "suit" ? "#26282f" : shade(outfit, 0.72))) : tr.pants || (OT === "overall" || OT === "track" ? outfit : OT === "suit" || OT === "uniform" ? shade(outfit, 0.85) : OT === "school" ? "#2c3346" : "#4a4a55");
+  const OUTER = armor ? (armorVisual.outer || null) : baby ? null : tr.outer;
   const dress = !armor && !baby && (OT === "dress" || OT === "nurse"), coat = !armor && !baby && (["coat", "trench", "labcoat"].includes(OUTER) || OT === "priest");
   const skinDefault = tr.skin === "#e9c6a8";
   const skinT = hexRGB(tr.skin), skinB = B.skin;
@@ -7318,11 +7363,11 @@ function drawSprite(cv, opt){
   if(!B._rb){ const r = {}; for(let y = 0; y < B.h; y++) for(let x = 0; x < B.w; x++){ const i = (y * B.w + x) * 4; if(!sd[i + 3]) continue; const g2 = Math.round(rg[i] / 20); const q = r[g2] || (r[g2] = [999, 999, -1, -1]); q[0] = Math.min(q[0], x); q[1] = Math.min(q[1], y); q[2] = Math.max(q[2], x); q[3] = Math.max(q[3], y); } B._rb = r; }
   const RB = B._rb, armT = (RB[4] || [0, B.neck])[1], armB = Math.max(armT + 1, (RB[4] || [0, 0, 0, B.crotch])[3]);
   const cxB = (B.headL + B.headR) / 2, torT = (RB[3] || [0, B.neck])[1], torB = Math.max(torT + 1, (RB[12] || [0, 0, 0, B.crotch])[3]);
-  const IN = hexRGB(tr.inner || (OT === "suit" || OT === "school" || OT === "overall" ? "#efede6" : "#e8e4da"));
+  const IN = hexRGB((armorVisual && armorVisual.inner) || tr.inner || (OT === "suit" || OT === "school" || OT === "overall" ? "#efede6" : "#e8e4da"));
   const TIEC = hexRGB(tr.accColor || "#a8302c");
   const ACC = hexRGB(tr.accColor || (OT === "school" ? "#b8333f" : OT === "uniform" ? "#d2a943" : OT === "suit" ? "#8a2a2c" : "#c9a24a"));
   const WHITE = [238, 236, 230], DARK = OUT.map(c => c * 0.55);
-  const OUTR = hexRGB(tr.outerColor || "#3a3a42");
+  const OUTR = hexRGB((armorVisual && armorVisual.outerColor) || tr.outerColor || "#3a3a42");
   const SKC = hexRGB(tr.skirtColor || tr.pants || "#4a4a55");
   const UND = tr.under || "basic", UC = hexRGB(tr.underColor || (UND === "wrap" ? "#ece6d6" : UND === "swim" ? "#2c3e74" : "#34323a"));
   const longLeg = OT === "robe" || OT === "priest" ? 0.86 : 0;
@@ -7577,7 +7622,12 @@ function drawSprite(cv, opt){
   /* 의상 구조 디테일: 무늬는 최소화하고 겹침 경계·여밈·단추만 선명하게 */
   {
     const darken = (c, k) => c.map(v => Math.max(0, Math.round(v * k)));
+    const torsoH = Math.max(3, torB - torT + 1);
     const center = Math.round(cxB), startY = oy + torT, endY = oy + torB;
+    const tieTop = startY + Math.max(1, Math.round(torsoH * 0.08));
+    const tieLen = Math.max(2, Math.min(5, Math.round(torsoH * 0.24)));
+    const torsoL = ox + (RB[3] || [0])[0], torsoR = ox + (RB[3] || [0,0,B.w-1])[2];
+    const torsoW = Math.max(2, torsoR - torsoL + 1);
     const putIfCloth = (X, Y, color, allowed) => {
       if(X < 0 || Y < 0 || X >= W || Y >= H) return;
       const j = (Y * W + X) * 4;
@@ -7614,17 +7664,18 @@ function drawSprite(cv, opt){
     const formal = ["suit","school","uniform"].includes(OT);
     if(tr.tie || OT === "suit" || OT === "school" || (OT === "uniform" && tr.faction)){
       const tieColor = tr.tie && tr.accColor ? hexRGB(tr.accColor) : (OT === "uniform" ? ACC : TIEC);
-      for(let n = 0; n < 4; n++){
-        const y = startY + 2 + n, x = center;
+      for(let n = 0; n < tieLen; n++){
+        const y = tieTop + n, x = center;
         putIfCloth(x, y, tieColor, [3,12]);
-        if(n > 1) putIfCloth(x - 1, y, darken(tieColor, 0.78), [3,12]);
+        if(n > 1 && torsoW >= 5) putIfCloth(x - 1, y, darken(tieColor, 0.78), [3,12]);
       }
     }
     if(formal || OUTER){
-      const bx = center + (OUTER ? Math.max(2, Math.round(GAP + 1)) : 2);
-      const by = startY + 4;
+      const bx = center + (OUTER ? Math.max(1, Math.round(GAP + 1)) : Math.max(1, Math.round(torsoW * 0.16)));
+      const by = tieTop + Math.max(1, Math.round(torsoH * 0.16));
       const button = tr.accColor ? hexRGB(tr.accColor) : (OT === "uniform" ? [184,148,83] : [158,145,116]);
-      for(let n = 0; n < 3; n++) putIfCloth(bx, by + n * 4, button, [3,12]);
+      const buttonStep = Math.max(2, Math.round(torsoH * 0.22));
+      for(let n = 0; n < 3; n++){ const yy = by + n * buttonStep; if(yy < endY - 1) putIfCloth(bx, yy, button, [3,12]); }
     }
     /* 소매 끝은 얇은 한 줄로만 구분 */
     for(let y = oy + armB - 1; y <= oy + armB + 1; y++){
