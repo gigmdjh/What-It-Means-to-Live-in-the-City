@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.5"></script>
+<script src="parts.js?v=20261108-1.0.6"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.5";
+const BUILD = "20261108-1.0.6";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -5003,18 +5003,21 @@ function becomeDistorted(){
   if(!S.tags.some(t => /^뒤틀림:/.test(t))) S.tags.push("뒤틀림:뒤틀린 채 살아감");
   if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); try{ updateFlowUI(); }catch(e){} }
   log({t:"narr", text:"속삭임이 머릿속을 가득 채운다. 끝까지 붙들고 있던 무언가가 툭 끊어진다.\n\n살갗 아래에서 뼈가 비틀리고, 감정이 형태가 되어 몸 밖으로 비어져 나온다. 거울에 비친 것은 더 이상 사람의 얼굴이 아니다. 그런데도, 당신은 아직 생각할 수 있다. 목소리는 여전히 귓가에서 속삭인다.",
-    deltas:[{k:"힘", v:6}, {k:"방어력", v:6}, {k:"속도", v:6}, {k:"돌발", v:0, event:true}], options:["속삭임을 따른다", "나 나름대로 살아간다"]});
+    deltas:[{k:"힘", v:6}, {k:"방어력", v:6}, {k:"속도", v:6}, {k:"돌발", v:0, event:true}], options:["주변을 살핀다", "몸의 변화를 확인한다"]});
   log({t:"sys", text:"뒤틀렸다. 뒤틀린 채로 삶이 이어진다. 이제 아무도 당신을 알아보지 못하고, 곳곳에서 당신을 노린다."});
   chron("뒤틀림이 되었다");
   S.awaitEvent = true; S.urgent = false;
   renderDistort();
 }
-/* 뒤틀린 직후의 선택: 속삭임을 따를지, 나름대로 살아갈지 */
+/* 뒤틀린 직후의 내면 판정: 속삭임을 따를지 밀어낼지 d6으로 결정한다. */
 function resolveDistortChoice(input){
   S.distortPending = false;
-  const follow = /(따르|따라|따른|받아들|목소리대로|속삭임대로|맡긴)/.test(input) && !/(안 ?따|따르지|거부|버틴|무시)/.test(input);
-  S.distorted.path = follow ? "follow" : "self";
   log({t:"me", text:input});
+  /* 뒤틀린 직후, 속삭임을 따를지 밀어낼지는 플레이어 선택이 아니라 d6 판정으로 결정한다. */
+  const roll = R(1, 6);
+  const follow = roll <= 3;
+  S.distorted.path = follow ? "follow" : "self";
+  log({t:"sys", text:`속삭임에 대한 내면 판정: d6 = ${roll}. ${follow ? "속삭임을 따른다 (1~3)." : "속삭임을 밀어낸다 (4~6)."}`});
   if(follow){
     S.str += 4; S.spd += 4;
     log({t:"narr", text:"당신은 속삭임에 몸을 맡긴다. 하고 싶은 대로, 느끼는 대로. 망설임이 사라진 몸은 놀라울 만큼 가볍다. 그 대신 무엇을 원하는지는 점점 목소리가 정해 준다.", deltas:[{k:"힘", v:4}, {k:"속도", v:4}], options:["거리로 나간다", "배고픔을 채운다", "목소리에게 묻는다"]});
