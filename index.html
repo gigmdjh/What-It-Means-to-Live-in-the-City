@@ -6723,14 +6723,14 @@ function lookTraitsOf(look, name, gender, seedKey, over){
     {re:/섕크 협회/, key:"섕크 협회", base:"#e8e2d0", pants:"#313b50", accent:"#48658a", outer:"#b8c0ca", type:"jacket"},
     {re:/세븐 협회/, key:"세븐 협회", base:"#334b45", pants:"#252c2b", accent:"#c0a15b", outer:"#222e2b", type:"jacket"},
     {re:/쐐기 사무소/, key:"쐐기 사무소", base:"#5b5348", pants:"#29282a", accent:"#b48b54", outer:"#403a32", type:"jacket"},
-    {re:/올드 보이즈/, key:"올드 보이즈", base:"#5b5348", pants:"#38332c", accent:"#b7a27b", outer:"#403a32", type:"overall"},
+    {re:/올드 보이즈/, key:"올드 보이즈", base:"#5b5348", pants:"#38332c", accent:"#b7a27b", outer:"#403a32", type:"jacket"},
     {re:/엄지 조직/, key:"엄지", base:"#4a2028", pants:"#211b20", accent:"#bda36d", outer:"#2d1b22", type:"coat"},
     {re:/검지 조직/, key:"검지", base:"#34435b", pants:"#242c3b", accent:"#d4d5da", outer:"#29364b", type:"cape"},
     {re:/중지 조직/, key:"중지", base:"#4c2c34", pants:"#272126", accent:"#b88d55", outer:"#302027", type:"leather"},
     {re:/약지 조직/, key:"약지", base:"#6a3e54", pants:"#302630", accent:"#d2b8ce", outer:"#493043", type:"jacket"},
     {re:/새끼 조직/, key:"새끼", base:"#3a3a42", pants:"#222329", accent:"#b99b68", outer:"#28282f", type:"coat"},
     {re:/R사 전투복/, key:"R사", base:"#4c5550", pants:"#252b29", accent:"#b6b9a5", outer:"#303833", type:"jacket"},
-    {re:/W사 정비복/, key:"W사", base:"#374e68", pants:"#252b35", accent:"#c6cbd2", outer:"#263849", type:"overall"},
+    {re:/W사 정비복/, key:"W사", base:"#374e68", pants:"#252b35", accent:"#c6cbd2", outer:"#263849", type:"jacket"},
     {re:/L사 연구복/, key:"L사", base:"#e6e0d4", pants:"#3a3b43", accent:"#a8b7a8", outer:"#d2d5cd", type:"labcoat"}
   ].find(f => f.re.test(t));
   tr.hair = findColor(t.replace(/머리(띠|핀|끈|장식|띄)|헤어(핀|밴드)/g, "□□"), /(머리|머리칼|머리카락|모발|헤어|장발|단발|머릿결|앞머리|트윈테일|포니테일|양갈래|땋은)/) || hanjaColor(t, "발") || (HAIR_DIRECT.find(([re]) => re.test(t)) || [])[1] || ["#25232d", "#3b2d26", "#6b4a32", "#2f2a33"][h % 4];
@@ -6762,6 +6762,7 @@ function lookTraitsOf(look, name, gender, seedKey, over){
   else if(/언더컷|투블럭|댄디컷/.test(t)) tr.style = "undercut";
   else if(/울프컷|레이어드컷|리프컷/.test(t)) tr.style = "wolf";
   else if(/번헤어|당고머리|똥머리/.test(t)) tr.style = "bun";
+  else if(/슬릭백/.test(t)) tr.style = "slick";
   else if(/트윈|양갈래|양 갈래|양쪽으로 묶/.test(t)) tr.style = "twin";
   else if(/땋은|땋아|브레이드|댕기/.test(t)) tr.style = "braid";
   else if(/포니|묶은|묶어|올림|하나로 묶/.test(t)) tr.style = "pony";
@@ -6944,7 +6945,7 @@ function hairPlan(tr, hseed, look){
   const wavy = /웨이브|곱슬|파마|구불|컬/.test(t) || style === "curly";
   const buns = /번|만두|당고|경단|똥머리|올린/.test(t) || style === "bun";
   const fringes = ["jag", "part", "swept", "straight"];
-  let fringe = tr.bangs ? fringes[hseed % 4] : "none";
+  let fringe = /슬릭백|올백/.test(t) ? "none" : tr.bangs ? fringes[hseed % 4] : "none";
   if(/일자 ?앞머리|히메|뱅/.test(t)) fringe = "straight";
   if(/가르마|5:5|반으로 가른/.test(t)) fringe = "part";
   if(/옆으로 넘긴|사이드/.test(t)) fringe = "swept";
@@ -8184,7 +8185,7 @@ function sellItem(slot){
   if(isAug(it)){ S.hp = clamp(S.hp - 10, 0, 100); S.sp = gclamp("sp", S.sp - 5); checkDeath(); }
   save(); renderStatus(); renderShop();
 }
-/* ───────── 인벤토리: 무기·방어구는 갖고 다니며 바꿔 낄 수 있다(의체는 몸에 이식되어 바꿀 수 없다) ───────── */
+/* ───────── 인벤토리: 무기·방어구와 미이식 의체를 보관하고, 의체는 인벤토리에서 이식한다 ───────── */
 function grantItem(id, equip){
   const it = itemById(id); if(!it) return;
   if(!S.inv) S.inv = [];
