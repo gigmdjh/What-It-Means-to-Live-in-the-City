@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.6"></script>
+<script src="parts.js?v=20261108-1.0.7"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.6";
+const BUILD = "20261108-1.0.7";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1173,15 +1173,15 @@ You are the referee of a text RPG set in this world. Do not narrate. Only set th
 - First read the very last scene in [최근 상황] (recent events) and work out who or what in that scene the input refers to.
 - Split only the actions actually written in the player input (max 3). Words inside quotes are speech and are not rolled. Never add or invent actions the player did not write (looking around, checking for danger, searching for watchers or traces, staying alert, etc.).
 - Ordinary actions with no risk and no way to fail (receiving, handing over, answering, greeting, thanking, agreeing, refusing, laughing) stay as one action with trivial: true.
-- For each action pick the single most relevant stat and a difficulty word. Do not write numbers.
+- For each action pick the single most relevant stat and a difficulty word. Do not write numbers. Use 정신저항 for resisting fear, coercion, mental interference or psychological pressure; use 공방 for precise handwork, repairs and crafting.
 
 [Stats] (value must be the Korean word)
-- 힘 (strength): hitting, lifting, breaking / 방어력 (defense): enduring, withstanding, blocking / 속도 (speed): running, dodging, dexterity / 지력 (intellect): observation, knowledge, speech, persuasion, deception
+- 힘 (strength): hitting, lifting, breaking / 방어력 (defense): enduring, withstanding, blocking / 속도 (speed): running, dodging / 지력 (intellect): observation, knowledge, speech, persuasion, deception / 정신저항 (mental resistance): resisting fear, mental interference, psychological pressure / 공방 (dexterity): fine handwork, crafting, repair, precise manipulation
 
 [Difficulty] (value must be one of these Korean words)
 - 사소함 (trivial), 매우 쉬움 (very easy), 쉬움 (easy), 보통 (normal), 어려움 (hard), 매우 어려움 (very hard), 극히 어려움 (extremely hard), 불가능 (impossible).
 - Rate the difficulty of the situation itself: the opponent's strength and number, the place, weather, physical limits from age, and the effect of the character's looks (read the [외모] text yourself). Example: a newborn standing up and walking is 불가능; crying is 사소함.
-- The player's stats, gear, augment bonuses, prescript and injury penalties are added by the dice separately. Do not factor them into difficulty again.
+- The player's stats, gear, augment bonuses, prescript and injury penalties are added by the dice separately. Do not factor them into difficulty again. Use 정신저항 for resisting fear, coercion, mental interference or psychological pressure; use 공방 for precise handwork, repairs and crafting.
 - Against an Abnormality, use its grade: ZAYIN 쉬움, TETH 보통, HE 어려움, WAW 매우 어려움, ALEPH 극히 어려움 (suppressing it alone is nearly impossible). Fleeing or hiding is one or two steps easier.
 
 [Other fields]
@@ -1366,8 +1366,8 @@ You keep the memory of a text RPG. Summarize the given record into short fields 
 - Write the values in the same language as the record.
 Output JSON only: {"where":"","situation":"","people":"","outcome":"","pending":""}`;
 
-const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"},combat:{type:"boolean"}},required:["text","stat","difficulty","why","trivial","combat"]}}},required:["actions"]};
-const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},blood:{type:"string"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},quest_add:{type:"string"},quest_clear:{type:"string"},quest_reward:{type:"string"},quest_fail:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"},aff:{type:"string"},rel:{type:"string"},age:{type:"string"},job:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead"]};
+const JUDGE_SCHEMA = {type:"object",properties:{actions:{type:"array",items:{type:"object",properties:{text:{type:"string"},stat:{type:"string",enum:["힘","방어력","속도","지력","정신저항","공방"]},difficulty:{type:"string",enum:["사소함","매우 쉬움","쉬움","보통","어려움","매우 어려움","극히 어려움","불가능"]},why:{type:"string"},trivial:{type:"boolean"},combat:{type:"boolean"}},required:["text","stat","difficulty","why","trivial","combat"]}}},required:["actions"]};
+const NARR_SCHEMA = {type:"object",properties:{narration:{type:"string"},hp:{type:"string"},sp:{type:"string"},en:{type:"string"},rep:{type:"string"},ahn:{type:"string"},str:{type:"string"},def:{type:"string"},spd:{type:"string"},int:{type:"string"},res:{type:"string"},dex:{type:"string"},days:{type:"string"},location:{type:"string"},tag_add:{type:"string"},tag_remove:{type:"string"},spouse:{type:"string"},child_born:{type:"boolean"},family_dead:{type:"string"},options:{type:"string"},shop:{type:"boolean"},urgent:{type:"boolean"},blood:{type:"string"},outfit:{type:"string"},npc_outfit:{type:"string"},merit:{type:"string"},time:{type:"string"},quest_add:{type:"string"},quest_clear:{type:"string"},quest_reward:{type:"string"},quest_fail:{type:"string"},talk:{type:"array",items:{type:"object",properties:{who:{type:"string"},say:{type:"string"},act:{type:"string"},look:{type:"string"},gender:{type:"string"},outfit:{type:"string"},aff:{type:"string"},rel:{type:"string"},age:{type:"string"},job:{type:"string"}},required:["who","say"]}}},required:["shop","options","narration","hp","sp","en","rep","ahn","str","def","spd","int","days","location","tag_add","tag_remove","spouse","child_born","family_dead","res","dex"]};
 const SUM_SCHEMA = {type:"object",properties:{where:{type:"string"},situation:{type:"string"},people:{type:"string"},outcome:{type:"string"},pending:{type:"string"},summary:{type:"string"}},required:["situation","outcome"]};
 
 /* 계절 · 달력 */
@@ -1979,8 +1979,8 @@ function surnameOf(name){ const f = familyOf(name); return f.sur || ""; }
 
 /* ───────── 기본 도구 ───────── */
 const $ = s => document.querySelector(s);
-const STAT_KEYS = ["str","def","spd","int"];
-const STAT_KO = {str:"힘",def:"방어력",spd:"속도",int:"지력"};
+const STAT_KEYS = ["str","def","spd","int","res","dex"];
+const STAT_KO = {str:"힘",def:"방어력",spd:"속도",int:"지력",res:"정신저항",dex:"공방"};
 const GAUGE_KEYS = ["hp","sp","en","rep"];
 const GAUGE_KO = {hp:"체력",sp:"정신력",en:"기력",rep:"평판",blood:"혈액"};
 /* 혈귀는 혈액 게이지가 하나 더 보인다 */
@@ -1998,7 +1998,7 @@ function setFill(f, k){
   f.classList.toggle("neg", S.sp < 0);
 }
 const gtext = k => k === "sp" ? (S.sp > 0 ? "+" + S.sp : String(S.sp)) : String(S[k]);
-const KO2STAT = {"힘":"str","방어력":"def","방어":"def","속도":"spd","지력":"int","지능":"int"};
+const KO2STAT = {"힘":"str","방어력":"def","방어":"def","속도":"spd","지력":"int","지능":"int","정신력":"res","정신저항":"res","정신력 저항":"res","저항":"res","공방":"dex","손재주":"dex","기술":"dex"};
 /* 구역별로 둥지에서 태어날 확률(나머지는 뒷골목). 게임을 위해 정한 값:
    L사(12구역)는 날개가 무너져 둥지가 쇠락, 습지·혹한·도박 구역은 둥지가 작다고 본다 */
 /* 머리(A·B·C사 구역)는 둥지 비율이 높고, 대부분 부유하다 */
@@ -2845,7 +2845,7 @@ function stateSummary(local){
   { const fs = fingerState(); if(fs) lines.push(fs); }
   if(S.distorted) lines.push(`[뒤틀림] 주인공은 ${S.distorted.age}세에 감정에 삼켜져 뒤틀림이 되었고, 뒤틀린 채 살아가고 있다(${S.distorted.path === "follow" ? "머릿속 여자의 속삭임을 따르며 충동대로 산다" : S.distorted.path === "self" ? "속삭임을 밀어내고 자기 나름대로 살려 애쓴다" : "아직 속삭임을 따를지 정하지 않았다"}). 겉모습은 괴물로 변해, 가족과 지인을 포함한 누구도 주인공을 알아보지 못한다. 주인공이 말을 걸어도 사람들은 괴물이 내는 소리로 듣고 겁먹거나 공격한다. 해결사·협회 토벌대·조직·날개 보안 부대가 곳곳에서 노린다. 머릿속에는 늘 낯선 여자의 목소리가 속삭인다.`);
   lines.push(`[게이지] 체력 ${S.hp}/100, 기력 ${S.en}/100, 평판 ${S.rep}/100, 정신력 ${gtext("sp")} (−45~+45, 0이 평온, +는 침착·고양, −는 불안·공포, −45에 닿으면 뒤틀림 위기)`);
-  lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력 각 ${STAT_AVG}. 단련된 해결사 45~59, 이름난 해결사 60~74, 특색급 75 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라. 이 숫자는 판단용일 뿐이다. 서술과 대사에 숫자·배율·등급("평균의 1.5배", "힘 45")을 절대 쓰지 말고, 사람들이 받는 인상과 반응으로 보여 줘라.`);
+  lines.push(`[능력치 기준] 성인 남성 평균이 힘·방어력·속도·지력·정신저항·공방 각 ${STAT_AVG}. 단련된 해결사 45~59, 이름난 해결사 60~74, 특색급 75 이상, 아이는 한 자릿수. 상대의 강함도 이 척도로 가늠하라. 이 숫자는 판단용일 뿐이다. 서술과 대사에 숫자·배율·등급("평균의 1.5배", "힘 45")을 절대 쓰지 말고, 사람들이 받는 인상과 반응으로 보여 줘라.`);
   const idt = identityText(); if(idt) lines.push(`[신분·힘] ${idt}`);
   lines.push(`[소지금] ${fmt(S.ahn)}안 [집안 형편] ${wealthText()}` + (allowanceNow() ? ` (부모에게 한 달 용돈 ${fmt(allowanceNow())}안)` : ""));
   lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}(${statRel(eff(k))})`).join(", "));
@@ -2927,6 +2927,8 @@ function ruleJudge(input){
     if(/때리|치|밀|들어|부수|던지|싸우|주먹|힘껏|당기/.test(p)) stat = "str";
     else if(/막|버티|견디|참|방어|맞서/.test(p)) stat = "def";
     else if(/달리|뛰|도망|피하|숨|훔치|잡|기어|재빠|오르/.test(p)) stat = "spd";
+    else if(/공포|겁먹|두려|정신 간섭|정신 공격|세뇌|환청|유혹을 뿌리|의지를 굳|정신을 붙잡|뒤틀림에 맞서/.test(p)) stat = "res";
+    else if(/만들|제작|수리|고치|조립|손질|정밀|공예|공방|자물쇠|자물쇠를 따|도구를 다루|기계를 조작/.test(p)) stat = "dex";
     const trivial = /둘러보|쉬|쉰|잠|자고|잔다|먹|마신|기다|운다|울|웃|앉|눕|인사|바라본|지켜본/.test(p);
     return {text: p.slice(0, 80), stat, dc: 12 + ageAdd, why: aiOn() ? "간이 판정" : "규칙 기반 판정 (AI 없음)", trivial};
   });
@@ -3054,7 +3056,7 @@ function parseOptions(o){
   return arr.map(x => String(x).replace(/^[\s\d.\-·•]+/, "").trim()).filter(x => x && x.length <= 40).slice(0, 4);
 }
 function blankNarr(text){
-  return {options:[], narration:text, hp:0, sp:0, en:0, rep:0, ahn:0, str:0, def:0, spd:0, int:0, days:0, location:"", tag_add:"", tag_remove:"", spouse:"", child_born:false, family_dead:""};
+  return {options:[], narration:text, hp:0, sp:0, en:0, rep:0, ahn:0, str:0, def:0, spd:0, int:0, res:0, dex:0, days:0, location:"", tag_add:"", tag_remove:"", spouse:"", child_born:false, family_dead:""};
 }
 
 /* 작은 모델이 엇나가도 숫자가 말이 되게 잡아 주는 안전장치 */
@@ -3320,8 +3322,8 @@ function rollPersonStats(age, who, look){
   const st = {};
   for(const k of STAT_KEYS){
     let v = grow * (0.75 + rand01() * 0.5) + old * (k === "int" ? 0 : 1);
-    if(fighter && k !== "int") v *= 1.3;
-    if(elite && k !== "int") v *= 1.35;
+    if(fighter && ["str","def","spd","res"].includes(k)) v *= 1.3;
+    if(elite && ["str","def","spd","res"].includes(k)) v *= 1.35;
     if(famous) v = 55 + rnd(30);
     st[k] = Math.max(1, Math.round(v));
   }
@@ -4059,18 +4061,18 @@ function checkDeath(){
 }
 
 /* ───────── 뒤틀림 · 에고 ─────────
-   정신력이 −45에 닿으면 뒤틀림 판정(d20 + 지력 보정, 에고가 있으면 +5, 난이도 16).
+   정신력이 −45에 닿으면 뒤틀림 판정(d20 + 정신저항 보정, 에고가 있으면 +5, 난이도 16).
    이겨내면 정신력이 0으로 돌아오고 (처음이면) 에고를 발현해 이름을 짓는다. 지면 뒤틀림이 되어 그 삶이 끝난다. */
 function distortionCheck(){
   if(S.dead || S.distorting) return;
   S.distorting = true;
   if(typeof flow !== "undefined" && flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   log({t:"sys", text:"머릿속에서 낯선 여자의 목소리가 속삭인다. 감정이 둑을 넘는다. 뒤틀림이 시작되려 한다."});
-  const d = 1 + rnd(20), b = bonus(eff("int")), mods = [];
+  const d = 1 + rnd(20), b = bonus(eff("res")), mods = [];
   if(S.ego) mods.push({label:"에고", v:5});
   const total = d + b + mods.reduce((a, m) => a + m.v, 0), dc = 16;
   const win = d === 20 || (d !== 1 && total >= dc);
-  log({t:"roll", data:{text:"뒤틀림에 맞선다", stat:"int", dc, d, b, mods, total, tier:win ? (d === 20 ? "대성공" : "성공") : (d === 1 ? "대실패" : "실패"), cls:win ? (d === 20 ? "crit" : "ok") : (d === 1 ? "fumble" : "fail")}});
+  log({t:"roll", data:{text:"뒤틀림에 맞선다", stat:"res", dc, d, b, mods, total, tier:win ? (d === 20 ? "대성공" : "성공") : (d === 1 ? "대실패" : "실패"), cls:win ? (d === 20 ? "crit" : "ok") : (d === 1 ? "fumble" : "fail")}});
   S.distorting = false;
   if(win){
     S.sp = 0;
@@ -4511,6 +4513,7 @@ function migrateSave(){
   if(!S) return;
   if(!S.v || S.v < 3){ if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45); S.v = 3; }
   if(typeof S.mins !== "number") S.mins = 9 * 60;
+  for(const k of STAT_KEYS) if(typeof S[k] !== "number" || !Number.isFinite(S[k])) S[k] = (k === "res" || k === "dex") ? Math.max(1, Math.round(Math.min(ageY(), 20) * 1.4 + 2)) : 1;
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
@@ -5595,7 +5598,7 @@ async function clawStart(){
   for(const f of S.family) if(f.diedAt != null && f.diedAt < 0) f.diedAt = S.days - 2000;
   S.claw = {W:100, R:100, K:100, since:S.days};
   S.origin = "nest";
-  S.str = 52 + rnd(9); S.def = 48 + rnd(9); S.spd = 52 + rnd(9); S.int = 38 + rnd(7);
+  S.str = 52 + rnd(9); S.def = 48 + rnd(9); S.spd = 52 + rnd(9); S.int = 38 + rnd(7); S.res = 45 + rnd(10); S.dex = 35 + rnd(10);
   S.rep = 60; S.ahn = 50000000 + rnd(50) * 1000000;
   S.tags.push("소속:머리의 발톱", "출신:C사 구역 둥지");
   S.location = "C사 구역 둥지 머리의 시설";
@@ -6399,7 +6402,7 @@ const TOUR = [
   [null, "도시에 오신 걸 환영해요", "태어나는 동안 화면을 짧게 안내할게요. 언제든 '건너뛰기'를 눌러도 돼요."],
   [["#yearBarH", "#yearBarS"], "올해와 시간", "계절·날짜·시각과 지금 있는 곳(📍)이 보여요. 막대는 올해가 얼마나 지났는지예요. 새벽 3시 13분부터는 위험한 '뒷골목의 밤'이에요."],
   [["#hGauges", "#sGauges"], "체력·정신력·기력·평판", "체력이 0이 되면 죽어요. 정신력이 바닥(−45)까지 떨어지면 뒤틀림 판정을 받아요. 기력은 움직일수록 줄고 쉬면 차요. 나이가 들수록 회복이 느려져요."],
-  [["#hStats", "#sStats"], "능력치", "힘·방어력·속도·지력이에요. 아래 '+숫자'가 주사위 판정에 더해지는 보너스예요. 성인 평균은 30 정도예요."],
+  [["#hStats", "#sStats"], "능력치", "힘·방어력·속도·지력·정신저항·공방(손재주)이에요. 정신저항은 공포와 정신 간섭을 버티고, 공방은 정밀 작업·수리·제작에 쓰여요. 아래 '+숫자'는 주사위 판정 보너스예요. 성인 평균은 30 정도예요."],
   [["#btnStatus"], "상세", "가족·소속·장비·인벤토리·기록 같은 자세한 정보는 여기서 봐요."],
   [["#log"], "이야기", "당신이 한 일과 그 결과가 여기에 쌓여요. 주사위 판정 카드도 여기에 나와요."],
   [["#actInput"], "행동 입력", "정해진 선택지는 없어요. 하고 싶은 일을 자유롭게 적어요. 여러 행동을 한 번에 적어도 돼요."],
@@ -6573,9 +6576,9 @@ const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
 function equipBonus(k){ let b = 0; for(const id of Object.values(S.equip || {})){ const it = id && itemById(id); if(it && it.fx[k]) b += it.fx[k]; } return b; }
-/* 혈귀는 사람보다 몇 배 강하다(지력 제외). 피가 모자라면 그만큼 약해진다 */
+/* 혈귀는 신체 능력이 강해진다. 지력·정신저항·공방은 혈액량으로 배율이 바뀌지 않는다. */
 function kinMul(k){
-  if(k === "int" || !isKindred()) return 1;
+  if(k === "int" || k === "res" || k === "dex" || !isKindred()) return 1;
   if(S.bornKindred && !S.kindredAwake) return 1.5;
   const b = S.blood == null ? 60 : S.blood;
   return b <= 0 ? 1.3 : b < 30 ? 2 : 3;
@@ -8518,7 +8521,7 @@ async function createLife(){
   const bornStar = rand01() < 0.01 ? STARS[rnd(STARS.length)] : null;
   S = {v:1, name, gender, look: $("#cLook").value.trim(), district, origin, wealth, bornKindred, lifespan, days:0, location:"",
     hp:100, sp:0, en:100, rep: origin === "nest" ? 15 : 5, ahn:0,
-    str:1 + rnd(2), def:1 + rnd(2), spd:1 + rnd(2), int:1 + rnd(2), log:[], dead:null,
+    str:1 + rnd(2), def:1 + rnd(2), spd:1 + rnd(2), int:1 + rnd(2), res:1 + rnd(2), dex:1 + rnd(2), log:[], dead:null,
     family:[], tags:[], stm:[], ltm:[], turn:0, pendingChild:null, doy0:0, equip:{}, seed, rng:S.rng,
     choice:{district:$("#cDistrict").value}, hairColor:swVal("hairc"), eyeColor:swVal("eyec")};
   S.doy0 = rnd(365);
