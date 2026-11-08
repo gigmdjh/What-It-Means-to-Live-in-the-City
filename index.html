@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.9"></script>
+<script src="parts.js?v=20261108-1.1.0"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.9";
+const BUILD = "20261108-1.1.0";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -6586,6 +6586,41 @@ for(const st of STARS){
 for(const it of ITEMS) if(it.fx) for(const k in it.fx) it.fx[k] *= 2;
 const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
+/* 장비 분류 데이터: 전투 수치와 별개로 재질·무게·품질·착용 부위를 명시한다.
+   textureKey는 추후 픽셀아트 파일과 연결할 안정적인 키다. */
+const ITEM_KIND_KO = {blade:"날붙이", blunt:"둔기", polearm:"장병기", firearm:"화기", gauntlet:"건틀릿", clothing:"의류", lightArmor:"경량 방호구", heavyArmor:"중장갑", arm:"의수", leg:"의족", eye:"의안", body:"신체 개조"};
+function itemProfile(it){
+  if(!it) return null;
+  const n = String(it.name || ""), look = String(it.look || "");
+  let kind = it.slot;
+  if(it.slot === "weapon"){
+    if(/총|권총|머스킷|산탄총/.test(n) || ["gun","musket"].includes(look)) kind = "firearm";
+    else if(/창|미늘창|낫/.test(n) || ["spear","scythe"].includes(look)) kind = "polearm";
+    else if(/망치|메이스|몽둥이|벽돌|파이프|빠루|스패너|렌치|사슬|톤파/.test(n) || ["hammer","mace","bat","pipe"].includes(look)) kind = "blunt";
+    else if(/건틀릿|너클/.test(n) || look === "gauntlet") kind = "gauntlet";
+    else kind = "blade";
+  }else if(it.slot === "armor"){
+    kind = /흉갑|갑옷|장갑|판|전신/.test(n) ? "heavyArmor" : /방검|방호|방화|강화 섬유|수정 섬유/.test(n) ? "lightArmor" : "clothing";
+  }
+  let material = "복합 소재";
+  if(/중고|녹슨|고물|벽돌|나무|야구 배트/.test(n)) material = /벽돌/.test(n) ? "벽돌" : /나무|배트/.test(n) ? "목재" : "중고 금속";
+  else if(/가죽|가죽/.test(n) || look === "leather") material = "가죽";
+  else if(/수정|크리스탈/.test(n)) material = "수정·결정체";
+  else if(/섬유|코트|외투|정장|작업복|제복|조끼|후드|의류|결투복|은밀복|우비/.test(n) || it.slot === "armor") material = /금속|장갑|흉갑|갑옷|판/.test(n) ? "금속 합금" : "직물·방호 섬유";
+  else if(/의수|의족|의안|장갑판|골격|심폐|근섬유|건틀릿|렌치|총|검|칼|도검|창|낫|망치|메이스|너클/.test(n) || it.slot === "arm" || it.slot === "leg" || it.slot === "eye" || it.slot === "body") material = /칼날|날붙이|검|칼|도검|창|낫/.test(n) ? "강철 합금" : /티타늄/.test(n) ? "티타늄 합금" : "기계·금속 합금";
+  const speed = Number(it.fx && it.fx.spd || 0);
+  const weight = kind === "firearm" || kind === "blade" || kind === "gauntlet" ? (speed >= 3 ? "경량" : speed <= -1 ? "중량" : "표준") :
+    kind === "polearm" || kind === "blunt" || kind === "heavyArmor" ? (speed <= -1 ? "중량" : "표준") :
+    ["arm","leg","eye","body"].includes(it.slot) ? "이식형" : speed >= 2 ? "경량" : "표준";
+  const price = Number(it.price || 0);
+  const quality = /중고|녹슨|고물/.test(n) ? "중고·마모" : price >= 80000000 ? "최상급" : price >= 25000000 ? "고급" : price >= 5000000 ? "정규 규격" : "보급형";
+  const coverage = ({armor:kind === "heavyArmor" ? "몸통 중심 · 높은 방호" : kind === "lightArmor" ? "몸통 · 일부 관절" : "일상복 · 제한적 방호", arm:"팔 부위", leg:"다리 부위", eye:"눈 부위", body:"몸통 내부·피하"})[it.slot] || (kind === "polearm" ? "긴 사거리" : kind === "firearm" ? "탄환·장전 필요" : kind === "blunt" ? "충격 타격" : kind === "gauntlet" ? "근접 타격" : "근접 절단");
+  return {kind, kindLabel:ITEM_KIND_KO[kind] || "장비", material, weight, quality, coverage, textureKey:it.textureKey || look || it.id || "generic"};
+}
+function itemProfileText(it){
+  const p = itemProfile(it); if(!p) return "";
+  return `${p.kindLabel} · ${p.material} · ${p.weight} · ${p.quality} · ${p.coverage}`;
+}
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
 /* 상점에서 현재 장비와 비교: 새 장비를 장착했을 때 변하는 능력치만 표시 */
 function fxDeltaText(it){
@@ -7941,6 +7976,7 @@ function renderShop(){
     top.append(el("b", null, it.name), el("span", "item-price", fmt(it.price) + "안"));
     c.appendChild(top);
     c.appendChild(el("div", "item-meta", `${it.shop} · ${isAug(it) ? SLOT_KO[it.slot] + " · " : ""}${fxText(it.fx)}${it.age ? ` · ${it.age}세부터` : ""}`));
+    c.appendChild(el("div", "item-meta item-profile", itemProfileText(it)));
     c.appendChild(el("div", "item-meta item-compare", fxDeltaText(it)));
     if(isAug(it)) c.appendChild(el("div", "item-meta", "이식 수술: 체력 −15, 정신력 −10" + (it.union ? " (출처 모를 시신의 살을 쓴다는 소문, 정신력 추가 −5)" : "") + ", 회복 7일"));
     const owned = S.equip[it.slot] === it.id || (S.inv || []).includes(it.id);
@@ -8085,6 +8121,7 @@ function renderInv(){
     b.appendChild(nm);
     if(it.ego){ const g = el("span", "ego", it.ego + " · 추출 E.G.O"); g.style.color = (ABNO_INFO[it.ego] || {}).color || ""; b.appendChild(g); }
     b.appendChild(el("span", null, `${SLOT_KO[it.slot]} · ${fxText(it.fx)}${on ? " · 착용 중 (눌러서 벗기)" : " · 눌러서 장착"}`));
+    b.appendChild(el("span", "inv-profile", itemProfileText(it)));
     b.disabled = busy || !!S.dead;
     b.addEventListener("click", () => on ? unequip(slot) : equipFromInv(it.id));
     return b;
