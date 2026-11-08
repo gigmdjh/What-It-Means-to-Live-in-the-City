@@ -1117,10 +1117,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1400"></script>
+<script src="parts.js?v=20261108-1410"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1400";
+const BUILD = "20261108-1410";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -4361,14 +4361,25 @@ function appendEntry(e, live){
 const PRIVATE_RE = /(단둘|둘만|둘이서|둘이 남|방 안|방에서|방으로|안방|침실|자취방|원룸|차 안|차에 타|객실|호텔 방|병실|사무실 안|옥상|문을 잠그|문을 닫|조용한 방|집 안|집에서|집으로)/;
 const PUBLIC_RE = /(시장|거리|광장|공원|지하철역|기차역|역 앞|역 안|정류장|식당|국밥집|카페|술집|가게 안|학교|교실|체육관|공방|병원 로비|사무소 로비|파티|퍼레이드|열차)/;
 function privateWith(){
-  const narrs = []; for(let i = S.log.length - 1; i >= 0 && narrs.length < 2; i--) if(S.log[i].t === "narr") narrs.push(S.log[i]);
-  if(!narrs.length) return null;
-  const who = new Set(); for(const n of narrs) for(const t of (n.talk || [])) if(t && t.who) who.add(t.who);
-  if(who.size !== 1) return null;
-  const name = [...who][0];
-  const here = String(S.location || "") + " " + narrs.map(n => String(n.text || "").slice(-300)).join(" ") + " " + (S._lastInput || "");
-  if(PUBLIC_RE.test(String(S.location || "")) && !/(단둘|둘만|둘이서)/.test(here)) return null;
-  return PRIVATE_RE.test(here) ? name : null;
+  /* 시간이 흘렀으면(작은 일·시간 흐름) 장면이 끝난 것 */
+  const narrs = [];
+  for(let i = S.log.length - 1; i >= 0 && narrs.length < 3; i--){ const e = S.log[i]; if(e.t === "small") break; if(e.t === "narr") narrs.push(e); }
+  const inp = String(S._lastInput || "");
+  const clear = () => { S.pv = null; return null; };
+  if(!narrs.length) return clear();
+  if(/(나간다|나가서|나가 |밖으로|헤어진다|헤어지|돌아간다|떠난다|자리를 뜬|외출|배웅)/.test(inp)) return clear();
+  const who = new Set(); for(const n of narrs) for(const t of (n.talk || [])) if(t && t.who && !isPlayerTalk(t)) who.add(t.who);
+  if(who.size >= 2) return clear();
+  let name = who.size === 1 ? [...who][0] : (S.pv && S.pv.loc === S.location ? S.pv.who : null);
+  if(!name) return clear();
+  const loc = String(S.location || "");
+  const here = loc + " " + narrs.map(n => String(n.text || "").slice(-300)).join(" ") + " " + inp;
+  const alone = /(단둘|둘만|둘이서|둘이 남)/.test(here);
+  if(PUBLIC_RE.test(loc) && !alone) return clear();
+  const closed = alone || PRIVATE_RE.test(here) || /(집|방|숙소|침실|객실|차 안|사무실)/.test(loc);
+  if(!closed) return clear();
+  S.pv = {who:name, loc};
+  return name;
 }
 function lastNarr(){ for(let i = S.log.length - 1; i >= 0; i--) if(S.log[i].t === "narr") return S.log[i]; return null; }
 /* 그 장면 뒤에 행동·시간 흐름이 있었으면 지나간 장면 */
