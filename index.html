@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.8"></script>
+<script src="parts.js?v=20261108-1.0.9"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.8";
+const BUILD = "20261108-1.0.9";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -2850,6 +2850,7 @@ function stateSummary(local){
   lines.push(`[소지금] ${fmt(S.ahn)}안 [집안 형편] ${wealthText()}` + (allowanceNow() ? ` (부모에게 한 달 용돈 ${fmt(allowanceNow())}안)` : ""));
   lines.push(`[능력치·장비 포함] ` + STAT_KEYS.map(k => `${STAT_KO[k]} ${eff(k)}(${statRel(eff(k))})`).join(", "));
   lines.push(`[장비] ${equipText()}`);
+  lines.push("[장비 적용 규칙] 장비 효과는 [능력치·장비 포함]에 이미 반영되어 있다. 장비가 있다는 이유만으로 승리하거나 피해를 전부 막지 않는다. 무기의 형태와 방어구·의체의 기능에 맞춰 현실적인 이점과 한계를 묘사한다. 주인공이 실제로 구매·획득·장착·해제하지 않았다면 장비를 새로 얻거나 바꾸지 않는다. 의체는 이식된 부위와 기능을 유지하고, 단순한 시간 경과만으로 외형이나 성능이 바뀌지 않는다.");
   if((S.inv || []).length) lines.push(`[가방] ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")} (갈아 낄 수 있는 무기·방어구)`);
   { const qs = questState(); if(qs) lines.push(qs); }
   lines.push(`[집] ${houseText()}${S.house ? `. 집이라고 하면 이곳이다(${homeLoc()})` : ""}${S.house && houseOf(S.house.id).safe ? ". 단단한 은신처라 뒷골목의 밤에도 안전하다" : ""}`);
@@ -6586,6 +6587,14 @@ for(const it of ITEMS) if(it.fx) for(const k in it.fx) it.fx[k] *= 2;
 const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
+/* 상점에서 현재 장비와 비교: 새 장비를 장착했을 때 변하는 능력치만 표시 */
+function fxDeltaText(it){
+  const cur = S.equip && S.equip[it.slot] ? itemById(S.equip[it.slot]) : null;
+  const keys = [...new Set([...Object.keys(it.fx || {}), ...Object.keys(cur && cur.fx || {})])];
+  const changes = keys.map(k => [k, (it.fx && it.fx[k] || 0) - (cur && cur.fx && cur.fx[k] || 0)]).filter(([,v]) => v !== 0);
+  if(!changes.length) return cur ? "현재 장비와 능력치 차이 없음" : "능력치 변화 없음";
+  return "교체 시 " + changes.map(([k,v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" ");
+}
 function equipBonus(k){ let b = 0; for(const id of Object.values(S.equip || {})){ const it = id && itemById(id); if(it && it.fx[k]) b += it.fx[k]; } return b; }
 /* 혈귀는 신체 능력이 강해진다. 지력·정신저항·공방은 혈액량으로 배율이 바뀌지 않는다. */
 function kinMul(k){
@@ -7932,6 +7941,7 @@ function renderShop(){
     top.append(el("b", null, it.name), el("span", "item-price", fmt(it.price) + "안"));
     c.appendChild(top);
     c.appendChild(el("div", "item-meta", `${it.shop} · ${isAug(it) ? SLOT_KO[it.slot] + " · " : ""}${fxText(it.fx)}${it.age ? ` · ${it.age}세부터` : ""}`));
+    c.appendChild(el("div", "item-meta item-compare", fxDeltaText(it)));
     if(isAug(it)) c.appendChild(el("div", "item-meta", "이식 수술: 체력 −15, 정신력 −10" + (it.union ? " (출처 모를 시신의 살을 쓴다는 소문, 정신력 추가 −5)" : "") + ", 회복 7일"));
     const owned = S.equip[it.slot] === it.id || (S.inv || []).includes(it.id);
     let why = owned ? (S.equip[it.slot] === it.id ? "착용 중" : "가방에 있음") : ageY() < it.age ? `${it.age}세부터` : S.ahn < it.price ? "돈이 모자람" : "";
