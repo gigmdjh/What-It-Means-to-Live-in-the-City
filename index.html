@@ -7979,13 +7979,25 @@ function drawSprite(cv, opt){
       box(hx-2,hy-3,9,2,"#39353a");box(hx-1,hy-3,7,1,"#d6b84f");
     }
     else if(L === "dihui" || w.name === "지혜성도"){
-      /* 지혜성도: 푸른 오오타치, 지면의 검흔을 연상시키는 푸른 빛 */
-      sword(29,3,"#3c69c5",5,{fuller:true,guardCol:"#9fc8f5",gripCol:"#253858"});
-      box(hx+1,hy-26,1,21,"#a8d9ff");box(hx+2,hy-19,1,12,"#e0f5ff");
-      for(const [yy,xx] of [[hy-22,-2],[hy-17,3],[hy-12,-2],[hy-7,3]]){
-        box(hx+xx,yy,2,1,"#72b8ff");box(hx+xx+(xx<0?-1:2),yy+1,1,1,"#d3eeff");
+      /* 지혜성도: assets/weapons/Arayashiki.png에서 사전 변환한 정적 픽셀 데이터 */
+      const sprite = WEAPON_PIXEL_DATA && WEAPON_PIXEL_DATA.dihui;
+      if(sprite && sprite.width === 32 && sprite.height === 32){
+        if(!sprite.canvas){
+          const imageData = new ImageData(sprite.rgba, sprite.width, sprite.height);
+          sprite.canvas = document.createElement("canvas");
+          sprite.canvas.width = sprite.width; sprite.canvas.height = sprite.height;
+          sprite.canvas.getContext("2d").putImageData(imageData, 0, 0);
+        }
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite.canvas, hx-16, hy-26);
+      }else{
+        sword(29,3,"#3c69c5",5,{fuller:true,guardCol:"#9fc8f5",gripCol:"#253858"});
+        box(hx+1,hy-26,1,21,"#a8d9ff");box(hx+2,hy-19,1,12,"#e0f5ff");
+        for(const [yy,xx] of [[hy-22,-2],[hy-17,3],[hy-12,-2],[hy-7,3]]){
+          box(hx+xx,yy,2,1,"#72b8ff");box(hx+xx+(xx<0?-1:2),yy+1,1,1,"#d3eeff");
+        }
+        box(hx-2,hy-1,7,1,"#c4e2ff");
       }
-      box(hx-2,hy-1,7,1,"#c4e2ff");
     }
     else if(w.name === "미미크리(시제품)"){
       /* 미미크리: 넓은 은회색 대검에 아무것도 없는의 살점·가시·눈을 픽셀로 얹는다 */
