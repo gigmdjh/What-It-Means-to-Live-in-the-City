@@ -423,6 +423,8 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .ad-grid input{width:100%}
 .ad-pre{white-space:pre-wrap;word-break:break-all;font-size:11px;max-height:320px;overflow:auto;background:var(--panel-2);padding:8px;border-radius:6px}
 .admin-claim{display:flex}
+.redo-btn{display:block;margin-top:8px;font-size:12px;padding:4px 10px;opacity:.75}
+.redo-btn:hover{opacity:1}
 .ad-code{font-size:12px;word-break:break-all;background:var(--panel-2);padding:2px 6px;border-radius:4px;user-select:all}
 .ad-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:1000;background:var(--panel-2);color:var(--fg,inherit);border:1px solid var(--line);padding:8px 14px;border-radius:8px;font-size:13px;max-width:90vw}
 .login-btns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -1096,11 +1098,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1300"></script>
+<script src="parts.js?v=20261108-1320"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1300";
+const BUILD = "20261108-1320";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1226,6 +1228,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 [8. Scene info fields]
 - location: where the scene ends. After the District, write the concrete spot the protagonist is actually in ("L사 구역 뒷골목 집 안방", "L사 구역 동네 공원", "L사 구역 둥지 병원"). If at home, it must contain "집"; never just "뒷골목". Babies and small children are inside the home unless taken out.
 - options: always "" (the player writes their own action).
+- Undressing depends on the situation: coming indoors, feeling hot, or getting ready to move or fight means only the outer layer (coat, jacket); medical treatment or checking a wound means only the top; bathing, showering or changing means down to underwear; swimming means a swimsuit. If a specific item is named, only that item. Underwear always stays on, never write anyone fully undressed, never describe the body, and keep it entirely non-sexual (especially for anyone under 18).
 - outfit: if the protagonist changed, removed or put on clothes, or clothes got torn or soaked in this scene, write the whole current outfit briefly ("남색 코트, 흰 셔츠, 검은 치마": color + item, comma-separated). Otherwise "".
 - If a talk character changed clothes, put their new outfit in that talk entry's "outfit" the same way. If a non-speaking character changed clothes, npc_outfit "name/outfit" (several joined by ;). Otherwise "".
 - urgent: true if the scene ends at a moment that needs an immediate response (attacked, chased, fire, something lunging); otherwise false.
@@ -3384,15 +3387,54 @@ function setOutfit(who, outfit){
   S.outfits[fam ? fam.name : who] = outfit;
 }
 /* AI가 옷차림 칸을 주지 않을 때(그냥 글·규칙): 입력에서 옷 갈아입기를 읽는다 */
+/* 옷 벗기: 무엇을 얼마나 벗는지는 상황에 따라 다르다. 속옷은 언제나 남는다.
+   - 옷 이름을 콕 집으면 그것만 (코트를 벗는다)
+   - 씻기·목욕·샤워: 속옷 차림까지 / 수영: 수영복
+   - 치료·진찰·시술·상처 확인: 상의만
+   - 집·실내에 들어옴, 더움, 운동·싸움 준비: 겉옷만 */
+const UND_OUTER_RE = /(코트|외투|재킷|자켓|점퍼|패딩|가디건|카디건|망토|케이프|파카|조끼|베스트|트렌치|겉옷|후드 집업|바람막이)/;
+const UND_TOP_RE = /(셔츠|블라우스|티셔츠|반팔|민소매|나시|니트|스웨터|후드|맨투맨|탑|상의|윗옷|원피스|드레스|교복|정장|제복|유니폼|트레이닝 상의)/;
+const UND_BOT_RE = /(바지|치마|스커트|반바지|청바지|슬랙스|레깅스|하의|아랫도리)/;
+function undressScope(t){
+  const here = t + " " + String(S.location || "") + " " + String((lastNarr() || {}).text || "").slice(-200);
+  if(/(수영|물에 들어|바다에 들어|수영장)/.test(t)) return "swim";
+  if(/(샤워|목욕|씻|욕실|욕조|탕에|사우나|온천|갈아입으려)/.test(t)) return "under";
+  if(/(치료|진찰|진료|검진|시술|수술|청진|상처를 (보|확인|살피|치료)|붕대|주사|의사|간호사|의체 (시술|이식))/.test(here) && /(상의|윗옷|옷|셔츠)/.test(t)) return "top";
+  if(/(상의|윗옷|웃통|셔츠|티셔츠)/.test(t)) return "top";
+  if(/(하의|바지|치마|스커트)/.test(t)) return "bottom";
+  return "outer";
+}
+function undressOutfit(t, cur){
+  const segs = cur.split(/\s*,\s*/).filter(Boolean).filter(x => !/(없음|차림)$/.test(x));
+  /* 옷 이름을 콕 집었으면(겉옷류·특정 상의/하의 이름) 그것만 */
+  const named = segs.filter(x => { const w = x.split(/\s+/).pop(); return w && w.length >= 2 && t.includes(w) && !/^(옷|상의|하의)$/.test(w); });
+  if(named.length){ const rest = segs.filter(x => !named.includes(x)); return finishOutfit(rest, named.some(x => UND_BOT_RE.test(x)) ? "bottom" : named.some(x => UND_TOP_RE.test(x)) ? "top" : ""); }
+  const sc = undressScope(t);
+  if(sc === "swim") return ageY() < 3 ? "기저귀" : "수영복";
+  if(sc === "under") return "상의 없음, 하의 없음, 속옷 차림";
+  if(sc === "top") return finishOutfit(segs.filter(x => !UND_OUTER_RE.test(x) && !UND_TOP_RE.test(x)), "top");
+  if(sc === "bottom") return finishOutfit(segs.filter(x => !UND_BOT_RE.test(x)), "bottom");
+  const rest = segs.filter(x => !UND_OUTER_RE.test(x));
+  return rest.length === segs.length ? null : finishOutfit(rest);
+}
+function finishOutfit(rest, gone){
+  const hasTop = rest.some(x => UND_TOP_RE.test(x)), hasBot = rest.some(x => UND_BOT_RE.test(x)) || rest.some(x => /(원피스|드레스)/.test(x));
+  const out = rest.slice();
+  if(!hasTop && (gone === "top" || !rest.length)) out.push("상의 없음");
+  if(!hasBot && (gone === "bottom" || !rest.length)) out.push("하의 없음");
+  return out.join(", ") || "속옷 차림";
+}
+/* AI가 적은 옷차림이 속옷보다 덜 입은 상태면 속옷 차림으로 */
+function safeOutfit(o){
+  if(!o) return o;
+  if(/(알몸|나체|벌거|맨몸|실오라기|아무것도 (안|입지)|속옷도 (벗|없)|전라|누드)/.test(o)) return "상의 없음, 하의 없음, 속옷 차림";
+  return o;
+}
 function outfitFromInput(input){
   const t = String(input || "").replace(/["“”][^"“”]*["”]/g, " ");
   if(!CLOTH_SEG_RE.test(t)) return null;
   const cur = (S.outfit || lookWithOutfit(S.look, "").split(/\s*,\s*/).filter(x => CLOTH_SEG_RE.test(x)).join(", "));
-  if(/(벗는다|벗어|벗고|벗었)/.test(t) && !/(입는다|입고|입었|갈아입|걸친|걸쳐)/.test(t)){
-    const m = t.match(CLOTH_SEG_RE); if(!m) return null;
-    const rest = cur.split(/\s*,\s*/).filter(x => x && !x.includes(m[1]));
-    return rest.length ? rest.join(", ") : "상의 없음";
-  }
+  if(/(벗는다|벗어|벗고|벗었|벗긴|벗을)/.test(t) && !/(입는다|입고|입었|갈아입|걸친|걸쳐)/.test(t)) return undressOutfit(t, cur);
   if(/(입는다|입고|입었|입어|갈아입|걸친|걸쳐|차려입)/.test(t)){
     /* 낱말 단위로: 옷 이름 낱말과 그 앞의 꾸밈말(색 등) */
     const toks = t.split(/\s+/), items = [];
@@ -3549,6 +3591,7 @@ function applyNarr(n, forcedDays, shownDays){
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
   const qNotes = questApply(n, deltas);
   /* 옷차림이 바뀌었으면 먼저 반영(그래야 이 장면의 대화 카드에도 새 옷으로 나온다) */
+  if(n.outfit) n.outfit = safeOutfit(n.outfit);
   if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; bump("outfit"); log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
   for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
   for(const pr of String(n.npcOutfit || "").split(/\s*;\s*/)){ const [w, o] = pr.split("/"); if(w && o) setOutfit(w.trim(), o.trim()); }
@@ -4062,6 +4105,7 @@ function log(entry){
   if(S.log.length > 250) S.log.splice(0, S.log.length - 250);
   /* 장면이 지나가면(행동·시간 흐름·작은 일) 앞 장면의 선택지는 지운다 */
   if(entry.t === "me" || entry.t === "small") document.querySelectorAll("#log .opts").forEach(o => o.remove());
+  if(entry.t === "small" || entry.t === "me"){ document.querySelectorAll("#log .redo-btn").forEach(b => b.remove()); if(entry.t === "small" && typeof REDO !== "undefined") REDO = null; }
   appendEntry(entry, true);
 }
 
@@ -4216,7 +4260,7 @@ function privateWith(){
 function lastNarr(){ for(let i = S.log.length - 1; i >= 0; i--) if(S.log[i].t === "narr") return S.log[i]; return null; }
 /* 그 장면 뒤에 행동·시간 흐름이 있었으면 지나간 장면 */
 function sceneOpen(e){ const i = S.log.indexOf(e); return i >= 0 && !S.log.slice(i + 1).some(x => x.t === "me" || x.t === "small"); }
-function renderLog(){ const box = $("#log"); box.replaceChildren(); for(const e of S.log) appendEntry(e, false); box.scrollTop = box.scrollHeight; }
+function renderLog(){ const box = $("#log"); box.replaceChildren(); for(const e of S.log) appendEntry(e, false); box.scrollTop = box.scrollHeight; try{ redoMark(); }catch(e){} }
 
 let lastSpriteKey = "";
 /* 상태창의 능력치 카드 4개: 장비·의체 포함 값, 판정 보정, 성인 평균과 비교 */
@@ -5810,7 +5854,30 @@ function renderAch(){
   $("#achCount").textContent = `${n} / ${ACHS.length}`;
 }
 
+/* 관리자: 방금 응답을 다시 받기. 행동 직전 상태를 기억해 두었다가 되돌린 뒤 같은 입력으로 다시 부른다(주사위는 같고 서술만 새로) */
+var REDO = null;
 async function doAction(input, opt = {}){
+  const can = !busy && S && !S.dead && isAdmin();
+  if(can && !opt.redo) REDO = {snap:JSON.stringify(S), input, opt:Object.assign({}, opt)};
+  if(!can) REDO = opt.redo ? REDO : null;
+  await doActionCore(input, opt);
+  if(REDO && S && !S.dead) REDO.turn = S.turn;
+  redoMark();
+}
+function redoMark(){
+  document.querySelectorAll("#log .redo-btn").forEach(b => b.remove());
+  if(!REDO || REDO.turn == null || !isAdmin() || !S || S.dead || busy) return;
+  const nodes = document.querySelectorAll("#log .e-narr"); const last = nodes[nodes.length - 1]; if(!last) return;
+  const b = el("button", "btn redo-btn", "↻ 다시 응답"); b.type = "button"; b.title = "관리자: 이 응답을 다시 받기";
+  b.onclick = redoLast; last.appendChild(b);
+}
+async function redoLast(){
+  if(busy || !REDO) return;
+  S = JSON.parse(REDO.snap);
+  try{ renderLog(); renderLite(); renderStatus(); }catch(e){}
+  await doAction(REDO.input, Object.assign({}, REDO.opt, {redo:true}));
+}
+async function doActionCore(input, opt = {}){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
   if(busy || S.dead) return;
   /* 뒤틀린 직후: 속삭임을 따를지 */
