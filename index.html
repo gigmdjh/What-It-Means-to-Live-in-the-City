@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.8"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.9"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.8";
+const BUILD = "20261109-1.5.9";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -4642,12 +4642,16 @@ function renderStatus(){
   if(!bonds.length) bd.appendChild(el("div", "note", "아직 없음"));
   for(const b of bonds){
     const dead = S.tags.find(t => new RegExp("^사망:" + b.nm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(/|$)").test(t)) || (S.npcs && S.npcs[b.nm] && S.npcs[b.nm].dead);
-    const row = el("div", "fam" + (dead ? " gone" : ""));
+    const row = el("div", "person" + (dead ? " gone" : ""));
+    const sum = el("div");
     const np = S.npcs && S.npcs[b.nm];
     const aff = np && np.aff != null ? np.aff : 0;
-    row.append(el("span", "f-rel", b.rel || "인연"), el("span", "f-name", b.nm + (dead ? " (사망)" : "")));
-    const af = el("span", "p-aff", (aff > 0 ? "♥ +" : "♥ ") + aff); af.style.color = aff >= 15 ? "var(--good)" : aff <= -15 ? "var(--bad)" : "var(--muted)"; row.appendChild(af);
-    if(dead && typeof dead === "string" && dead.includes("/")) row.appendChild(el("span", "f-cause", dead.split("/")[1]));
+    const af = el("span", "p-aff", (aff > 0 ? "♥ +" : "♥ ") + aff);
+    af.style.color = aff >= 15 ? "var(--good)" : aff <= -15 ? "var(--bad)" : "var(--muted)";
+    sum.style.cssText = "display:flex;align-items:baseline;gap:8px;min-width:0";
+    sum.append(el("b", null, b.nm + (dead ? " (사망)" : "")), el("span", "p-meta", b.rel || "인연"), af);
+    row.appendChild(sum);
+    if(dead && typeof dead === "string" && dead.includes("/")) row.appendChild(el("div", "p-det", "사망 원인 · " + dead.split("/")[1]));
     if(np && np.look) row.title = np.look;
     bd.appendChild(row);
   }
