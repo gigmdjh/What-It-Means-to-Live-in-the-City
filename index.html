@@ -6520,7 +6520,7 @@ const ITEMS = [
   {id:"liublade", slot:"weapon", name:"리우 화염검", shop:"리우 협회 납품 공방", fx:{str:6, spd:1}, price:26000000, age:20, look:"liublade"},
   {id:"cinq", slot:"weapon", name:"결투 세검", shop:"섕크 협회 납품 공방", fx:{str:4, spd:4}, price:32000000, age:20, look:"cinq"},
   {id:"halberd", slot:"weapon", name:"미늘창", shop:"올드 보이즈 공방", fx:{str:6, def:1, spd:-1}, price:20000000, age:20, look:"halberd"},
-  {id:"warhammer", slot:"weapon", name:"분쇄 망치", shop:"올드 보이즈 공방", fx:{str:8, spd:-2}, price:24000000, age:20, look:"hammer"},
+  {id:"warhammer", slot:"weapon", name:"분쇄 망치", shop:"올드 보이즈 공방", fx:{str:8, spd:-2}, price:24000000, age:20, look:"warhammer"},
   {id:"crystal", slot:"weapon", name:"수정 장검", shop:"크리스탈 아틀리에", fx:{str:6, int:2}, price:38000000, age:20, look:"crystal"},
   {id:"rosespanner", slot:"weapon", name:"장미스패너 전동 렌치", shop:"장미스패너 공방", fx:{str:7, def:1}, price:42000000, age:20, look:"rosespanner"},
   {id:"ranga", slot:"weapon", name:"랑가 톱날 단검", shop:"랑가 공방", fx:{str:5, spd:3}, price:30000000, age:20, look:"ranga"},
@@ -7376,7 +7376,7 @@ function drawSprite(cv, opt){
   /* 다리 영역(8·9)을 바지/치마/양말/의족으로 나눠 무엇을 칠할지 정한다 */
   const legPaint = (region, x, y) => {
     const t = (y - B.crotch) / legLen;
-    if(region === 9 && eq.leg) return METAL;
+    if(region === 9 && eq.leg) return hexRGB((AUGMENT_VISUALS[eq.leg] || {}).base || "#a9b3c1");
     if(dress) return t < (OT === "nurse" ? 0.42 : 0.38) ? OUT : tr.layerPants ? PANT : t > 0.78 ? SOCK : null;
     if(outerLen && t < outerLen){ const ax = Math.abs(x - cxB), g2 = GAP + 1 + t * 4; if(ax > g2 + 1) return OUTR; if(ax > g2) return shade3(OUTR, 0.72); }
     if(longLeg && t < longLeg) return OUT;
@@ -7456,9 +7456,9 @@ function drawSprite(cv, opt){
   const colorFor0 = (region, x, y) => {
     if(region === 3) return torsoPaint(x, y);
     if(region === 4) return armPaint(4, x, y);
-    if(region === 5) return eq.arm ? METAL : armPaint(5, x, y);
+    if(region === 5) return eq.arm ? hexRGB((AUGMENT_VISUALS[eq.arm] || {}).base || "#a9b3c1") : armPaint(5, x, y);
     if((region === 6 || region === 7) && tr.gloves && !baby) return region === 7 && eq.arm ? METAL : hexRGB(tr.gloveColor);
-    if(region === 7 && eq.arm) return METAL;
+    if(region === 7 && eq.arm) return hexRGB((AUGMENT_VISUALS[eq.arm] || {}).base || "#a9b3c1");
     if(region === 12){
       const ax12 = Math.abs(x - cxB);
       if(coat && OUTER && ax12 > GAP + 1) return ax12 <= GAP + 2 ? shade3(OUTR, 0.72) : (OUTER === "trench" && y === (RB[12] || [0, 0])[1] ? shade3(OUTR, 0.6) : OUTR);
@@ -7532,7 +7532,7 @@ function drawSprite(cv, opt){
     /* 왼쪽 눈 하나만 읽어 좌우로 뒤집어 그린다 → 두 눈이 완전히 대칭 */
     const pe = E.eye, cxE = (pe[0] + pe[2]) / 2, P = pe[0] + pe[2], half = Math.floor(cxE);
     const x0 = Math.round(ox + (eb[0] + eb[2]) / 2 - cxE), y0e = Math.round(oy + (eb[1] + eb[3]) / 2 - (pe[1] + pe[3]) / 2) + 1;
-    const eyeA = hexRGB(tr.eye), eyeB2 = hexRGB(tr.eye2 || tr.eye), eyeR = eq.eye ? [69, 224, 207] : eyeB2;
+    const eyeA = hexRGB(tr.eye), eyeB2 = hexRGB(tr.eye2 || tr.eye), eyeR = eq.eye ? hexRGB((AUGMENT_VISUALS[eq.eye] || {}).eye || "#45e0cf") : eyeB2;
     const lashC = tr.lash ? hexRGB(tr.lash).map(c => c * 0.5) : null;
     const hairBrow = hexRGB(tr.hair).map(c => c * 0.62);
     const skinNow = skinDefault ? skinB : skinT;
@@ -7788,6 +7788,25 @@ function drawSprite(cv, opt){
     box(cx, top, 2, 2, wood); box(cx + 2, top - 1, 3, 2, wood); box(cx + 4, top, 2, 3, dk); box(cx + 2, top - 1, 2, 1, hi);
     box(cx, bot - 2, 2, 2, "#2b2b31");
   }
+  /* 의체 세부선은 성별·나이별 몸 시트의 실제 부위 마스크에 맞춘다 */
+  const armAug = eq.arm && itemById(eq.arm), legAug = eq.leg && itemById(eq.leg);
+  const armStyle = eq.arm ? (AUGMENT_VISUALS[eq.arm] || {}) : null, legStyle = eq.leg ? (AUGMENT_VISUALS[eq.leg] || {}) : null;
+  if(armAug && RB[5]){
+    const [al,at,ar,ab]=RB[5], xL=ox+al, xR=ox+ar, yT=oy+at, yB=oy+ab, mid=Math.round((yT+yB)/2);
+    const seam=armStyle.seam||"#687482", base=armStyle.base||"#a9b3c1";
+    box(xL,mid,Math.max(1,xR-xL+1),1,seam); box(xR,yT+1,1,Math.max(1,yB-yT-1),shade(base,1.2));
+    if(eq.arm==="karm"){box(xL,mid-2,1,2,"#42d4d0");box(xR,mid+1,1,2,"#42d4d0");}
+    if(eq.arm==="sarm"||eq.arm==="tarm")frame(xL,yT,xR-xL+1,Math.max(3,yB-yT+1),seam);
+    if(eq.arm==="blarm"){box(xR+1,yB-1,2,1,"#d8dde5");box(xR+2,yB-2,1,2,"#f0f2f5");}
+    if(eq.arm==="garm"){box(xL,mid,1,2,"#c7a24b");box(xR,mid+1,1,2,"#c7a24b");}
+  }
+  if(legAug && RB[9]){
+    const [ll,lt,lr,lb]=RB[9], xL=ox+ll, xR=ox+lr, yT=oy+lt, yB=oy+lb, knee=Math.round(yT+(yB-yT)*0.58);
+    const seam=legStyle.seam||"#687482", base=legStyle.base||"#a9b3c1";
+    box(xL,knee,Math.max(1,xR-xL+1),1,seam);box(xR,yT+1,1,Math.max(1,yB-yT-1),shade(base,1.18));
+    if(eq.leg==="jleg"||eq.leg==="kleg"){box(xL,knee-1,1,2,seam);box(xR,knee+1,1,2,seam);}
+    if(eq.leg==="rleg"){box(xL,yT+1,Math.max(1,xR-xL+1),1,"#d64a43");box(xL,yB-1,Math.max(1,xR-xL+1),1,"#d64a43");}
+  }
   const w = eq.weapon && itemById(eq.weapon);
   if(w && !baby){
     const hx = ox + B.w - 3, hy = oy + B.handTop + 3, L = w.look;
@@ -7832,6 +7851,27 @@ function drawSprite(cv, opt){
     else if(L === "hammer"){ box(hx, hy - 12, 2, 17, "#3b3d44"); box(hx - 4, hy - 18, 10, 6, "#8a8f99"); box(hx - 4, hy - 18, 10, 1, "#b3b8c2"); box(hx - 3, hy - 16, 1, 3, "#4f9fba"); box(hx + 4, hy - 16, 1, 3, "#4f9fba"); box(hx - 4, hy - 13, 10, 1, "#6d727b"); }
     else if(L === "gauntlet"){ for(const gx of [ox - 1, ox + B.w - 6]){ box(gx, hy - 3, 7, 6, "#c9a24a"); box(gx, hy - 3, 7, 1, "#e6c675"); box(gx + 1, hy + 1, 5, 1, "#8a6a2a"); box(gx + 1, hy - 1, 1, 1, "#4f9fba"); box(gx + 5, hy - 1, 1, 1, "#4f9fba"); } }
     else if(L === "gun"){ box(hx - 1, hy - 2, 8, 3, "#2b2b31"); box(hx - 1, hy - 2, 8, 1, "#4a4a55"); box(hx + 7, hy - 1, 1, 1, "#16161a"); box(hx - 1, hy + 1, 3, 4, "#3a2c22"); box(hx + 2, hy + 1, 1, 2, "#16161a"); }
+    else if(L === "brick"){box(hx-2,hy-7,5,5,"#7c5546");box(hx-1,hy-6,3,3,"#a87960");box(hx-2,hy-7,5,1,"#4b3936");}
+    else if(L === "chain"){for(let i=0;i<6;i++){const yy=hy-16+i*3;box(hx+(i%2),yy,2,2,"#696d74");box(hx+(i%2),yy,1,1,"#a1a5ac");}box(hx,hy,2,4,"#3b3d44");}
+    else if(L === "crowbar"){box(hx,hy-17,2,21,"#747981");box(hx,hy-17,1,18,"#b4bac2");box(hx-2,hy-18,5,2,"#747981");box(hx-2,hy-19,2,2,"#b4bac2");}
+    else if(L === "cleaver"){box(hx-2,hy-10,5,8,"#c9ced6");box(hx-2,hy-10,5,1,"#eef0f4");box(hx-2,hy-9,1,6,"#858b95");box(hx,hy-2,2,7,"#47352b");}
+    else if(L === "tonfa"){box(hx,hy-9,2,14,"#3b3d44");box(hx,hy-8,1,11,"#767c86");box(hx-3,hy-2,8,2,"#4b4f58");box(hx-2,hy-2,6,1,"#9097a1");}
+    else if(L === "dagger"){box(hx-3,hy-7,1,7,"#dfe3ea");box(hx-3,hy-8,1,1,"#f4f6fa");box(hx-4,hy,3,1,"#c09a3a");box(hx-3,hy+1,1,3,"#3b3d44");box(hx+2,hy-6,1,6,"#b8bec8");box(hx+1,hy,3,1,"#c09a3a");box(hx+2,hy+1,1,3,"#3b3d44");}
+    else if(L === "hwando" || L === "katana"){sword(21,2,"#dfe3ea",4,{curve:true,guardCol:L==="katana"?"#17191f":"#3b3d44",gripCol:"#282a31"});box(hx+1,hy-16,1,2,"#20222a");if(L==="katana")box(hx+1,hy-11,1,2,"#5d2930");}
+    else if(L === "zweih"){sword(21,3,"#cfd4dd",7,{fuller:true,guardCol:"#2f4a7a"});box(hx-7,hy-3,4,6,"#2f4a7a");box(hx-7,hy-3,4,1,"#7590b5");box(hx-6,hy-2,2,4,"#1c2c48");}
+    else if(L === "liublade"){sword(21,2,"#b84632",6,{guardCol:"#5a2925"});box(hx-1,hy-15,1,1,"#ffb14b");box(hx+2,hy-12,1,1,"#ffe3a0");box(hx-1,hy-8,1,1,"#ff8b42");box(hx+2,hy-5,1,1,"#54272a");}
+    else if(L === "cinq"){box(hx,hy-24,1,24,"#e8ebf0");box(hx,hy-25,1,1,"#fff");box(hx-2,hy-1,5,1,"#d1b77a");box(hx-3,hy,1,3,"#d1b77a");box(hx+2,hy-2,1,4,"#d1b77a");box(hx,hy+1,1,3,"#34343b");}
+    else if(L === "halberd"){box(hx,hy-27,1,33,"#694a31");box(hx+1,hy-26,1,30,"#9a7044");box(hx-2,hy-30,4,4,"#cdd2dc");box(hx-4,hy-29,2,3,"#cdd2dc");box(hx+2,hy-28,3,2,"#cdd2dc");box(hx-2,hy-30,3,1,"#f1f2f5");}
+    else if(L === "warhammer"){box(hx,hy-12,2,17,"#49382c");box(hx-5,hy-19,12,7,"#69717d");box(hx-5,hy-19,12,1,"#c2c7cf");box(hx-4,hy-17,2,3,"#3d424a");box(hx+4,hy-17,2,3,"#8b929d");box(hx-5,hy-13,12,1,"#444a54");}
+    else if(L === "crystal"){sword(20,3,"#a9c8e0",6,{fuller:true,guardCol:"#719bbd"});box(hx+2,hy-18,1,2,"#e1f4ff");box(hx-1,hy-13,1,2,"#75a8d5");box(hx+2,hy-8,1,2,"#e1f4ff");}
+    else if(L === "rosespanner"){box(hx,hy-13,2,18,"#484c55");box(hx,hy-13,1,16,"#8e949e");box(hx-3,hy-19,8,7,"#727984");box(hx-3,hy-19,8,1,"#c3a2b3");box(hx-3,hy-14,2,2,"#272a30");box(hx+3,hy-14,2,2,"#272a30");box(hx-1,hy-18,4,1,"#d8b8c8");}
+    else if(L === "ranga"){box(hx,hy-10,2,15,"#3b3d44");box(hx,hy-10,1,1,"#dfe3ea");for(let i=0;i<5;i++)box(hx+2,hy-9+i*2,1,1,"#bfc5cf");box(hx,hy-11,2,1,"#f4f6fa");}
+    else if(L === "shotgun"){box(hx-1,hy-19,9,3,"#343840");box(hx-1,hy-19,9,1,"#7e858f");box(hx+6,hy-18,3,1,"#17191f");box(hx-1,hy-16,5,2,"#5a4433");box(hx,hy-14,2,7,"#42342a");box(hx-1,hy-8,3,3,"#25282f");}
+    else if(L === "dualpistol"){for(const dx of [-4,3]){box(hx+dx,hy-4,4,3,"#2b2b31");box(hx+dx,hy-4,4,1,"#646b76");box(hx+dx+1,hy-1,2,4,"#3a2c22");}}
+    else if(L === "durandal"){sword(28,4,"#d9dce5",9,{fuller:true,guardCol:"#b69a56"});box(hx+1,hy-23,1,4,"#fff0c2");box(hx+2,hy-17,1,3,"#a7b8d2");box(hx-1,hy-5,1,2,"#9d7e3e");}
+    else if(L === "bigscythe"){box(hx,hy-28,1,34,"#49382c");box(hx+1,hy-29,8,2,"#aeb5c0");box(hx+7,hy-28,3,2,"#cdd2dc");box(hx+9,hy-26,3,1,"#e8ebf0");box(hx+1,hy-29,7,1,"#f4f6fa");}
+    else if(L === "gauntlet2"){for(const gx of [ox-1,ox+B.w-6]){box(gx,hy-3,7,6,"#747e8b");box(gx,hy-3,7,1,"#c2c7cf");for(let i=0;i<3;i++)box(gx+1+i*2,hy-1,1,2,"#e2c77d");box(gx+1,hy+2,5,1,"#3b3d44");}}
+
     else if(L === "musket"){ box(hx, hy - 22, 2, 27, "#6a4a30"); box(hx + 1, hy - 24, 1, 20, "#3b3d44"); box(hx, hy - 22, 1, 27, "#8a6644"); box(hx + 1, hy - 30, 1, 6, "#dfe3ea"); box(hx + 1, hy - 31, 1, 1, "#f4f6fa"); box(hx - 1, hy + 2, 4, 3, "#5a3f2a"); box(hx + 2, hy - 2, 1, 2, "#c09a3a"); }
     else sword(18, 2, "#dfe3ea", 5, {});
   }
