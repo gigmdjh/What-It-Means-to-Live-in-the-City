@@ -1127,7 +1127,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="parts.js?v=20261108-1.4.5"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.4.8";
+const BUILD = "20261109-1.4.9";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -7875,7 +7875,7 @@ function drawSprite(cv, opt){
   const w = eq.weapon && itemById(eq.weapon);
   if(w && !baby){
     const hx = ox + B.w - 3, hy = oy + B.handTop + 3, L = w.look;
-    /* 무기를 별도 원본 픽셀 캔버스에 먼저 그린 뒤, 최근접 보간으로 한 번만 회전/반전한다. */
+    /* 무기는 회전하지 않고, 원본 픽셀을 좌우 반전만 한다. */
     const transformWeapon = !["gauntlet","gauntlet2"].includes(L);
     let weaponCanvas = null;
     if(transformWeapon){
@@ -8068,7 +8068,6 @@ function drawSprite(cv, opt){
       ctx.save();
       ctx.translate(hx, hy);
       ctx.scale(-1, 1);
-      ctx.rotate(-0.18);
       ctx.translate(-hx, -hy);
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(weaponCanvas, 0, 0);
