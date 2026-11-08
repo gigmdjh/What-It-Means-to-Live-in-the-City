@@ -1098,11 +1098,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1320"></script>
+<script src="parts.js?v=20261108-1330"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1320";
+const BUILD = "20261108-1330";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1228,7 +1228,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 [8. Scene info fields]
 - location: where the scene ends. After the District, write the concrete spot the protagonist is actually in ("L사 구역 뒷골목 집 안방", "L사 구역 동네 공원", "L사 구역 둥지 병원"). If at home, it must contain "집"; never just "뒷골목". Babies and small children are inside the home unless taken out.
 - options: always "" (the player writes their own action).
-- Undressing depends on the situation: coming indoors, feeling hot, or getting ready to move or fight means only the outer layer (coat, jacket); medical treatment or checking a wound means only the top; bathing, showering or changing means down to underwear; swimming means a swimsuit. If a specific item is named, only that item. Underwear always stays on, never write anyone fully undressed, never describe the body, and keep it entirely non-sexual (especially for anyone under 18).
+- For adults (18+), follow exactly how much the player says to take off, in any situation (down to underwear). For anyone under 18, undressing depends on the situation: coming indoors, feeling hot, or getting ready to move or fight means only the outer layer (coat, jacket); medical treatment or checking a wound means only the top; bathing, showering or changing means down to underwear; swimming means a swimsuit. If a specific item is named, only that item. Underwear always stays on, never write anyone fully undressed, never describe the body, and keep it entirely non-sexual (especially for anyone under 18).
 - outfit: if the protagonist changed, removed or put on clothes, or clothes got torn or soaked in this scene, write the whole current outfit briefly ("남색 코트, 흰 셔츠, 검은 치마": color + item, comma-separated). Otherwise "".
 - If a talk character changed clothes, put their new outfit in that talk entry's "outfit" the same way. If a non-speaking character changed clothes, npc_outfit "name/outfit" (several joined by ;). Otherwise "".
 - urgent: true if the scene ends at a moment that needs an immediate response (attacked, chased, fire, something lunging); otherwise false.
@@ -3409,7 +3409,8 @@ function undressOutfit(t, cur){
   /* 옷 이름을 콕 집었으면(겉옷류·특정 상의/하의 이름) 그것만 */
   const named = segs.filter(x => { const w = x.split(/\s+/).pop(); return w && w.length >= 2 && t.includes(w) && !/^(옷|상의|하의)$/.test(w); });
   if(named.length){ const rest = segs.filter(x => !named.includes(x)); return finishOutfit(rest, named.some(x => UND_BOT_RE.test(x)) ? "bottom" : named.some(x => UND_TOP_RE.test(x)) ? "top" : ""); }
-  const sc = undressScope(t);
+  /* 18세 이상은 상황과 상관없이 플레이어가 말한 만큼 벗는다(속옷까지는 남는다) */
+  const sc = ageY() >= 18 && /(다 벗|전부 벗|모두 벗|몽땅 벗|속옷만|속옷 차림)/.test(t) ? "under" : undressScope(t);
   if(sc === "swim") return ageY() < 3 ? "기저귀" : "수영복";
   if(sc === "under") return "상의 없음, 하의 없음, 속옷 차림";
   if(sc === "top") return finishOutfit(segs.filter(x => !UND_OUTER_RE.test(x) && !UND_TOP_RE.test(x)), "top");
