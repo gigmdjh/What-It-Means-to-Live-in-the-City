@@ -423,6 +423,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .ad-grid input{width:100%}
 .ad-pre{white-space:pre-wrap;word-break:break-all;font-size:11px;max-height:320px;overflow:auto;background:var(--panel-2);padding:8px;border-radius:6px}
 .admin-claim{display:flex}
+.ad-code{font-size:12px;word-break:break-all;background:var(--panel-2);padding:2px 6px;border-radius:4px;user-select:all}
 .ad-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:1000;background:var(--panel-2);color:var(--fg,inherit);border:1px solid var(--line);padding:8px 14px;border-radius:8px;font-size:13px;max-width:90vw}
 .login-btns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .ugauge{display:inline-block;vertical-align:middle;width:46px;height:6px;margin-left:8px;border-radius:3px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
@@ -893,10 +894,28 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
       <div class="row"><button class="btn" type="button" id="adAIShow">불러오기</button></div>
       <pre class="ad-pre" id="adAI"></pre>
     </details>
+    <details><summary>복구 코드</summary>
+      <p class="note">브라우저 데이터를 지우거나 새 기기를 쓸 때 관리자로 돌아오는 코드예요. 코드는 이 기기에서만 만들어지고 어디에도 보내지지 않아요. 코드는 따로 적어 두고, 아래 '해시'만 개발자(Claude)에게 보내 주세요.</p>
+      <div class="row"><button class="btn" type="button" id="adRecGen">복구 코드 만들기</button></div>
+      <div id="adRecOut" hidden>
+        <div class="row"><b>코드</b> <code id="adRecCode" class="ad-code"></code><button class="btn" type="button" id="adRecCopyC">복사</button></div>
+        <div class="row"><b>해시</b> <code id="adRecHash" class="ad-code"></code><button class="btn" type="button" id="adRecCopyH">복사</button></div>
+      </div>
+      <p class="note" id="adRecState"></p>
+    </details>
     <details><summary>이 기기의 관리자 해제</summary>
       <div class="row"><button class="btn" type="button" id="adRevoke">관리자 해제</button></div>
     </details>
   </div>
+</dialog>
+
+<dialog id="adminKeyDlg" aria-labelledby="akTitle">
+  <form class="dlg" id="adminKeyForm">
+    <h2 id="akTitle">복구 코드</h2>
+    <input id="adminKeyIn" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">
+    <p class="note" id="adminKeyMsg"></p>
+    <div class="row login-btns"><button class="btn" type="button" id="adminKeyClose">닫기</button><button class="btn primary" type="submit">확인</button></div>
+  </form>
 </dialog>
 
 <dialog id="loginDlg">
@@ -1077,11 +1096,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1230"></script>
+<script src="parts.js?v=20261108-1240"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1230";
+const BUILD = "20261108-1240";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -8937,6 +8956,39 @@ $("#adAchAll").addEventListener("click", () => { const g = loadAch(); for(const 
 $("#adAchReset").addEventListener("click", () => { store.set(ACH_KEY, {}); try{ renderAch(); }catch(e){} adToast("업적을 초기화했어요."); });
 $("#adAIShow").addEventListener("click", () => { const a = window.__lastAI; $("#adAI").textContent = a ? `[${a.prov} · ${a.at}]\n\n=== SYSTEM ===\n${a.sys}\n\n=== USER ===\n${a.user}\n\n=== 응답 ===\n${a.raw}` : "아직 AI 요청이 없어요(이번 접속 이후)."; });
 $("#adRevoke").addEventListener("click", () => { try{ localStorage.removeItem(ADMIN_KEY); }catch(e){} $("#adminDlg").close(); adminSync(); adToast("이 기기의 관리자를 해제했어요."); });
+/* 복구 코드: 코드는 기기에서만 만들고, 게임 코드에는 그 해시(SHA-256)만 넣는다 */
+const ADMIN_HASHES = [];
+const recNorm = t => String(t || "").normalize("NFKC").toUpperCase().replace(/[^A-Z0-9]/g, "");
+async function sha256hex(t){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
+function recGen(){
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", r = new Uint8Array(16); crypto.getRandomValues(r);
+  const c = [...r].map(x => A[x % 32]).join("");
+  return c.match(/.{4}/g).join("-");
+}
+$("#adRecGen").addEventListener("click", async () => {
+  const code = recGen(), h = await sha256hex("dosi-admin|" + recNorm(code));
+  $("#adRecCode").textContent = code; $("#adRecHash").textContent = h; $("#adRecOut").hidden = false;
+  $("#adRecState").textContent = "코드는 지금 한 번만 보여요. 꼭 적어 두세요.";
+});
+const copyTxt = (sel, btn) => { const t = $(sel).textContent; navigator.clipboard && navigator.clipboard.writeText(t).then(() => { btn.textContent = "복사됨"; setTimeout(() => btn.textContent = "복사", 1200); }).catch(() => {}); };
+$("#adRecCopyC").addEventListener("click", e => copyTxt("#adRecCode", e.currentTarget));
+$("#adRecCopyH").addEventListener("click", e => copyTxt("#adRecHash", e.currentTarget));
+(() => { const st = $("#adRecState"); if(st) st.textContent = ADMIN_HASHES.length ? `등록된 복구 코드 ${ADMIN_HASHES.length}개` : "아직 등록된 복구 코드가 없어요."; })();
+/* 숨은 입구: 메인 메뉴 맨 아래 버전 글자를 3초 안에 5번 누르면 */
+{ let taps = [];
+  $("#buildTag").addEventListener("click", () => {
+    const now = Date.now(); taps = taps.filter(t => now - t < 3000); taps.push(now);
+    if(taps.length >= 5){ taps = []; $("#adminKeyIn").value = ""; $("#adminKeyMsg").textContent = ""; try{ $("#adminKeyDlg").showModal(); }catch(e){} }
+  }); }
+$("#adminKeyClose").addEventListener("click", () => $("#adminKeyDlg").close());
+$("#adminKeyForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const v = recNorm($("#adminKeyIn").value); if(!v) return;
+  let ok = false; try{ ok = ADMIN_HASHES.includes(await sha256hex("dosi-admin|" + v)); }catch(err){}
+  if(!ok){ $("#adminKeyMsg").textContent = "코드가 맞지 않아요."; return; }
+  try{ localStorage.setItem(ADMIN_KEY, "1"); }catch(err){}
+  $("#adminKeyDlg").close(); adminSync(); adToast("관리자로 돌아왔어요.");
+});
 adminSync();
 if(!window.DOSI_EDITOR) checkUpdate();
 loadSharedLooks();
