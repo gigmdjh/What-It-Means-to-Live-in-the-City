@@ -7461,11 +7461,12 @@ function drawSprite(cv, opt){
     if(region === 7 && eq.arm) return hexRGB((AUGMENT_VISUALS[eq.arm] || {}).base || "#a9b3c1");
     if(region === 12){
       const ax12 = Math.abs(x - cxB);
-      if(coat && OUTER && ax12 > GAP + 1) return ax12 <= GAP + 2 ? shade3(OUTR, 0.72) : (OUTER === "trench" && y === (RB[12] || [0, 0])[1] ? shade3(OUTR, 0.6) : OUTR);
-      if(OUTER === "jacket" || OUTER === "leather"){
-        /* 겉옷 자락은 허리 부위까지 이어져야 하며, 바지 색으로 덮이지 않게 한다 */
-        if(ax12 > GAP + 1) return OUTR;
-        if(ax12 > GAP) return shade3(OUTR, 0.72);
+      if(OUTER && ["jacket","leather","coat","trench","labcoat"].includes(OUTER)){
+        /* 겉옷의 밑단은 허리 부위 위에 이어진다. 이 영역이 바지색으로 칠해지면 겉옷이 바지 안에 들어간 것처럼 보인다. */
+        if(OUTER === "trench" && y === (RB[12] || [0, 0])[1]) return shade3(OUTR, 0.6);
+        if(ax12 <= GAP) return shade3(OUTR, 0.86);
+        if(ax12 <= GAP + 1) return shade3(OUTR, 0.72);
+        return OUTR;
       }
       if(tr.belt || OT === "uniform"){ const top = (RB[12] || [0, 0])[1]; if(y === top + 1) return [44, 38, 34]; }
       if(OT === "robe") return ACC;
