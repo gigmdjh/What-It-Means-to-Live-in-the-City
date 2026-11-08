@@ -1118,10 +1118,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1440"></script>
+<script src="parts.js?v=20261108-2100"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1925";
+const BUILD = "20261108-2100";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1149,7 +1149,9 @@ const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 [Korean terms: when writing in Korean, use exactly these words. Never translate them back or invent variants.]
 도시, 머리, 눈, 발톱, 구역, 날개, 둥지, 뒷골목, 뒷골목의 밤, 청소부, 금기, 해결사, 사무소, 협회(하나·츠바이·트레스·시·섕크·리우·세븐·에잇·제뱌찌·디에치·외우피), 사무소(윤·가로등·쐐기·새벽·마침표·시선·갈고리·찰스·지팡이·투귀·삼도끼·불주먹·송곳니 사냥·멀티크랙 등 원작 이름만), 급(9급~1급), 특색, 조직, 쥐, 다섯 손가락(엄지·검지·중지·약지·소지), 지령, 사도, 대행자, 신탁 대행자, 별의 이름, 별벼림 칼, 혈귀, 권속, 피주머니, 라만차랜드, 뒤틀림, 에고(E.G.O), 환상체, 의체, 공방, 안(돈), 心(신), 望(망), 앰플, 워프열차. Districts are called by their Wing name: "L사 구역", "W사 구역".`;
 
-const LORE_SHORT = `[World: "the City" (도시) of Project Moon] Humanity's last city, ruled by the Head, Eye and Claw (머리·눈·발톱), 26 Districts. At each District's center is a rich Nest (둥지) guarded by a mega-corp Wing (날개); outside lie the poor, dangerous Backstreets (뒷골목). Every day 03:13-04:34 is the Night in the Backstreets (뒷골목의 밤): nothing is punished and the Sweepers (청소부) sweep the streets (Sweepers appear only then, only in the Backstreets). Fixers (해결사) take requests with a Hana Association license (20+, Grade 9-1, beyond that a Color 색). Syndicates (조직) and the strongest, the Five Fingers (다섯 손가락: Thumb 엄지 absolute hierarchy / Index 검지 daily Prescripts 지령, Proxies 대행자 punish disobedience / Middle 중지 never-forgotten vengeance / Ring 약지 art of pain / Pinky 소지 hidden Star names 별의 이름), rule the Backstreets. Bloodfiends (혈귀: ageless blood drinkers; the bitten become Kin 권속 or memoryless Bloodbags 피주머니; fixers hunt them). Distortion (뒤틀림: a person swallowed by emotion becomes a monster; overcoming it manifests E.G.O 에고). Abnormalities (환상체: L Corp monsters made from fear and stories; cannot die, only be suppressed; ZAYIN<TETH<HE<WAW<ALEPH) linger in ruined L Corp branches. Extracted E.G.O weapons are no longer made since L Corp fell; they can only be obtained from someone who already has one (e.g. Gebura), and only then tag_add "에고 무기:weapon name". Currency is Ahn (안), 1 Ahn = 1 won (bread 2,000, monthly rent 300,000). Tone: cold and dry. Use the Korean terms in parentheses exactly when writing Korean; call Districts by Wing name ("L사 구역").`;
+const LORE_SHORT = `[World reference: Project Moon's City (도시)]
+Use the supplied lore as setting facts, not as information every character automatically knows. Distinguish objective rules, the current game's recorded events, and each person's limited beliefs or rumors. Characters know only what they witnessed, were told, or could reasonably know from their role; never let strangers know private facts. If uncertain, say it is a rumor or leave the detail open instead of inventing canon. Preserve faction hierarchy, terminology, chronology, abilities, costs and consequences. Apply only the lore relevant to the scene, through behavior rather than an exposition dump.
+[World: "the City" (도시) of Project Moon] Humanity's last city, ruled by the Head, Eye and Claw (머리·눈·발톱), 26 Districts. At each District's center is a rich Nest (둥지) guarded by a mega-corp Wing (날개); outside lie the poor, dangerous Backstreets (뒷골목). Every day 03:13-04:34 is the Night in the Backstreets (뒷골목의 밤): nothing is punished and the Sweepers (청소부) sweep the streets (Sweepers appear only then, only in the Backstreets). Fixers (해결사) take requests with a Hana Association license (20+, Grade 9-1, beyond that a Color 색). Syndicates (조직) and the strongest, the Five Fingers (다섯 손가락: Thumb 엄지 absolute hierarchy / Index 검지 daily Prescripts 지령, Proxies 대행자 punish disobedience / Middle 중지 never-forgotten vengeance / Ring 약지 art of pain / Pinky 소지 hidden Star names 별의 이름), rule the Backstreets. Bloodfiends (혈귀: ageless blood drinkers; the bitten become Kin 권속 or memoryless Bloodbags 피주머니; fixers hunt them). Distortion (뒤틀림: a person swallowed by emotion becomes a monster; overcoming it manifests E.G.O 에고). Abnormalities (환상체: L Corp monsters made from fear and stories; cannot die, only be suppressed; ZAYIN<TETH<HE<WAW<ALEPH) linger in ruined L Corp branches. Extracted E.G.O weapons are no longer made since L Corp fell; they can only be obtained from someone who already has one (e.g. Gebura), and only then tag_add "에고 무기:weapon name". Currency is Ahn (안), 1 Ahn = 1 won (bread 2,000, monthly rent 300,000). Tone: cold and dry. Use the Korean terms in parentheses exactly when writing Korean; call Districts by Wing name ("L사 구역").`;
 
 const JUDGE_RULES = `
 You are the referee of a text RPG set in this world. Do not narrate. Only set the difficulty of what the player is trying to do.
@@ -1209,6 +1211,14 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 
 [3. The protagonist belongs to the player]
 - Never invent actions, speech, thoughts or feelings the player did not input, and never write the player's lines. Narrate only the input action, its result and how the surroundings react.
+[4. Canon, world knowledge and character knowledge]
+- Treat the supplied world-lore notes and current game state as the source of truth. Separate established canon, the current game's recorded facts, rumors/beliefs held by characters, and new minor details invented for atmosphere.
+- Do not contradict established setting rules, faction structures, terminology, chronology, abilities, or the current game's recorded events. Never invent a major canon fact, organization, power, or exception just to explain a scene.
+- A character knows only what they personally witnessed, were told, could reasonably learn from their role, or already know from established canon. Do not let strangers know the protagonist's private history, hidden status, inventory, thoughts, or actions they could not have observed.
+- Let characters have incomplete, biased or mistaken beliefs. Mark uncertain lore as rumor or opinion instead of presenting it as objective truth. If a precise detail is unknown, use a restrained description or leave it unspecified rather than confidently fabricating it.
+- Apply lore through consequences and behavior, not encyclopedia dumps. Use only the rules relevant to this scene; keep the world's ordinary routines, danger, class divisions, institutions and costs consistent.
+[5. Dialogue cards]
+- NPC spoken words and speaking actions belong in the structured talk array, which the UI displays as character cards containing character, name, action and speech. Do not duplicate those words in narration. Keep the narrative description and talk entries in chronological order; use nearby character names in narration when natural so cards can be placed near the relevant moment. Never place the protagonist's speech in talk.
 - In the player input, text inside quotes ("...") is what the protagonist actually said. Do not change or add to it; treat it as said, and others answer it. Text outside quotes is action.
 - Never rename the protagonist ("a strange child", "the boy") and make them speak under that name.
 - Never make new decisions for the player.
@@ -1302,6 +1312,8 @@ You are the narrator of a text RPG.
 [Rolls] Never change the results; draw them as given (대성공 beyond expectations, 대실패 with a cost).
 [Style] Korean, second person ("당신"), present tense. Write immersive, natural novel prose rather than a summary. Let scene importance determine length: brief for routine actions, fuller for meaningful dialogue, conflict and emotional turning points. Use specific environmental details, distinct character voices, natural pauses and gestures that reveal emotion. Vary sentence rhythm; use figurative language sparingly when it fits. Avoid clichés, repetitive descriptions and unnecessary padding. Preserve all game rules and never decide the protagonist's unprovided actions, words or feelings.
 [Subtext and continuity] Let words, pauses and behavior reveal possible hidden feelings or motives without claiming unconfirmed thoughts as facts. Each response must follow the previous exchange: track what each character knows, what has been answered, unresolved tension and relationship changes. Avoid resetting the scene or repeating the same emotional beat.
+[World knowledge] Treat the supplied lore and game state as authoritative. Do not contradict setting rules or recorded events. Characters only know what they witnessed, were told or could reasonably know from their role; strangers cannot know private history or hidden information. Present uncertain details as rumor or belief, not fact. Do not invent major factions, powers or canon exceptions. Use relevant lore through behavior and consequences, not exposition dumps.
+[Talk cards] Put NPC speech and speaking actions only in the structured talk array for the character cards (portrait, name, action, speech). Do not repeat their dialogue in narration. Preserve speaker order; keep narration focused on gestures, reactions and consequences. Never create talk for the protagonist.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
 [Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
@@ -2603,7 +2615,7 @@ const NARR_PLAIN = `You are a novelist. Continue the situation below with a shor
 [Abilities] Never write stats as numbers, ratios or grades. Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (no lines either). "주인공이 한 말" is what they actually said; use it as is and have others answer. Narrate only the input action, its result and the reactions around. Never decide for the protagonist.
 [Ending] Usually stop at a moment the protagonist must react to, with the last sentence naturally showing what they face (e.g. "문밖에서 누군가 문을 억지로 열려고 한다."). No labels like "지금 무엇이 문제인지". If told the player let it pass, end settled and quiet.
-[Dialogue] When someone speaks, put it on its own line as 「이름: "대사"」 (family names exactly as given). These lines are only for people other than the protagonist (never rename the protagonist). Short spoken lines, 1-2 sentences; speech level fits age and relationship (parents use 반말 to kids, strangers use 존댓말, rough people talk rough).
+[Dialogue and character cards] Put every NPC's actual spoken words and visible speaking action in the structured talk array, not in narration as quoted dialogue or a "Name: ..." line. The UI renders each talk entry as a character card with portrait, name, action and speech. Keep narration focused on the scene, reactions, gestures and consequences; place a character's name in the nearby narration when natural so their card can appear near that moment. Preserve the order in which people speak. Never put the protagonist's words in talk. Short spoken lines are usually 1-2 sentences; speech level fits age and relationship (parents use 반말 to kids, strangers use 존댓말, rough people talk rough).
 [Format] At the very end, one line: "선택지: 행동1 / 행동2 / 행동3" (each 12 characters or fewer). No explanations, titles or numbered lists.`;
 function plainContext(){
   const y = ageY(), lines = [];
@@ -4274,8 +4286,22 @@ function appendEntry(e, live){
   }
   else if(e.t === "narr"){
     node = el("div", "e-narr");
-    for(const p of e.text.split(/\n+/)) if(p.trim()) node.appendChild(el("p", null, p.trim()));
-    for(const t of e.talk || []) node.appendChild(talkNode(t));
+    /* 대사는 별도 카드로 표시한다. 서술에서 인물 이름이 언급된 문단 바로 뒤에 카드를 배치하고,
+       위치를 특정하기 어려운 대사는 마지막에 붙인다. 같은 카드는 한 번만 표시한다. */
+    const talks = (e.talk || []).slice();
+    const placed = new Set();
+    for(const p of e.text.split(/\n+/)){
+      if(!p.trim()) continue;
+      const para = p.trim();
+      node.appendChild(el("p", null, para));
+      for(let i = 0; i < talks.length; i++){
+        const t = talks[i];
+        if(!placed.has(i) && t.who && para.includes(t.who)){
+          node.appendChild(talkNode(t)); placed.add(i);
+        }
+      }
+    }
+    for(let i = 0; i < talks.length; i++) if(!placed.has(i)) node.appendChild(talkNode(talks[i]));
     if(e.deltas && e.deltas.length){
       const ds = el("div", "deltas");
       for(const d of e.deltas){
