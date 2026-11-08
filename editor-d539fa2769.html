@@ -1119,11 +1119,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1430"></script>
+<script src="parts.js?v=20261108-1440"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1430";
+const BUILD = "20261108-1440";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -3174,7 +3174,12 @@ function applyFamily(n){
     let [name, g] = n.spouse.split("/").map(x => (x || "").trim());
     if(!/^(남성|여성)$/.test(g || "")) g = S.gender === "남성" ? "여성" : S.gender === "여성" ? "남성" : randGender();
     if(name){
-      S.family.push({rel:"배우자", name, gender:g, born: S.days - (365 * Math.max(18, ageY() + rnd(7) - 3)), alive:true, look:(S.npcs && S.npcs[name] && S.npcs[name].look) || randLook(g)});
+      const np = S.npcs && S.npcs[name];
+      const sAge = np ? Math.max(18, npcAge(np)) : Math.max(18, ageY() + rnd(7) - 3);
+      S.family.push({rel:"배우자", name, gender:np && np.gender || g, born: S.days - 365 * sAge, alive:true, look:(np && np.look) || randLook(g), aff:np ? np.aff : 60});
+      /* 친구·연인으로 적혀 있던 기록은 배우자로 바뀐다 */
+      S.tags = S.tags.filter(t => !t.startsWith("인연:" + name) && t !== "연인:" + name && t !== "좋아함:" + name);
+      if(S.lover && S.lover.name === name) S.lover = null;
       log({t:"sys", text:`${name}이(가) 배우자가 되었다.`});
     }
   }
@@ -3651,6 +3656,15 @@ const houseOf = id => HOUSES.find(h => h.id === id) || HOUSES[0];
 function nestAccess(){
   return S.origin === "nest" || (S.license && S.license <= 3) || !!S.color || S.tags.some(t => /^(날개 직원|협회 직원):/.test(t));
 }
+/* 사람과의 관계 이름: 가족(배우자 등)·연인이면 그것이 인연 태그보다 먼저다 */
+function relOf(name){
+  const fam = S.family.find(f => f.name === name);
+  if(fam) return fam.rel + (fam.alive ? "" : "(사망)");
+  if(S.lover && S.lover.name === name) return "연인";
+  if(S.tags.some(t => t === "좋아함:" + name)) return "좋아하는 사이";
+  const bond = (S.tags || []).find(t => t.startsWith("인연:" + name + "/") || t === "인연:" + name);
+  return bond ? (bond.split("/")[1] || "인연") : "";
+}
 function houseText(){
   if(!S.house) return ageY() < 20 && parentsAlive() ? "부모님 집에서 산다" : `${originKo(S.origin)}에서 셋방살이(따로 계약한 집 없음)`;
   const h = houseOf(S.house.id), yrs = Math.floor((S.days - S.house.since) / 365);
@@ -3943,7 +3957,7 @@ function knownPeopleText(n){
   const ps = Object.entries(S.people || {}).sort((a, b) => (b[1].last || 0) - (a[1].last || 0)).slice(0, n);
   if(!ps.length) return "";
   return ps.map(([name, p]) => {
-    const bond = (S.tags || []).find(t => t.startsWith("인연:" + name)); const rel = bond ? bond.split("/")[1] || "아는 사이" : "";
+    const rel = relOf(name);
     const r = S.npcs && S.npcs[name];
     const info = r ? `${r.gender || "?"}, ${npcAge(r)}세, ${r.job || "직업 모름"}, 성격 #${(r.persona || []).join(" #")}, 호감 ${r.aff > 0 ? "+" : ""}${r.aff || 0}(${affWord(r.aff || 0)}), 외모 ${String(r.look || "").slice(0, 50)}${r.stats ? `, 힘${r.stats.str} 방어${r.stats.def} 속도${r.stats.spd} 지력${r.stats.int}` : ""}` : "";
     return `${name}${rel ? "(" + rel + ")" : ""}[${info}]: ${p.n}번 만남, 마지막 ${agoText(S.days - (p.last || S.days))}${p.say ? `, 전에 한 말 "${p.say}"(같은 말을 되풀이하지 말 것)` : ""}`; }).join(" / ");
@@ -4518,7 +4532,9 @@ function renderStatus(){
   }
   /* 인연: 친해진 사람들. 죽은 사람은 회색 */
   const bd = $("#sBonds"); bd.replaceChildren();
-  const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => { const [nm, rel] = t.slice(3).split("/"); return {nm:(nm || "").trim(), rel:(rel || "").trim()}; });
+  const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => { const [nm, rel] = t.slice(3).split("/"); return {nm:(nm || "").trim(), rel:(rel || "").trim()}; })
+    .filter(b => !S.family.some(f => f.name === b.nm)).map(b => Object.assign(b, {rel:relOf(b.nm) || b.rel}));
+  if(S.lover && !bonds.some(b => b.nm === S.lover.name) && !S.family.some(f => f.name === S.lover.name)) bonds.unshift({nm:S.lover.name, rel:"연인"});
   if(!bonds.length) bd.appendChild(el("div", "note", "아직 없음"));
   for(const b of bonds){
     const dead = S.tags.find(t => new RegExp("^사망:" + b.nm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(/|$)").test(t)) || (S.npcs && S.npcs[b.nm] && S.npcs[b.nm].dead);
@@ -5459,7 +5475,7 @@ function renderPeople(){
   $("#sPeopleN").textContent = ents.length ? `${ents.length}명` : "";
   if(!ents.length){ box.appendChild(el("div", "note", "아직 없음")); return; }
   for(const [name, r] of ents.slice(0, 40)){
-    const bond = (S.tags || []).find(t => t.startsWith("인연:" + name));
+    const rel = relOf(name), bond = rel ? "인연:" + name + "/" + rel : null;
     const row = el("details", "person" + (r.dead ? " gone" : ""));
     const sum = el("summary");
     const aff = r.aff || 0, ac = aff >= 15 ? "var(--good)" : aff <= -15 ? "var(--bad)" : "var(--muted)";
