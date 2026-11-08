@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.7"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.8"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.7";
+const BUILD = "20261109-1.5.8";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -4616,7 +4616,8 @@ function renderStatus(){
     const row = el("div", "fam" + (f.alive ? "" : " gone"));
     const rel = f.rel === "자녀" ? (f.gender === "남성" ? "아들" : "딸") : f.rel;
     const aff = f.aff == null ? ((f.rel === "어머니" || f.rel === "아버지") ? 100 : 30) : f.aff;
-    row.append(el("span", "f-rel", rel), el("span", "f-name", (f.name || "이름 미정") + (f.alive ? "" : " (사망)")), el("span", "f-age", f.alive ? `${Math.max(0, famAge(f))}세 · 호감도 ${aff}` : "故"));
+    row.append(el("span", "f-rel", rel), el("span", "f-name", (f.name || "이름 미정") + (f.alive ? "" : " (사망)")), el("span", "f-age", f.alive ? `${Math.max(0, famAge(f))}세` : "故"));
+    if(f.alive){ const af = el("span", "p-aff", (aff > 0 ? "♥ +" : "♥ ") + aff); af.style.color = aff >= 15 ? "var(--good)" : aff <= -15 ? "var(--bad)" : "var(--muted)"; row.appendChild(af); }
     if(!f.alive) row.appendChild(el("span", "f-cause", f.cause || "사망"));
     if(f.look) row.title = f.look;
     fam.appendChild(row);
@@ -4644,7 +4645,8 @@ function renderStatus(){
     const row = el("div", "fam" + (dead ? " gone" : ""));
     const np = S.npcs && S.npcs[b.nm];
     const aff = np && np.aff != null ? np.aff : 0;
-    row.append(el("span", "f-rel", b.rel || "인연"), el("span", "f-name", b.nm + (dead ? " (사망)" : "")), el("span", "f-age", `호감도 ${aff} · ${affWord(aff)}`));
+    row.append(el("span", "f-rel", b.rel || "인연"), el("span", "f-name", b.nm + (dead ? " (사망)" : "")));
+    const af = el("span", "p-aff", (aff > 0 ? "♥ +" : "♥ ") + aff); af.style.color = aff >= 15 ? "var(--good)" : aff <= -15 ? "var(--bad)" : "var(--muted)"; row.appendChild(af);
     if(dead && typeof dead === "string" && dead.includes("/")) row.appendChild(el("span", "f-cause", dead.split("/")[1]));
     if(np && np.look) row.title = np.look;
     bd.appendChild(row);
