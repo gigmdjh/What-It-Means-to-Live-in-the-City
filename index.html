@@ -372,6 +372,9 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .game{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding-block:8px}
   .hud{display:grid;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .hud-top{display:flex;align-items:center;gap:8px;min-width:0}
+  .hud-top .hname-wrap{flex:0 1 auto;max-width:48%;overflow:hidden}
+  .hud-top #hName{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hud-top .htitle{max-width:100%;overflow-wrap:anywhere}
   .hud-top b{font:700 1rem var(--f-display);white-space:nowrap}
   .hud-top .info{font-size:.78rem;color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hud-top .btn{padding:4px 10px;font-size:.8rem;flex:none}
@@ -1120,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.0"></script>
+<script src="parts.js?v=20261108-1.0.1"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.0";
+const BUILD = "20261108-1.0.1";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1199,11 +1202,12 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Make the scene easy to follow on the first read. Clearly identify who acts, what they react to, and what changes as a result.
 - Avoid vague pronouns, unexplained gestures, cryptic metaphors and abrupt transitions. Anchor each paragraph to the previous scene; make the cause of reactions clear, and establish new people or objects before relying on them.
 - Preserve subtext, but keep literal actions and their immediate meaning understandable. Prefer concrete, direct sentences over obscure or overly compressed prose.
+- Write natural, idiomatic spoken Korean. Avoid stiff, translated-sounding or oddly compressed lines such as "오늘은 조금만 밖에 바람 맞자"; prefer what a person of this age and relationship would naturally say, such as "오늘은 잠깐만 바람 쐬자. 사람들이 더 지나가기 전에 들어가야 해." Treat the example as a style guide, not text to repeat.
 - Write in Korean, in second person ("당신") and present tense. Narrate as an immersive novel, not a summary of game events.
 - Let the length follow the scene. Ordinary actions may be brief; meaningful conversations, discoveries, conflicts, emotional moments and turning points deserve several substantial paragraphs. Do not force every scene into 3-5 sentences or a fixed character count.
 - Build scenes through concrete details that matter: the arrangement of the place, light, sound, temperature, smells, nearby movement and the reactions of people. Select details naturally instead of listing every sense in every scene.
 - Show emotions through observable behavior whenever possible: a delayed answer, a glance that avoids someone's eyes, fingers tightening around an object, a voice becoming quieter. Do not explain every emotion immediately after showing it.
-- Give dialogue natural rhythm. Let characters interrupt themselves, hesitate, misunderstand, avoid questions or remain silent when appropriate. Their vocabulary, speech level, sentence length and willingness to speak must reflect their age, personality, relationship and current mood.
+- Give dialogue natural rhythm. Let characters interrupt themselves, hesitate, misunderstand, avoid questions or remain silent when appropriate. Their vocabulary, speech level, sentence length and willingness to speak must reflect their age, personality, relationship and current mood. Make spoken Korean sound like something a real person would say aloud, not a literal translation or a compressed poetic sentence. Avoid unnatural constructions; read each line as if speaking it naturally.
 - Give each paragraph a purpose. Connect action, environmental changes, character reactions and consequences through clear cause and effect. Do not repeat the same information in narration and dialogue.
 - Use metaphors, imagery and figurative language selectively when they strengthen the scene. Avoid ornate language that draws attention to itself, clichés, repetitive emotional descriptions and empty adjectives.
 - Vary sentence length and paragraph rhythm. Use short sentences for sudden actions or tension, and longer sentences when observing a place, following a train of thought or allowing an emotional moment to unfold.
@@ -1222,7 +1226,13 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - A character knows only what they personally witnessed, were told, could reasonably learn from their role, or already know from established canon. Do not let strangers know the protagonist's private history, hidden status, inventory, thoughts, or actions they could not have observed.
 - Let characters have incomplete, biased or mistaken beliefs. Mark uncertain lore as rumor or opinion instead of presenting it as objective truth. If a precise detail is unknown, use a restrained description or leave it unspecified rather than confidently fabricating it.
 - Apply lore through consequences and behavior, not encyclopedia dumps. Use only the rules relevant to this scene; keep the world's ordinary routines, danger, class divisions, institutions and costs consistent.
-[5. Dialogue cards]
+[5. Progression and status changes]
+- Time passing by itself does not mean the protagonist trained hard, suffered trauma, recovered fully, or became exceptional. A long time skip should usually cause only modest changes unless the described activity and events clearly justify more.
+- Ordinary life over months or a year should not suddenly make the protagonist far stronger than their peers. Dedicated, repeated training may improve abilities gradually; show the practice and limits, and keep each individual action's stat change small.
+- Mental state must follow specific events and accumulate plausibly. Do not plunge 정신력 from stable to severely negative over a minor conversation or routine day. Reserve large losses for severe fear, trauma, supernatural influence or major crises; everyday stress causes small changes. Do not invent an extreme change merely to make the scene dramatic.
+- Describe the elapsed period and the actual routine or training consistently with the amount of growth recorded. If little happened, keep stats and gauges mostly unchanged.
+
+[6. Dialogue cards]
 - NPC spoken words and speaking actions belong in the structured talk array, which the UI displays as character cards containing character, name, action and speech. When known, include relationship to the protagonist as "rel", occupation/role as "job", and age as digits in "age". Leave unknown details blank rather than guessing. Do not duplicate those words in narration. Keep the narrative description and talk entries in chronological order; use nearby character names in narration when natural so cards can be placed near the relevant moment. Never place the protagonist's speech in talk.
 - In the player input, text inside quotes ("...") is what the protagonist actually said. Do not change or add to it; treat it as said, and others answer it. Text outside quotes is action.
 - Never rename the protagonist ("a strange child", "the boy") and make them speak under that name.
@@ -1318,7 +1328,7 @@ You are the narrator of a text RPG.
 [Style] Korean, second person ("당신"), present tense. Write immersive, natural novel prose rather than a summary. Let scene importance determine length: brief for routine actions, fuller for meaningful dialogue, conflict and emotional turning points. Keep it easy to follow on first read: identify who acts, what they react to, and what changes. Avoid vague pronouns, unexplained gestures, cryptic metaphors and abrupt transitions. Anchor each paragraph to the previous scene; make causes clear and establish new people or objects before relying on them. Preserve subtext while keeping literal actions understandable. Use specific environmental details, distinct character voices, natural pauses and gestures that reveal emotion. Vary sentence rhythm; use figurative language sparingly when it fits. Avoid clichés, repetitive descriptions and unnecessary padding. Preserve all game rules and never decide the protagonist's unprovided actions, words or feelings.
 [Subtext and continuity] Let words, pauses and behavior reveal possible hidden feelings or motives without claiming unconfirmed thoughts as facts. Each response must follow the previous exchange: track what each character knows, what has been answered, unresolved tension and relationship changes. Avoid resetting the scene or repeating the same emotional beat.
 [World knowledge] Treat the supplied lore and game state as authoritative. Do not contradict setting rules or recorded events. Characters only know what they witnessed, were told or could reasonably know from their role; strangers cannot know private history or hidden information. Present uncertain details as rumor or belief, not fact. Do not invent major factions, powers or canon exceptions. Use relevant lore through behavior and consequences, not exposition dumps.
-[Talk cards] Put NPC speech and speaking actions only in the structured talk array for the character cards (portrait, name, action, speech). When known, include relationship as "rel", occupation/role as "job", and age as digits in "age"; leave unknown details blank rather than guessing. Do not repeat their dialogue in narration. Preserve speaker order; keep narration focused on gestures, reactions and consequences. Never create talk for the protagonist.
+[Talk cards] Put NPC speech and speaking actions only in the structured talk array for the character cards (portrait, name, action, speech). When known, include relationship as "rel", occupation/role as "job", and age as digits in "age"; leave unknown details blank rather than guessing. Spoken Korean must sound idiomatic and conversational, not translated or unnaturally compressed. Do not repeat their dialogue in narration. Preserve speaker order; keep narration focused on gestures, reactions and consequences. Never create talk for the protagonist.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
 [Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
@@ -2615,7 +2625,7 @@ function repairJSON(t){
    작은 모델은 항목 이름(hp, 형편: …)이 잔뜩 든 JSON 지시를 받으면 그 이름들을 그대로 베껴 엉터리 글을 쓴다.
    그래서 기기 AI에게는 장면 글과 선택지만 받고, 수치는 주사위 결과로 게임이 정한다. */
 const NARR_PLAIN = `You are a novelist. Continue the situation below with a short scene.
-[Style] Write immersive Korean novel prose in second person ("당신") and present tense. Let scene importance determine length: keep routine actions concise, but allow meaningful conversations, discoveries, conflict and emotional turning points to unfold across several paragraphs when useful. Make the scene easy to follow on first read: identify who acts, what they react to, and what changes. Avoid vague pronouns, unexplained gestures, cryptic metaphors and abrupt transitions. Anchor each paragraph to the previous scene, show why reactions happen, and establish new people or objects before relying on them. Keep subtext but make literal actions understandable. Use concrete details that matter to this moment, and reveal emotion through behavior, pauses, word choice and what characters avoid saying. Give characters distinct voices and believable motives; let dialogue carry subtext without making every line dramatic. Vary sentence rhythm. Use imagery selectively, avoid clichés and repetition, and do not add decorative detail without purpose. No unexplained supernatural events. Keep the protagonist true to their age.
+[Style] Write immersive Korean novel prose in second person ("당신") and present tense. Let scene importance determine length: keep routine actions concise, but allow meaningful conversations, discoveries, conflict and emotional turning points to unfold across several paragraphs when useful. Make the scene easy to follow on first read: identify who acts, what they react to, and what changes. Avoid vague pronouns, unexplained gestures, cryptic metaphors and abrupt transitions. Anchor each paragraph to the previous scene, show why reactions happen, and establish new people or objects before relying on them. Keep subtext but make literal actions understandable. Use concrete details that matter to this moment, and reveal emotion through behavior, pauses, word choice and what characters avoid saying. Give characters distinct voices and believable motives; let dialogue carry subtext without making every line dramatic. Spoken Korean must sound idiomatic and natural aloud, not translated or unnaturally compressed. Vary sentence rhythm. Use imagery selectively, avoid clichés and repetition, and do not add decorative detail without purpose. No unexplained supernatural events. Keep the protagonist true to their age.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
 [Abilities] Never write stats as numbers, ratios or grades. Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (no lines either). "주인공이 한 말" is what they actually said; use it as is and have others answer. Narrate only the input action, its result and the reactions around. Never decide for the protagonist.
@@ -3000,9 +3010,10 @@ function normalizeNarr(j, statCap){
   if(typeof j.urgent === "boolean" || j.urgent === "true" || j.urgent === "false") n.urgent = j.urgent === true || j.urgent === "true";
   if(typeof j.outfit === "string" && j.outfit.trim() && !/^(없음|그대로|변화 ?없음)$/.test(j.outfit.trim())) n.outfit = j.outfit.trim().slice(0, 80);
   if(typeof j.npc_outfit === "string" && j.npc_outfit.trim() && !/^(없음)$/.test(j.npc_outfit.trim())) n.npcOutfit = j.npc_outfit.trim().slice(0, 200);
-  for(const k of GAUGE_KEYS) n[k] = num(wordAmount(j[k], k === "rep" ? "rep" : "gauge"), -60, 60);
+  const gaugeLimits = {hp:[20,10], sp:[12,6], en:[25,20], rep:[10,10]};
+  for(const k of GAUGE_KEYS){ const lim = gaugeLimits[k] || [15,10]; n[k] = num(wordAmount(j[k], k === "rep" ? "rep" : "gauge"), -lim[0], lim[1]); }
   if(j.blood != null){ const lv = wordLevel(j.blood); n.blood = Math.sign(lv) * [0, 25, 35, 60, 80][Math.min(4, Math.abs(lv))]; }
-  for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")) * 2, -statCap * 2, statCap * 2);
+  for(const k of STAT_KEYS) n[k] = num(Math.sign(wordAmount(j[k], "gauge")) * 2, -2, 2);
   n.ahn = num(wordAmount(j.ahn, "ahn"), -1e10, 1e10);
   n.days = num(wordDays(j.days), 0, 3650);
   n.time = j.time == null ? "" : String(j.time);
@@ -4518,7 +4529,7 @@ function renderStatus(){
     if(S.claw){ const sp = el("span", null, "머리의 발톱"); sp.style.color = "#cfd6e6"; ht.appendChild(sp); }
     if(S.lm && S.lm.rank >= 1){ const sp = el("span", null, "라만차랜드 " + LM_RANKS[S.lm.rank]); sp.style.color = "#e0455a"; ht.appendChild(sp); }
     ht.hidden = !ht.children.length; }
-  $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
+  $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#hAhn").textContent = fmt(S.ahn);
   const hg = $("#hGauges"); hg.replaceChildren();
   ensureBlood(); hg.classList.toggle("five", shownGauges().length > 4);
@@ -4635,7 +4646,7 @@ function shortPlace(loc){
 function renderLite(){
   renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar(); renderPresBar();
   $("#sAge").textContent = `${ageY()}세 ${ageM()}개월`;
-  $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월 · ${calendarText()}`;
+  $("#hInfo").textContent = `${ageY()}세 ${ageM()}개월`;
   $("#sAhn").textContent = fmt(S.ahn); $("#hAhn").textContent = fmt(S.ahn);
   for(const k of shownGauges()){
     document.querySelectorAll(".g-" + k + " .fill").forEach(f => setFill(f, k));
