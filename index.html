@@ -1023,10 +1023,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-0430"></script>
+<script src="parts.js?v=20261108-1210"></script>
 <script>
 "use strict";
-const BUILD = "20261108-0430";
+const BUILD = "20261108-1210";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1034,7 +1034,7 @@ const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The Backstreets (뒷골목) are the slums that spread like veins outside the Nests. Poor and dangerous, but they still have diners, laundromats and grocery stores. Each District has its own culture.
 - The Night in the Backstreets (뒷골목의 밤): every day from 03:13 to 04:34 (81 minutes), nothing done is punished. Recording is forbidden, and anyone who tries to report is silenced by the Claws (발톱). During it the Sweepers (청소부, beings that were once people) sweep the streets three times, taking everything, living or dead. People stay indoors. Sweepers appear ONLY during this window and ONLY in the Backstreets. Never in daytime, never in a Nest.
 - The Head (rule), the Eye (눈, surveillance) and the Claw (발톱, enforcement) guard the City's rules and Taboos (금기). Break a Taboo and the Claws come.
-- Fixers (해결사): contract workers who solve requests for money. They need a Hana Association license and must be 20+. Grades run 9 to 1; those beyond Grade 1 receive a Color (색). Fixers usually belong to an Office (사무소), and Offices work with the Associations (협회: Hana, Zwei, Tres, Shi, Cinq, Liu, Seven, Devyat, Dieci, Öufi and others, 12 in total). Hana rates threats: Urban Myth (도시 괴담) < Urban Legend (도시 전설) < Urban Plague (도시 질병) < Urban Nightmare (도시 악몽) < Star of the City (도시의 별).
+- Fixers (해결사): contract workers who solve requests for money. They need a Hana Association license and must be 20+. Grades run 9 to 1; those beyond Grade 1 receive a Color (색). Fixers usually belong to an Office (사무소), and Offices work with the Associations (협회: 12 in total; see the list below). Hana rates threats: Urban Myth (도시 괴담) < Urban Legend (도시 전설) < Urban Plague (도시 질병) < Urban Nightmare (도시 악몽) < Star of the City (도시의 별).
 - Syndicates (조직): violent groups with no due process. The lowest thugs are Rats (쥐). The strongest in the Backstreets are the Five Fingers (다섯 손가락), as powerful as a Wing:
   · Thumb (엄지): absolute hierarchy. Never speak or meet a superior's eyes without permission. Insulting a superior costs a body part; questioning orders means a purge. Ranks: Soldato, Capo, Sottocapo, Capo dei Capi (솔다토·카포·소토카포·카포 데이 카피). Muskets with costly special rounds, and bayonets.
   · Index (검지): obeys Prescripts (지령) from an unknown source, delivered on slips at any time, ranging from mundane to cruel. Disobey and you lose protection and a Proxy (대행자) comes to punish you. Ranks: Proselyte (사도, blindfolded, trained under a Proxy), Messenger (전령), Proxy (대행자), and the Oracle Proxy (신탁 대행자) who seems to receive oracles straight from the City's "god". Promotion brings a custom sword and removal of the blindfold. Black suits, white capes.
@@ -1048,10 +1048,11 @@ const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - Bloodfiends (혈귀): ageless monsters that drink human blood. Without blood they go mad and wither. Most fear water. They shape blood into weapons and armor. They are bound into Families (가문) headed by a First Kin (La Manchaland, 라만차랜드). A bitten living person becomes either a Kin (권속, a new bloodfiend) or a Bloodbag (피주머니, a minion with no memory or self). Some fixers specialize in hunting them.
 - Distortion (뒤틀림): a person swallowed by emotions and desires they cannot bear turns into a monstrous being. A woman's voice only they can hear is said to whisper them to give in. Those who accept and master the emotion manifest E.G.O (에고) and escape distortion.
 - Colors (특색): names given by Hana to top fixers (e.g. the Red Mist 붉은 안개, the Black Silence 검은 침묵, the Purple Tear 보라 눈물). Beyond Grade 1.
-- Associations (fixer bodies with a branch in each District): Hana (leads all, grades fixers and Offices), Zwei (security and defense, police-like), Tres (workshops and weapon review), Shi (assassination and covert ops), Cinq (settles disputes by duel), Liu (fighting many at once), Seven (intelligence), Devyat (delivery and transport), Dieci (knowledge, research, charity), Öufi (trade and contracts). Fixers can join a branch or an Office.
+- Associations (fixer bodies with branches across Districts), canon Korean names: 하나 협회 (Hana: leads all, issues licenses, grades fixers and Offices), 츠바이 협회 (Zwei: security and defense, police-like; its western branch calls itself a knighthood), 트레스 협회 (Tres: manages workshops, reviews and taxes gear), 시 협회 (Shi: assassination and covert ops), 섕크 협회 (Cinq: settles disputes by one-on-one duel), 리우 협회 (Liu: fire-based fighting against many), 세븐 협회 (Seven: intelligence and profiling), 에잇 협회 (Eight: the nominal home of the whale-hunting fixers), 제뱌찌 협회 (Devyat: delivery and transport), 디에치 협회 (Dieci: knowledge, research, charity), 외우피 협회 (Öufi: brokering trades, notarizing and enforcing contracts), and a 12th. A 13th is still being formed. Fixers can join a branch or an Office.
+- Canon fixer Offices (사무소). Use these names; never invent new office names (only the player may name an office they open): 윤 사무소 (small Grade 7 office), 가로등 사무소, 쐐기 사무소 (spear users), 새벽 사무소, 마침표 사무소, 시선 사무소 (unofficial info gathering), 갈고리 사무소 (hires ex-killers, Backstreets), 찰스 사무소 (small elite), 지팡이 사무소 (T Corp-backed notary office), 어금니 사무소 (later became a workshop), 투귀 사무소 (District 14, Grade 2, unaffiliated), 삼도끼 사무소 (District 8 Backstreets, axes), 불주먹 사무소 (flame gauntlets), 송곳니 사냥 사무소 (bloodfiend hunters), 멀티크랙 사무소 (P Corp Nest, augmented fixers), 러스크 사무소 (L Corp Nest hotel guards), 속삭임 사무소 (high-grade), 뒤틀림 탐정 사무소.
 - Abnormalities (환상체): monsters L Corp made from human fear, desire and stories using the Singularity and Cogito. They cannot die, only be suppressed; suppressed, they return to an egg and wake again. Graded ZAYIN < TETH < HE < WAW < ALEPH, roughly matching danger. No new ones after L Corp's fall, but they remain in ruined branch facilities or rarely arise from distortion or the river. E.G.O gear comes from Abnormalities.
 [Korean terms: when writing in Korean, use exactly these words. Never translate them back or invent variants.]
-도시, 머리, 눈, 발톱, 구역, 날개, 둥지, 뒷골목, 뒷골목의 밤, 청소부, 금기, 해결사, 사무소, 협회(하나·츠바이·트레스·시·생크·리우·세븐·데뱌트·디에치·우피), 급(9급~1급), 특색, 조직, 쥐, 다섯 손가락(엄지·검지·중지·약지·소지), 지령, 사도, 대행자, 신탁 대행자, 별의 이름, 별벼림 칼, 혈귀, 권속, 피주머니, 라만차랜드, 뒤틀림, 에고(E.G.O), 환상체, 의체, 공방, 안(돈), 心(신), 望(망), 앰플, 워프열차. Districts are called by their Wing name: "L사 구역", "W사 구역".`;
+도시, 머리, 눈, 발톱, 구역, 날개, 둥지, 뒷골목, 뒷골목의 밤, 청소부, 금기, 해결사, 사무소, 협회(하나·츠바이·트레스·시·섕크·리우·세븐·에잇·제뱌찌·디에치·외우피), 사무소(윤·가로등·쐐기·새벽·마침표·시선·갈고리·찰스·지팡이·투귀·삼도끼·불주먹·송곳니 사냥·멀티크랙 등 원작 이름만), 급(9급~1급), 특색, 조직, 쥐, 다섯 손가락(엄지·검지·중지·약지·소지), 지령, 사도, 대행자, 신탁 대행자, 별의 이름, 별벼림 칼, 혈귀, 권속, 피주머니, 라만차랜드, 뒤틀림, 에고(E.G.O), 환상체, 의체, 공방, 안(돈), 心(신), 望(망), 앰플, 워프열차. Districts are called by their Wing name: "L사 구역", "W사 구역".`;
 
 const LORE_SHORT = `[World: "the City" (도시) of Project Moon] Humanity's last city, ruled by the Head, Eye and Claw (머리·눈·발톱), 26 Districts. At each District's center is a rich Nest (둥지) guarded by a mega-corp Wing (날개); outside lie the poor, dangerous Backstreets (뒷골목). Every day 03:13-04:34 is the Night in the Backstreets (뒷골목의 밤): nothing is punished and the Sweepers (청소부) sweep the streets (Sweepers appear only then, only in the Backstreets). Fixers (해결사) take requests with a Hana Association license (20+, Grade 9-1, beyond that a Color 색). Syndicates (조직) and the strongest, the Five Fingers (다섯 손가락: Thumb 엄지 absolute hierarchy / Index 검지 daily Prescripts 지령, Proxies 대행자 punish disobedience / Middle 중지 never-forgotten vengeance / Ring 약지 art of pain / Pinky 소지 hidden Star names 별의 이름), rule the Backstreets. Bloodfiends (혈귀: ageless blood drinkers; the bitten become Kin 권속 or memoryless Bloodbags 피주머니; fixers hunt them). Distortion (뒤틀림: a person swallowed by emotion becomes a monster; overcoming it manifests E.G.O 에고). Abnormalities (환상체: L Corp monsters made from fear and stories; cannot die, only be suppressed; ZAYIN<TETH<HE<WAW<ALEPH) linger in ruined L Corp branches. Extracted E.G.O weapons are no longer made since L Corp fell; they can only be obtained from someone who already has one (e.g. Gebura), and only then tag_add "에고 무기:weapon name". Currency is Ahn (안), 1 Ahn = 1 won (bread 2,000, monthly rent 300,000). Tone: cold and dry. Use the Korean terms in parentheses exactly when writing Korean; call Districts by Wing name ("L사 구역").`;
 
@@ -1153,7 +1154,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - outfit: if the protagonist changed, removed or put on clothes, or clothes got torn or soaked in this scene, write the whole current outfit briefly ("남색 코트, 흰 셔츠, 검은 치마": color + item, comma-separated). Otherwise "".
 - If a talk character changed clothes, put their new outfit in that talk entry's "outfit" the same way. If a non-speaking character changed clothes, npc_outfit "name/outfit" (several joined by ;). Otherwise "".
 - urgent: true if the scene ends at a moment that needs an immediate response (attacked, chased, fire, something lunging); otherwise false.
-- shop: true if the player ends up inside a workshop, weapon shop, armor shop or augment clinic able to pick items (including arriving via an event). False if they failed to get there, only passed by, it's a raid or theft, or a baby/small child couldn't go alone.
+- shop: true only if the player's own input in this scene was to go into or look around a workshop, weapon shop, armor shop or augment clinic, and they are now inside able to pick items. If an event merely brings a workshop near (an artisan waving them in, a flyer, passing by its door), shop is false: stop at the doorway and let the player decide to go in. False if they failed to get there, only passed by, it's a raid or theft, or a baby/small child couldn't go alone.
 
 [9. Record fields]
 - tag_add: important new facts as "category:content" with a Korean category (e.g. "부상:왼팔 골절", "빚:쥐 패거리에 30만안", "인연:옆집 할머니"). Several joined by commas; none = "".
@@ -1168,7 +1169,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Public servant (government office, ward office): tag_add "공무원:office name"; on quitting tag_remove.
 - Association staff (registration, review, admin at Hana etc.; not a fixer): tag_add "협회 직원:association name". Wing employee: a corporate job in a Nest, very hard to get: tag_add like "날개 직원:L사". On quitting tag_remove.
 - Jobless adults earn nothing. Money only goes out, so never give ahn "벎" unless they actually worked for it.
-- Joining an Association branch: "협회:association name"; joining someone else's Office: "소속 사무소:office name". On leaving tag_remove.
+- Joining an Association branch: "협회:association name"; joining someone else's Office: "소속 사무소:office name". On leaving tag_remove. Associations and Offices always use the canon names listed in the world section (e.g. "츠바이 협회", "쐐기 사무소"); never make up new ones.
 - Only Hana Grade 4 or higher can open their own Office (the Association calls at Grade 4). Below Grade 4, never bring up opening an Office. On success tag_add only "사무소:새로 차림" (the player names it). Hiring: "고용:name/role" (e.g. "고용:한서진/해결사").
 - Fixer promotion is decided by the game: when merit fills, the Association calls and holds an exam. Colors are granted by the Association only to Grade 1 fixers who are strong enough. Never raise grades or grant Colors yourself.
 - Joining the Five Fingers: tag_add "조직:엄지" etc. with the finger name (엄지·검지·중지·약지·소지). Ranks are decided by the game.
@@ -1205,7 +1206,7 @@ You are the narrator of a text RPG.
 [Talk] When another character speaks, 1-3 entries in talk: {"who":"the character's real name (e.g. 한서진, 마르코 벨리니). Never labels like '새 친구', '이웃 주민', '낯선 사내'; give a name even if unknown to the protagonist","say":"short spoken line, no quotes","act":"short action while speaking","look":"looks, first appearance only","gender":"남성/여성","age":"age number, first appearance only","job":"job, first appearance only","aff":"change in liking toward the protagonist (없음/오름/내림/크게 오름/크게 내림)"}. Never put the protagonist in talk, and do not repeat the lines in narration. If the player speaks to someone, they must answer via talk. Keep gender, age, job and #personality from [아는 사람]; never repeat earlier lines. Nobody speaks = [].
 [Missions] If the player accepts someone's favor or order in this scene, quest_add "giver/task/reward" (e.g. "한서진/잃어버린 고양이 찾기/5만안"). When a task in [미션] is finished, quest_clear with the task text. When the protagonist reports a 완료 task to its giver, the giver pays: quest_reward with the giver's name (do not put that money in ahn). Otherwise "".
 [Special status] If fields like [혈귀], [뒤틀림], [心], [발톱], [엄지], [검지], [중지], [약지], [소지], [별의 이름], [라만차랜드], [워프열차] exist, reflect them. Grades, ranks, Colors and Star names are decided by the game; never change them.
-[Fields] Changes as Korean words: hp/sp/en/rep "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복"; ahn "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎"; str/def/spd/int "없음/오름/내림"; days "없음/하루/며칠/일주일/한 달/몇 달"; time (within the day) "잠깐/한 시간/몇 시간/반나절/밤새". If the player wrote a duration or time passed in the scene, reflect it in days/time. options: always "". tag_add/tag_remove: "Korean category:content" or "". shop: true if it ends inside a workshop.
+[Fields] Changes as Korean words: hp/sp/en/rep "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복"; ahn "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎"; str/def/spd/int "없음/오름/내림"; days "없음/하루/며칠/일주일/한 달/몇 달"; time (within the day) "잠깐/한 시간/몇 시간/반나절/밤새". If the player wrote a duration or time passed in the scene, reflect it in days/time. options: always "". tag_add/tag_remove: "Korean category:content" or "". shop: true only if the player chose to go into a workshop in this scene (an event bringing one near is false).
 Output JSON only: {"narration":"narration","hp":"없음","sp":"없음","en":"약간 감소","rep":"없음","ahn":"없음","str":"없음","def":"없음","spd":"없음","int":"없음","days":"없음","time":"잠깐","location":"place","tag_add":"","tag_remove":"","spouse":"","child_born":false,"family_dead":"","options":"","shop":false,"urgent":false,"quest_add":"","quest_clear":"","quest_reward":"","talk":[]}`;
 
 const SUM_RULES = `
@@ -1418,10 +1419,10 @@ const FAMOUS_RAW = `앤젤라|라오루|도서관|도서관 관장. 예전 L사�
 아일린|라오루|톱니바퀴 교회|톱니바퀴 교회의 지도자. 훗날 뒤틀림이 되어 잔향악단에 든다|4|street
 아르갈리아|라오루|잔향악단|특색 해결사 '푸른 잔향'. 잔향악단을 이끈다|5|street
 플루토|라오루|잔향악단|뒤틀림 '어제의 약속'. 잔향악단 단원|5|street
-살바도르|라오루|여명 사무소|여명 사무소 운영자|3|street
-필립|라오루|여명 사무소|여명 사무소 해결사. 훗날 뒤틀림 '울음 아이들'이 된다|3|street
-유나|라오루|여명 사무소|여명 사무소 해결사|2|street
-알록|라오루|응시 사무소|응시 사무소 운영자|2|street
+살바도르|라오루|새벽 사무소|새벽 사무소 운영자|3|street
+필립|라오루|새벽 사무소|새벽 사무소 해결사. 훗날 뒤틀림 '울음 아이들'이 된다|3|street
+유나|라오루|새벽 사무소|새벽 사무소 해결사|2|street
+알록|라오루|시선 사무소|시선 사무소 운영자|2|street
 타냐|라오루|잔향악단|뒤틀림. 잔향악단 단원|5|street
 오스카|라오루|쐐기 사무소|쐐기 사무소 운영자|2|street
 피에르|라오루|피에르의 비스트로|23구 뒷골목 식당의 주방장. 사람을 요리한다|3|street
@@ -1546,7 +1547,17 @@ function recordAbno(ev){
   if(!S.abnos) S.abnos = [];
   if(!S.abnos.some(x => x.name === a.name)) S.abnos.push({name:a.name, g:a.g, at:S.days});
 }
-function scoutEvent(){ bump("scout"); const y = ageY(); const l = y < 13 ? SCOUTS.child : y < 20 ? SCOUTS.teen : SCOUTS.adult; return l[rnd(l.length)]; }
+function scoutEvent(){ bump("scout"); const y = ageY(); const l = y < 13 ? SCOUTS.child : y < 20 ? SCOUTS.teen : SCOUTS.adult; const ev = l[rnd(l.length)]; S.scoutOrg = scoutOrgFor(ev); return ev; }
+/* 스카우트하러 온 사람의 소속: 이벤트 문장이 협회면 협회, 사무소면 원작 사무소 중에서 정한다 */
+const SCOUT_ASSOCS = ["츠바이 협회", "트레스 협회", "시 협회", "섕크 협회", "리우 협회", "세븐 협회", "제뱌찌 협회", "디에치 협회", "외우피 협회"];
+const SCOUT_TOP_OFFICES = ["투귀 사무소", "찰스 사무소", "마침표 사무소", "속삭임 사무소", "멀티크랙 사무소"];
+function scoutOrgFor(ev){
+  const t = evText(ev);
+  if(/협회/.test(t)) return {name:SCOUT_ASSOCS[rnd(SCOUT_ASSOCS.length)], kind:"협회", at:S.days};
+  const pool = /(이름난|고급 차)/.test(t) ? SCOUT_TOP_OFFICES : OFFICE_NAMES;
+  return {name:pool[rnd(pool.length)], kind:"사무소", at:S.days};
+}
+const scoutOrgNow = () => S.scoutOrg && S.days - S.scoutOrg.at <= 30 ? S.scoutOrg : null;
 /* 납치: 외모가 눈에 띄는 사람이 혼자 인적 드문 곳을 다니면 노리는 자가 있다 */
 const LONELY_RE = /(혼자|홀로|아무도 없|인적(이)? 드문|인적 없|외진|으슥|빈 골목|버려진|폐건물|폐공장|공사장|뒷길|밤길|골목 깊|지름길|어두운 골목|후미진|막다른)/;
 function kidnapChance(input){
@@ -1609,7 +1620,9 @@ const APPRENTICE = [
   "단골 해결사 사무소에 심부름을 갔더니, 대표가 방과 후에 사무소 일을 거들어 볼 생각이 없냐고 묻는다. 견습이라 보수는 적지만 일을 배울 수 있다고 한다.|해 보겠다고 한다/무슨 일인지 묻는다/거절한다",
   "동네 작은 사무소 문에 '견습 구함, 청소년 가능'이라는 쪽지가 붙어 있다. 안에서 피곤해 보이는 해결사가 손짓한다.|들어가 본다/쪽지만 챙긴다/지나간다",
   "아는 형이 다니는 사무소에서 장비를 닦고 서류를 나를 견습이 필요하다고 한다. 면허를 따기 전에 경험을 쌓기 좋다고 한다.|소개해 달라고 한다/부모님과 상의한다/관심 없다고 한다"];
-const OFFICE_NAMES = ["골목등 사무소","청어 사무소","녹슨 열쇠 사무소","새벽 사무소","잿빛 우산 사무소","두 갈래 사무소","작은 등불 사무소","검은 고양이 사무소"];
+/* 원작에 나오는 사무소 이름만 쓴다 */
+const OFFICE_NAMES = ["윤 사무소","가로등 사무소","쐐기 사무소","새벽 사무소","마침표 사무소","시선 사무소","갈고리 사무소","찰스 사무소","투귀 사무소","삼도끼 사무소","불주먹 사무소","송곳니 사냥 사무소"];
+const ASSOC_NAMES = ["하나 협회","츠바이 협회","트레스 협회","시 협회","섕크 협회","리우 협회","세븐 협회","에잇 협회","제뱌찌 협회","디에치 협회","외우피 협회"];
 const isApprenticeEv = ev => APPRENTICE.includes(ev);
 const apprenticeOf = () => (S.tags.find(t => /^견습:/.test(t)) || "").replace(/^견습:/, "").trim();
 const isScout = ev => Object.values(SCOUTS).some(l => l.includes(ev));
@@ -1700,7 +1713,7 @@ function plainEvent(ev){
   if(isFamousEv(ev)){ const f = famousEv(ev); return `\n그리고 장면 끝에 원작 인물 ${famousLine(f)} 그 사람과 마주친다.` + (/^도서관:/.test(ev) ? " 도서관 초대장을 받는 장면이다." : ""); }
   if(isAbno(ev)){ const a = abnoOf(ev); return `\n그리고 장면 끝에 환상체 「${a.name}」(${a.g} 등급, ${a.info.ko})와 마주친다. ${a.desc}.`; }
   if(isApprenticeEv(ev)) return `\n그리고 장면 끝에 해결사 사무소 사람이 견습으로 일해 보지 않겠냐고 제안한다. 예: "${evText(ev)}"`;
-  if(isScout(ev)) return `\n그리고 장면 끝에 주인공의 재능을 본 해결사 사무소나 협회 사람이 찾아와 함께하자고 제안한다. 예: "${evText(ev)}"`;
+  if(isScout(ev)){ const o = scoutOrgNow() || {name:"쐐기 사무소"}; return `\n그리고 장면 끝에 주인공의 재능을 본 ${o.name} 사람이 찾아와 ${o.name}에 들어오라고 제안한다. 예: "${evText(ev)}"`; }
   if(isBond(ev)) return `\n그리고 장면 끝에 사람과의 인연이 생긴다(위험한 일 아님). 다가오는 사람은 ${approacherGender()}. 새로 만난 사람이나 아는 사람이 말을 건다. 예: "${evText(ev)}"`;
   return `\n그리고 장면 끝에 갑작스러운 일이 생긴다. 지금 상황에 맞게 구체적으로 지어내라(무엇을 하던 중 무엇을 마주쳤는지). 예: "${evText(ev)}"`;
 }
@@ -1718,12 +1731,13 @@ function eventLine(ev){
   if(isFamousEv(ev)){ const f = famousEv(ev); const lib = /^도서관:/.test(ev);
     return `\n\n[원작 인물] 장면 끝에서 플레이어가 프로젝트 문 원작 인물과 마주치게 하라. ${famousLine(f)} 원작 설정과 말투에 맞게, 그 인물다운 행동과 말을 짧게 보여 줘라. 이름은 talk의 who에 "${f.name}" 그대로 써라. 외모 묘사는 하지 마라.` + (lib ? " 도서관에서 온 초대장을 받는 장면이다. 도서관의 손님은 사서와 겨뤄 이기면 책을 얻고, 지면 죽어 책이 된다." : "") + ` 대응을 고르는 순간에서 멈춰라.`; }
   if(isAbno(ev)){ const a = abnoOf(ev); return `\n\n[환상체] 장면 끝에서 플레이어가 환상체 「${a.name}」(${a.g} 등급: ${a.info.ko})과(와) 마주치게 하라. 생김새와 습성: ${a.desc}. 등급에 맞는 위협으로, 무엇을 하는 존재인지 분명히 그려라. 정신력에 충격을 준다(높은 등급일수록 크게). 맞서 이 환상체를 제압하면 tag_add에 "환상체 제압:${a.name}"을 적어라(환상체는 죽지 않고 제압될 뿐이다). 대응을 고르는 순간에서 멈추고, options는 대응으로 써라.`; }
-  if(isApprenticeEv(ev)) return `\n\n[견습 제안] 장면 끝에서 해결사 사무소(이름을 지어라)가 아직 면허가 없는 청소년인 플레이어에게 견습 자리를 제안하게 하라. 청소·장비 손질·심부름·서류 같은 잔일을 하며 일을 배우는 자리이고, 면허는 성인(20세)이 되어야 딸 수 있다는 점을 분명히. 제안하는 사람은 talk로 말한다. 받아들이면 tag_add에 "견습:사무소 이름". 참고 예시(그대로 베끼지 말 것): "${evText(ev)}". 고르는 순간에서 멈춰라.`;
-  if(isScout(ev)) return `\n\n[스카우트] 장면 끝에서 플레이어의 재능을 눈여겨본 해결사 사무소나 협회(이름을 지어라) 사람이 찾아와 스카우트를 제안하게 하라. 나이에 비해 얼마나 강한지(평균의 약 ${prodigyRatio().toFixed(1)}배)를 보고 왜 탐내는지 분명히 말하게 하라. 어린아이면 부모와도 이야기하고, 성인이면 보수와 조건을 말하게 하라. 제안하는 사람은 talk로 말한다. 플레이어가 받아들이면 tag_add에 성인은 "협회:이름" 또는 "소속 사무소:이름", 미성년은 "수련생:이름"을 적어라. 참고 예시(그대로 베끼지 말 것): "${evText(ev)}". 받아들일지 고르는 순간에서 멈추고, options는 대응으로 써라.`;
+  if(isApprenticeEv(ev)) return `\n\n[견습 제안] 장면 끝에서 해결사 사무소(원작 이름에서 골라라: ${OFFICE_NAMES.join(", ")})가 아직 면허가 없는 청소년인 플레이어에게 견습 자리를 제안하게 하라. 청소·장비 손질·심부름·서류 같은 잔일을 하며 일을 배우는 자리이고, 면허는 성인(20세)이 되어야 딸 수 있다는 점을 분명히. 제안하는 사람은 talk로 말한다. 받아들이면 tag_add에 "견습:사무소 이름". 참고 예시(그대로 베끼지 말 것): "${evText(ev)}". 고르는 순간에서 멈춰라.`;
+  if(isScout(ev)){ const o = scoutOrgNow() || (S.scoutOrg = scoutOrgFor(ev));
+    return `\n\n[스카우트] 장면 끝에서 플레이어의 재능을 눈여겨본 「${o.name}」 사람이 찾아와 스카우트를 제안하게 하라. 찾아온 사람은 반드시 ${o.name} 소속이다: talk의 job은 "${o.name} ${o.kind === "협회" ? "지부 해결사" : "해결사"}"(또는 그곳의 대표·지부장)로 쓰고, 대사나 명함으로 ${o.name}이라는 소속을 분명히 밝히게 하라. 다른 협회나 사무소로 바꾸지 마라. 플레이어가 나이에 비해 ${prodigyRatio() >= 2 ? "놀라울 만큼" : prodigyRatio() >= 1.4 ? "눈에 띄게" : "제법"} 강하다는 것을 인상으로 말하게 하라(숫자·배율 금지, 예: "그 나이에 그런 몸놀림이라니, 꽤나 강해 보이는군요."). 어린아이면 부모와도 이야기하고, 성인이면 보수와 조건을 말하게 하라. 제안하는 사람은 talk로 말한다. 플레이어가 받아들이면 tag_add에 성인은 "${o.kind === "협회" ? "협회" : "소속 사무소"}:${o.name}", 미성년은 "수련생:${o.name}"을 적어라. 참고 예시(그대로 베끼지 말 것): "${evText(ev)}". 받아들일지 고르는 순간에서 멈추고, options는 대응으로 써라.`; }
   if(isBond(ev)) return `\n\n[인연] 다가오는 사람: ${approacherGender()}. 장면 끝에서 위험한 일이 아니라 사람 사이의 일이 생기게 하라: 새로운 사람(또래 친구·이웃·스승 같은 어른 등)을 만나거나, 아는 사람과의 사이가 깊어지는 일, 또는 주변 사람(이웃·친척·친구·동료)의 결혼처럼 관계가 바뀌는 일. 나이에 맞고 따뜻하거나 씁쓸한 일상의 장면으로, 상대는 이름을 지어 talk로 말하게 하라. 친해지면 tag_add에 "인연:이름/관계"(예: "인연:한이솔/단짝")를 적어라. 참고 예시(그대로 베끼지 말 것): ${eventExamples(ev).map(e => `"${e}"`).join(" / ")}. 플레이어가 어떻게 대할지 고르는 순간에서 멈추고, options는 대응으로 써라.`;
   if(COMMISSIONS.includes(ev)) return `\n\n[의뢰] 장면 끝에서 해결사인 플레이어에게 새 의뢰가 들어오게 하라. 누가, 무엇을, 얼마에 맡기려는지 구체적으로(평판 ${S.rep}에 걸맞은 규모로). 참고 예시(그대로 베끼지 말 것): "${evText(ev)}". 맡을지 말지 고르는 순간에서 멈추고, options는 대응으로 써라.`;
   return `\n\n[돌발 상황] 장면 끝에서 갑작스러운 일이 벌어지게 하라. 무슨 일인지는 네가 지금의 나이·장소·계절·태그·가족·최근 일에 맞게 새로 지어내라` +
-    (shop ? "(이번엔 공방·무기점·의체 시술소와 엮이는 일)" : "") +
+    (shop ? "(이번엔 공방·무기점·의체 시술소와 엮이는 일. 아직 안에 들어간 것은 아니다. 문 앞이나 입구에서 들어갈지 고르는 순간에 멈추고, shop은 false)" : "") +
     `. 막연하거나 기이하게 쓰지 말고, 이 도시에서 흔히 있을 법한 일로, 언제·어디서·무엇을 하던 중에 무엇을 보거나 마주쳤는지 구체적인 장면으로 써서 플레이어가 다음 행동을 바로 고를 수 있게 하라. 참고 예시(그대로 베끼지 말 것): ${eventExamples(ev).map(e => `"${e}"`).join(" / ")}. 그 순간에서 멈추고, options는 이 상황에 대한 대응으로 써라.`;
 }
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -2656,7 +2670,7 @@ function identityText(){
   if(!S.license && ageY() >= 20) out.push("해결사 자격 없음(성인이라 시험은 볼 수 있음)");
   if(inSyndicate()) out.push("조직에 몸담고 있어 사건이 잦고 적도 많다");
   const tr = S.tags.find(t => /^수련생:/.test(t)); if(tr) out.push(`${tr.slice(4)}의 수련생`);
-  if(prodigyRatio() >= 1.6) out.push(`나이에 비해 눈에 띄게 강하다(또래 평균의 ${prodigyRatio().toFixed(1)}배)`);
+  if(prodigyRatio() >= 1.6) out.push(`나이에 비해 ${prodigyRatio() >= 2.2 ? "믿기 힘들 만큼" : "눈에 띄게"} 강하다(숫자로 말하지 말고 주변의 인상과 반응으로 보여 줄 것)`);
   if(S.color) out.push(`특색 「${S.color}」로 불린다(하나 협회가 인정한 최고의 해결사)`);
   if(S.office) out.push(`자기 해결사 사무소 「${S.office}」의 대표` + ((S.staff || []).length ? `, 직원: ${S.staff.map(p => `${p.name}(${p.role}, ${p.grade}급)`).join(", ")}` : ", 직원 없음"));
   return out.join(" / ");
@@ -3446,6 +3460,12 @@ function applyNarr(n, forcedDays, shownDays){
   const days = forcedDays != null ? forcedDays : n.days;
   if(days > 0 || shownDays > 0) deltas.push({k:"경과", v:days || shownDays, days:true});
   if(n.event) deltas.push({k:"돌발", v:0, event:true});
+  { const o = scoutOrgNow();
+    const about = o && (String(n.narration || "") + JSON.stringify(n.talk || []) + (S.log.slice(-6).map(e => e.text || "").join(" "))).includes(o.name.replace(/ (협회|사무소)$/, ""));
+    if(o && about && n.tag_add && /(협회|소속 사무소|수련생):/.test(n.tag_add)){
+      n.tag_add = n.tag_add.replace(/(협회|소속 사무소|수련생):[^,]+/g, (m0, k) => `${k === "수련생" ? "수련생" : o.kind === "협회" ? "협회" : "소속 사무소"}:${o.name}`);
+      S.scoutOrg = null;
+    } }
   const tagChanges = applyTags(n.tag_add, n.tag_remove);
   const qNotes = questApply(n, deltas);
   /* 옷차림이 바뀌었으면 먼저 반영(그래야 이 장면의 대화 카드에도 새 옷으로 나온다) */
@@ -5891,9 +5911,15 @@ async function doAction(input, opt = {}){
   if(fainted) return;
   /* 공방은 버튼이 없다. 직접 찾아가야 열린다.
      찾아갔는지는 AI 서술자가 장면을 보고 정한다(shop). AI가 없을 때(규칙 진행)만 문장으로 어림한다 */
-  const atShop = wo ? false : n ? n.shop : (visitsShop(input) || SHOP_EVENTS.includes(ev));
-  if(!S.dead && atShop) openShop();
+  const okRoll = !passive && results.some(r => r.auto || r.cls === "ok" || r.cls === "crit");
+  const enters = !wo && !S.dead && okRoll && (visitsShop(input) || (shopNearNow() && SHOP_ENTER_RE.test(input || "")));
+  const atShop = enters && (!n || n.shop || shopNearNow());
+  if(SHOP_EVENTS.includes(ev)) S.shopNear = {d:S.days, m:minsNow()};
+  if(atShop){ S.shopNear = null; openShop(); }
 }
+/* 공방은 사건으로 '가까이 오기'만 하고, 플레이어가 들어가겠다고 해야 창이 열린다 */
+const SHOP_ENTER_RE = /(들어가|들어간|들어선|들른|들르|구경|둘러|진열대|물건을 본|새 물건|따라 들어|안으로|살펴본|고른다|골라|주문)/;
+const shopNearNow = () => !!(S.shopNear && S.shopNear.d === S.days);
 /* AI 없이 진행할 때만 쓰는 대체 판단 */
 function visitsShop(t){
   const place = /(공방|대장간|무기\s?(점|가게|상점|상인)|장비\s?(점|가게|상점)|방어구\s?(점|가게|상점)|의체\s?(시술소|병원|가게|상점|공방|센터)|의수\s?(가게|공방)|의족\s?(가게|공방))/;
@@ -6047,7 +6073,7 @@ const ITEMS = [
   {id:"bat", slot:"weapon", name:"나무 야구 배트", shop:"고물상", fx:{str:2}, price:30000, age:10, look:"bat"},
   {id:"axe", slot:"weapon", name:"손도끼", shop:"뒷골목 잡화점", fx:{str:3}, price:400000, age:14, look:"axe"},
   {id:"spear", slot:"weapon", name:"해결사 단창", shop:"리플릿 공방", fx:{str:3, spd:1}, price:2500000, age:18, look:"spear"},
-  {id:"rapier", slot:"weapon", name:"결투용 레이피어", shop:"생크 협회 납품 공방", fx:{str:3, spd:3}, price:18000000, age:18, look:"rapier"},
+  {id:"rapier", slot:"weapon", name:"결투용 레이피어", shop:"섕크 협회 납품 공방", fx:{str:3, spd:3}, price:18000000, age:18, look:"rapier"},
   {id:"scythe", slot:"weapon", name:"큰 낫", shop:"이름난 공방", fx:{str:7, spd:-1}, price:40000000, age:20, look:"scythe"},
   {id:"musket", slot:"weapon", name:"총검 달린 머스킷 (탄환 별도)", shop:"지하 공방", fx:{str:7, def:1}, price:55000000, age:20, look:"musket"},
   /* ── 무기 추가 ── */
@@ -6060,7 +6086,7 @@ const ITEMS = [
   {id:"katana", slot:"weapon", name:"흑운도", shop:"흑운회 대장간", fx:{str:4, spd:2}, price:12000000, age:18, look:"blade"},
   {id:"zweih", slot:"weapon", name:"츠바이 방패검", shop:"츠바이 협회 납품처", fx:{str:3, def:3}, price:15000000, age:18, look:"sword"},
   {id:"liublade", slot:"weapon", name:"리우 화염검", shop:"리우 협회 납품 공방", fx:{str:6, spd:1}, price:26000000, age:20, look:"hotsword"},
-  {id:"cinq", slot:"weapon", name:"결투 세검", shop:"생크 협회 납품 공방", fx:{str:4, spd:4}, price:32000000, age:20, look:"rapier"},
+  {id:"cinq", slot:"weapon", name:"결투 세검", shop:"섕크 협회 납품 공방", fx:{str:4, spd:4}, price:32000000, age:20, look:"rapier"},
   {id:"halberd", slot:"weapon", name:"미늘창", shop:"올드 보이즈 공방", fx:{str:6, def:1, spd:-1}, price:20000000, age:20, look:"spear"},
   {id:"warhammer", slot:"weapon", name:"분쇄 망치", shop:"올드 보이즈 공방", fx:{str:8, spd:-2}, price:24000000, age:20, look:"hammer"},
   {id:"crystal", slot:"weapon", name:"수정 장검", shop:"크리스탈 아틀리에", fx:{str:6, int:2}, price:38000000, age:20, look:"sword"},
@@ -6084,7 +6110,7 @@ const ITEMS = [
   {id:"zweiarmor", slot:"armor", name:"츠바이 제식 갑옷", shop:"츠바이 협회 납품처", fx:{def:6, spd:-1}, price:16000000, age:20, look:"#2f4a7a"},
   {id:"shiarmor", slot:"armor", name:"시 협회 은밀복", shop:"시 협회 납품 공방", fx:{def:3, spd:3}, price:18000000, age:20, look:"#1b1c22"},
   {id:"liucoat", slot:"armor", name:"리우 방화 코트", shop:"리우 협회 납품 공방", fx:{def:5, int:1}, price:21000000, age:20, look:"#b8452f"},
-  {id:"cinqsuit", slot:"armor", name:"결투복", shop:"생크 협회 납품 공방", fx:{def:4, spd:2}, price:19000000, age:20, look:"#e8e2d0"},
+  {id:"cinqsuit", slot:"armor", name:"결투복", shop:"섕크 협회 납품 공방", fx:{def:4, spd:2}, price:19000000, age:20, look:"#e8e2d0"},
   {id:"oldboys", slot:"armor", name:"올드 보이즈 작업복", shop:"올드 보이즈 공방", fx:{def:5}, price:12000000, age:18, look:"#5b5348"},
   {id:"crystalcoat", slot:"armor", name:"수정 섬유 망토", shop:"크리스탈 아틀리에", fx:{def:6, int:2}, price:40000000, age:20, look:"#a9c8e0"},
   {id:"plate", slot:"armor", name:"중장갑 흉갑", shop:"휠스 인더스트리", fx:{def:9, spd:-2}, price:55000000, age:22, look:"#6d727b"},
@@ -7431,8 +7457,7 @@ async function flowNarrate(elapsed, big){
   save(); setBusy(false);
   memoryTick();
   /* 흘려보내다 공방에 들르게 된 경우 */
-  const atShop = n ? n.shop : !!(big && big.kind === "event" && SHOP_EVENTS.includes(big.text));
-  if(!S.dead && atShop) openShop();
+  if(big && big.kind === "event" && SHOP_EVENTS.includes(big.text)) S.shopNear = {d:S.days, m:minsNow()};
 }
 
 /* ───────── 공방 창 ───────── */
