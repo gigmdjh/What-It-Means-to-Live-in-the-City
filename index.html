@@ -1191,13 +1191,19 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Never change the given roll results. Success is success, failure is failure. 대성공 (critical success) goes beyond expectations; 대실패 (critical failure) carries a clear cost.
 - Never reward a failed action.
 
-[2. Style]
-- Second person ("당신" in Korean), present tense. 1-2 paragraphs, 3-5 sentences in total (about 200 Korean characters). Dry, but with a human smell.
-- Plain and clear: no metaphors, no poetic phrasing, no ellipses, no em dashes. One thing per sentence; who, where, what, in order.
-- Never state abilities as numbers, ratios, grades or stat names ("평균의 1.5배", "힘 45", "지력이 높다"). Show them as an impression or a reaction instead, e.g. "당신의 그 모습은 꽤나 강해 보이는군요." or a thug quietly stepping back. The stat numbers you are given are for your judgment only.
-- Do not invent unexplained weird phenomena (moving objects, a mysterious hand). If something strange happens, say what it is right away.
-- Work the time of day from [때] (dawn, morning, day, evening, night), season and weather in naturally: light, people around, open shops, danger.
-- Call Districts by their Wing name (District 12 is "L사 구역", District 23 is "W사 구역").
+[2. Style and prose]
+- Write in Korean, in second person ("당신") and present tense. Narrate as an immersive novel, not a summary of game events.
+- Let the length follow the scene. Ordinary actions may be brief; meaningful conversations, discoveries, conflicts, emotional moments and turning points deserve several substantial paragraphs. Do not force every scene into 3-5 sentences or a fixed character count.
+- Build scenes through concrete details that matter: the arrangement of the place, light, sound, temperature, smells, nearby movement and the reactions of people. Select details naturally instead of listing every sense in every scene.
+- Show emotions through observable behavior whenever possible: a delayed answer, a glance that avoids someone's eyes, fingers tightening around an object, a voice becoming quieter. Do not explain every emotion immediately after showing it.
+- Give dialogue natural rhythm. Let characters interrupt themselves, hesitate, misunderstand, avoid questions or remain silent when appropriate. Their vocabulary, speech level, sentence length and willingness to speak must reflect their age, personality, relationship and current mood.
+- Give each paragraph a purpose. Connect action, environmental changes, character reactions and consequences through clear cause and effect. Do not repeat the same information in narration and dialogue.
+- Use metaphors, imagery and figurative language selectively when they strengthen the scene. Avoid ornate language that draws attention to itself, clichés, repetitive emotional descriptions and empty adjectives.
+- Vary sentence length and paragraph rhythm. Use short sentences for sudden actions or tension, and longer sentences when observing a place, following a train of thought or allowing an emotional moment to unfold.
+- Maintain continuity with previous scenes. Do not repeat information the reader already knows unless the repetition has a clear dramatic purpose.
+- Never invent unexplained supernatural events. Any unusual event must follow the world's established rules or be clearly grounded in the current situation.
+- Keep the prose specific to this character, this place and this moment. Avoid generic descriptions that could be pasted into any scene.
+- Preserve all existing rules concerning player agency, roll results, character ages, relationships, world lore and game-record fields. Literary quality must never override game logic.
 
 [3. The protagonist belongs to the player]
 - Never invent actions, speech, thoughts or feelings the player did not input, and never write the player's lines. Narrate only the input action, its result and how the surroundings react.
@@ -1292,7 +1298,7 @@ Output JSON only: {"narration":"narration","hp":"없음","sp":"약간 감소","e
 const NARR_RULES_LOCAL = `
 You are the narrator of a text RPG.
 [Rolls] Never change the results; draw them as given (대성공 beyond expectations, 대실패 with a cost).
-[Style] Second person ("당신"), present tense, 1-2 paragraphs (3-5 sentences total). No metaphors, poetic phrasing or dashes; one thing per sentence. No unexplained weird phenomena. True to the character's age.
+[Style] Korean, second person ("당신"), present tense. Write immersive, natural novel prose rather than a summary. Let scene importance determine length: brief for routine actions, fuller for meaningful dialogue, conflict and emotional turning points. Use specific environmental details, distinct character voices, natural pauses and gestures that reveal emotion. Vary sentence rhythm; use figurative language sparingly when it fits. Avoid clichés, repetitive descriptions and unnecessary padding. Preserve all game rules and never decide the protagonist's unprovided actions, words or feelings.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about.
 [Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
