@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.5"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.6"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.5";
+const BUILD = "20261109-1.5.6";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1272,7 +1272,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Even the same character must not repeat earlier lines. Make them say something new that fits this moment and what the protagonist just said.
 - Lines are short, spoken, 1-2 sentences, like real people. No expository, written or exaggerated speech. Speech level fits age and relationship (in Korean: parents use 반말 to their kids, strangers use 존댓말 with each other, rough people talk rough).
 - Use family exactly as in [가족] (names, looks, jobs, personality); never change them. Parents act and talk according to their job and personality.
-- #personality tags in [가족 성격] and [아는 사람] tell you who that person is. Show them through speech, choices and how they treat the protagonist. Never print the tag words or explain ("he is a kind person"); show it in action.
+- #personality tags in [가족 성격] and [아는 사람] define stable character traits. Show them consistently through word choice, sentence rhythm, decisions, boundaries, body language and how they treat others; do not merely mention the traits. Distinguish every character: do not make everyone generically polite, sweet or agreeable. A 츤데레 character may deny affection verbally but should reveal it through concrete helpful actions; do not make them cruel in every scene. A 멘헤라-type character may fear rejection, seek reassurance, become jealous or read too much into silence, but express these differently by person and situation; do not reduce them to constant crying, threats or self-harm. A character tagged as swearing frequently should naturally use strong Korean profanity in ordinary speech when their voice and context fit, not only during fights; vary intensity and do not force profanity into every sentence. A no-swearing character should keep their language clean. Combine traits rather than letting one tag erase the rest, and let mood, age, relationship and setting affect expression. Never print the tag words or explain ("he is a kind person"); show it in action.
 
 [6b. Missions]
 - When someone asks the protagonist for a favor or gives an order (an errand, a request, a job, a command from a superior) and the player clearly accepts it in this scene, write quest_add as "giver name/task/reward" (e.g. "한서진/잃어버린 고양이 찾기/5만안", "카포 로렌초/빚진 가게 주인에게 돈 받아 오기/30만안"). If the reward was not mentioned, write a fitting one ("사례금", "작은 선물"). Several joined by ";". Do not add it if the player only listened, hesitated or refused.
@@ -1341,7 +1341,7 @@ You are the narrator of a text RPG.
 [Style] Korean, second person ("당신"), present tense. Be concise by default: routine actions and short exchanges get 1 paragraph of 2–4 sentences; meaningful scenes get at most 2–4 compact paragraphs. Go longer only for a major turning point, complex fight, revelation or emotional climax. Never restate the player action, repeat dialogue in narration, recap known facts, or describe the same emotion several times. Keep only details that change the scene or deepen the moment, and stop once the result or response is clear. Keep it easy to follow on first read: identify who acts, what they react to, and what changes. Avoid vague pronouns, unexplained gestures, cryptic metaphors and abrupt transitions. Anchor each paragraph to the previous scene; make causes clear and establish new people or objects before relying on them. Preserve subtext while keeping literal actions understandable. Use specific environmental details, distinct character voices, natural pauses and gestures that reveal emotion. Vary sentence rhythm; use figurative language sparingly when it fits. Avoid clichés, repetitive descriptions and unnecessary padding. Preserve all game rules and never decide the protagonist's unprovided actions, words or feelings.
 [Subtext and continuity] Let words, pauses and behavior reveal possible hidden feelings or motives without claiming unconfirmed thoughts as facts. Each response must follow the previous exchange: track what each character knows, what has been answered, unresolved tension and relationship changes. Avoid resetting the scene or repeating the same emotional beat.
 [World knowledge] Treat the supplied lore and game state as authoritative. Do not contradict setting rules or recorded events. Characters only know what they witnessed, were told or could reasonably know from their role; strangers cannot know private history or hidden information. Present uncertain details as rumor or belief, not fact. Do not invent major factions, powers or canon exceptions. Use relevant lore through behavior and consequences, not exposition dumps.
-[Talk cards — mandatory, including on-device AI] Character cards are required in every response where an NPC speaks or performs a notable action. Always return those people in the JSON "talk" array; never leave it empty merely to save tokens. If the player speaks to or directly addresses an NPC, that NPC must answer in a talk entry. Use 1–3 entries in chronological order, each with {"who":"real character name","say":"spoken line without quotation marks","act":"brief action","look":"first-appearance look only","gender":"남성/여성","rel":"relationship to protagonist when known","age":"digits when known","job":"occupation/role when known","aff":"change in affection when relevant"}. Include portrait/name/action/speech through this array; do not put NPC dialogue only in narration. Never create a card for the protagonist, never duplicate dialogue in narration, and use [] only when no NPC speaks or performs a notable action. For unknown age, job or relationship, use an empty string rather than guessing. Keep Korean natural and concise. This rule is mandatory for local/on-device generation too; prioritize valid talk entries over decorative narration.
+[Personality] Follow each person’s #personality tags consistently in dialogue, choices and behavior. Give characters distinct voices instead of making everyone generically polite. Tsundere traits show affection through actions despite brusque words. Menhera-like insecurity may show as fear of rejection, jealousy or reassurance-seeking, but do not reduce the person to constant breakdowns or threats. If tagged as frequently swearing, use natural strong Korean profanity even in casual conversation when it fits; do not force it into every line. Mood, age, relationship and situation still matter. Never explain or repeat the tags in narration. [Talk cards — mandatory, including on-device AI] Character cards are required in every response where an NPC speaks or performs a notable action. Always return those people in the JSON "talk" array; never leave it empty merely to save tokens. If the player speaks to or directly addresses an NPC, that NPC must answer in a talk entry. Use 1–3 entries in chronological order, each with {"who":"real character name","say":"spoken line without quotation marks","act":"brief action","look":"first-appearance look only","gender":"남성/여성","rel":"relationship to protagonist when known","age":"digits when known","job":"occupation/role when known","aff":"change in affection when relevant"}. Include portrait/name/action/speech through this array; do not put NPC dialogue only in narration. Never create a card for the protagonist, never duplicate dialogue in narration, and use [] only when no NPC speaks or performs a notable action. For unknown age, job or relationship, use an empty string rather than guessing. Keep Korean natural and concise. This rule is mandatory for local/on-device generation too; prioritize valid talk entries over decorative narration.
 [Context] Read the previous scene and dialogue first and interpret the input as continuing from who or what that scene was about. However, if its recorded day is two or more days before the current game day, treat it as history, not a live scene. Resume from the current time and place; do not revive an old threat or conversation without a new cause.
 [Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
@@ -3352,7 +3352,7 @@ function guessJob(name, look, age){
   if(age != null && age >= 70) return "은퇴한 노인";
   return NPC_JOBS[rnd(NPC_JOBS.length)];
 }
-/* AI만 읽는 성격 태그: 서로 반대되는 것끼리 묶어, 묶음 다섯 개에서 하나씩 고른다(모순 없이 5개) */
+/* AI만 읽는 성격 태그: 서로 반대되는 성향은 같은 묶음에 둔다. 인물마다 서로 다른 5개 묶음에서 골라 개성을 만든다. */
 const PERSONA = [
   ["다정함", "냉정함", "잔인함"], ["겁이 많음", "대담함", "무모함"], ["욕심이 많음", "검소함", "돈을 밝힘"], ["의리가 있음", "배신을 쉽게 함"],
   ["거짓말을 잘함", "정직함", "과장이 심함"], ["수다스러움", "과묵함"], ["의심이 많음", "남을 잘 믿음"], ["성급함", "신중함", "느긋함"],
@@ -3363,7 +3363,16 @@ const PERSONA = [
   ["규칙을 중시함", "규칙을 비웃음"], ["외로움을 탐", "사교적", "내성적"], ["미신을 믿음", "합리적임"], ["책임감이 강함", "무책임함"],
   ["감정을 숨김", "감정이 얼굴에 다 드러남"], ["뒷말을 좋아함", "비밀을 잘 지킴"], ["허영심이 많음", "소박함"], ["자기희생적", "이기적"],
   ["남을 잘 돌봄", "남에게 관심 없음"], ["싸움을 좋아함", "폭력을 싫어함"], ["과거를 숨김", "옛날이야기를 자주 함"], ["가족을 아낌", "가족과 연을 끊음"],
-  ["도시를 떠나고 싶어함", "둥지를 동경함", "뒷골목을 사랑함"], ["약속을 꼭 지킴", "약속을 쉽게 잊음"], ["돈 계산이 정확함", "돈 관리를 못함"]];
+  ["도시를 떠나고 싶어함", "둥지를 동경함", "뒷골목을 사랑함"], ["약속을 꼭 지킴", "약속을 쉽게 잊음"], ["돈 계산이 정확함", "돈 관리를 못함"],
+  ["츤데레: 호의는 행동으로 보이고 말은 퉁명스러움", "솔직하게 애정을 표현함", "누구에게나 상냥함"],
+  ["멘헤라 성향: 관계 불안과 확인 욕구가 강함", "독립적이고 혼자서도 안정적임", "감정을 차분히 조절함"],
+  ["욕설이 매우 잦음: 일상 대화에도 거친 욕을 섞음", "욕설은 거의 하지 않음", "화가 났을 때만 욕함"],
+  ["빈정거리고 비꼬는 말투", "직설적이고 담백한 말투", "돌려 말하고 완곡한 말투"],
+  ["낯가림이 심하지만 친해지면 말이 많음", "처음부터 쉽게 친해짐", "사람과 거리를 둠"],
+  ["관심받고 싶어 함", "주목받는 것을 부담스러워함", "칭찬을 어색해함"],
+  ["애정 표현은 서툴지만 헌신적임", "말과 행동으로 애정을 자주 표현함", "친밀한 관계에도 거리를 둠"],
+  ["경쟁심이 강하고 지기 싫어함", "승패에 크게 연연하지 않음", "협력과 조화를 중시함"]
+];
 function rollPersona(){
   const groups = PERSONA.map((g, i) => i), out = [];
   while(out.length < 5 && groups.length){ const gi = groups.splice(rnd(groups.length), 1)[0], g = PERSONA[gi]; out.push(g[rnd(g.length)]); }
