@@ -7023,7 +7023,7 @@ function drawHairLayers(B, ox, oy, eb, plan, child){
       if(xs.length > 3){ const face = side < 0 ? fL(y) : fR(y); for(const X of xs) if(side < 0 ? X > face + 1 : X < face - 1) earFix.push([X, y, side]); }
     }
   }
-  const s = plan.style === "wolf" ? "long" : plan.style === "undercut" ? "short" : plan.style === "bun" ? "pony" : plan.style, v = plan.v;
+  const s = plan.style === "wolf" ? "long" : plan.style === "undercut" || plan.style === "slick" ? "short" : plan.style === "bun" ? "pony" : plan.style, v = plan.v;
   /* 길이(아래 끝) */
   const neckY = chin + 1;
   const endY = {short:eyeB - 1, spiky:eyeB - 1, bob:chin - 1, curly:chin + 2, long:neckY + (child ? 14 : 20), twin:eyeB, pony:eyeB, braid:eyeB, bald:0}[s] || eyeB;
@@ -8190,8 +8190,8 @@ function grantItem(id, equip){
   const it = itemById(id); if(!it) return;
   if(!S.inv) S.inv = [];
   if(S.equip[it.slot] === id || S.inv.includes(id)) return;
-  if(equip){ const old = S.equip[it.slot]; if(old) S.inv.push(old); S.equip[it.slot] = id; log({t:"sys", text:`${it.name}을(를) 손에 넣어 장착했다. ${fxText(it.fx)}`}); }
-  else { S.inv.push(id); log({t:"sys", text:`${it.name}을(를) 인벤토리에 넣었다.`}); }
+  if(equip && !isAug(it)){ const old = S.equip[it.slot]; if(old) S.inv.push(old); S.equip[it.slot] = id; log({t:"sys", text:`${it.name}을(를) 손에 넣어 장착했다. ${fxText(it.fx)}`}); }
+  else { S.inv.push(id); log({t:"sys", text:isAug(it) ? `${it.name}을(를) 인벤토리에 넣었다. 공방에서 이식할 수 있다.` : `${it.name}을(를) 인벤토리에 넣었다.`}); }
 }
 function equipFromInv(id){
   if(busy || S.dead) return;
