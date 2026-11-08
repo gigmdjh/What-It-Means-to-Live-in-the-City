@@ -19,7 +19,7 @@ button{background:#e9e9e9;color:#17191d;border:0;border-radius:8px;padding:12px 
 </head>
 <body>
 <h1>게임 내 체형 부위 색상표</h1>
-<p>실제 게임 체형 9종을 원래 피부색 이미지와 부위 구분용 색상 이미지로 나란히 보여 줘. 원래 모습을 참고하면서 어느 부위인지 비교할 수 있어. PNG 저장에도 두 버전이 모두 들어가.</p>
+<p>실제 게임 체형 9종을 게임에서 좌우 대칭 처리된 체형과 부위 구분용 색상 이미지로 나란히 보여 줘. 게임에서 실제로 사용하는 대칭 체형을 기준으로 어느 부위인지 비교할 수 있어. PNG 저장에도 두 버전이 모두 들어가.</p>
 <div id="status">체형 이미지를 불러오는 중…</div>
 <div class="grid" id="grid"></div>
 <div class="legend" id="legend"></div>
@@ -40,32 +40,53 @@ for(const [id,[color,label]] of Object.entries(palette)){const el=document.creat
 function loadImg(src){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src})}
 async function makeBody(key,b){
   const [src,mask]=await Promise.all([loadImg(b.img),loadImg(b.reg)]);
-  const w=b.w,h=b.h,raw=document.createElement("canvas"),m=document.createElement("canvas");
-  raw.width=m.width=w;raw.height=m.height=h;
-  const rc=raw.getContext("2d",{willReadFrequently:true}),mc=m.getContext("2d",{willReadFrequently:true});
-  rc.drawImage(src,0,0,w,h);mc.drawImage(mask,0,0,w,h);
-  const original=rc.getImageData(0,0,w,h),regions=mc.getImageData(0,0,w,h),out=rc.createImageData(w,h);
+  const w0=b.w,h=b.h,raw0=document.createElement("canvas"),mask0=document.createElement("canvas");
+  raw0.width=mask0.width=w0;raw0.height=mask0.height=h;
+  const r0=raw0.getContext("2d",{willReadFrequently:true}),m0=mask0.getContext("2d",{willReadFrequently:true});
+  r0.drawImage(src,0,0,w0,h);m0.drawImage(mask,0,0,w0,h);
+  const source=r0.getImageData(0,0,w0,h).data,regions0=m0.getImageData(0,0,w0,h).data;
+  // 게임의 symBody()와 동일하게 머리 중심축 기준으로 좌우 대칭을 만든다.
+  let hl=999,hr=-1,minX=w0;
+  for(let y=0;y<b.neck;y++)for(let x=0;x<w0;x++){const i=(y*w0+x)*4;if(source[i+3]&&Math.round(regions0[i]/20)===2){if(x<hl)hl=x;if(x>hr)hr=x}}
+  for(let y=0;y<h;y++)for(let x=0;x<w0;x++)if(source[(y*w0+x)*4+3]&&x<minX)minX=x;
+  if(hr<0)throw Error(key+" 머리 중심축을 찾지 못했어");
+  const axis2=hl+hr,nw=axis2-2*minX+1,shift=-minX;
+  const raw=document.createElement("canvas"),m=document.createElement("canvas");raw.width=m.width=nw;raw.height=m.height=h;
+  const rc=raw.getContext("2d"),mc=m.getContext("2d"),od=rc.createImageData(nw,h),md=mc.createImageData(nw,h);
+  const swap={4:5,5:4,6:7,7:6,8:9,9:8,10:11,11:10};
+  for(let y=0;y<h;y++)for(let x=minX;2*x<=axis2;x++){
+    const i=(y*w0+x)*4;if(!source[i+3])continue;
+    const reg=Math.round(regions0[i]/20);
+    for(const [X,mir] of [[x+shift,false],[axis2-x+shift,true]]){
+      if(X<0||X>=nw)continue;const j=(y*nw+X)*4;
+      for(let c=0;c<4;c++)od[j+c]=source[i+c];
+      for(let c=0;c<4;c++)md[j+c]=regions0[i+c];
+      if(mir&&swap[reg])md[j]=swap[reg]*20;
+    }
+  }
+  rc.putImageData(od,0,0);mc.putImageData(md,0,0);
+  const original=document.createElement("canvas");original.width=nw;original.height=h;original.getContext("2d").drawImage(raw,0,0);
+  const out=rc.createImageData(nw,h);
   for(let i=0;i<out.data.length;i+=4){
-    if(!original.data[i+3])continue;
-    const r=Math.round(regions.data[i]/20),entry=palette[r];
+    if(!od.data[i+3])continue;
+    const id=Math.round(md.data[i]/20),entry=palette[id];
     if(entry){const hex=entry[0].slice(1);out.data[i]=parseInt(hex.slice(0,2),16);out.data[i+1]=parseInt(hex.slice(2,4),16);out.data[i+2]=parseInt(hex.slice(4,6),16);out.data[i+3]=255}
     else {out.data[i]=180;out.data[i+1]=180;out.data[i+2]=180;out.data[i+3]=255}
   }
-  const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").putImageData(out,0,0);
-  const orig=document.createElement("canvas");orig.width=w;orig.height=h;orig.getContext("2d").drawImage(raw,0,0);
+  const cv=document.createElement("canvas");cv.width=nw;cv.height=h;cv.getContext("2d").putImageData(out,0,0);
   const card=document.createElement("div");card.className="card";
   const title=document.createElement("h2");title.textContent=(names[key[0]]||key[0])+" · "+ages[key[1]];
   const views=document.createElement("div");views.className="views";
-  function addView(labelText,source){const col=document.createElement("div");col.className="viewcol";const label=document.createElement("label");label.textContent=labelText;const view=document.createElement("canvas");view.className="sprite";view.width=w;view.height=h;view.getContext("2d").drawImage(source,0,0);col.append(label,view);views.appendChild(col)}
-  addView("원래 색",orig);addView("부위 색상",cv);
+  function addView(labelText,source){const col=document.createElement("div");col.className="viewcol";const label=document.createElement("label");label.textContent=labelText;const view=document.createElement("canvas");view.className="sprite";view.width=nw;view.height=h;view.getContext("2d").drawImage(source,0,0);col.append(label,view);views.appendChild(col)}
+  addView("게임 대칭 원본",original);addView("대칭 부위 색상",cv);
   card.append(title,views);grid.appendChild(card);
-  cards.push({key,original:orig,canvas:cv,title:title.textContent});
+  cards.push({key,original,canvas:cv,title:title.textContent});
 }
 function downloadSheet(){
  const scale=3,cellW=300,cellH=300,gap=18,cols=3,rows=Math.ceil(cards.length/cols);
  const c=document.createElement("canvas");c.width=cols*cellW+(cols+1)*gap;c.height=rows*cellH+(rows+1)*gap+125;
- const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.fillStyle="#17191d";x.font="bold 26px sans-serif";x.fillText("게임 체형 부위 색상표 · 원래 색 / 부위 색상",gap,38);
- x.font="16px sans-serif";x.fillText("왼쪽은 원래 체형, 오른쪽은 게임 부위 마스크 색상",gap,68);
+ const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.fillStyle="#17191d";x.font="bold 26px sans-serif";x.fillText("게임 체형 부위 색상표 · 게임 대칭 원본 / 대칭 부위 색상",gap,38);
+ x.font="16px sans-serif";x.fillText("왼쪽은 게임 대칭 체형, 오른쪽은 대칭 처리된 부위 마스크 색상",gap,68);
  for(let i=0;i<cards.length;i++){
    const a=cards[i],cx=gap+(i%cols)*(cellW+gap),cy=105+gap+Math.floor(i/cols)*(cellH+gap);
    x.fillStyle="#f4f4f4";x.fillRect(cx,cy,cellW,cellH);x.fillStyle="#111";x.font="bold 17px sans-serif";x.fillText(a.title,cx+8,cy+24);
