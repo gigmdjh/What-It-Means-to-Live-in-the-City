@@ -5009,7 +5009,7 @@ function becomeDistorted(){
   S.awaitEvent = true; S.urgent = false;
   renderDistort();
 }
-/* 뒤틀린 직후의 선택: 속삭임을 따를지, 나름대로 살아갈지 */
+/* 뒤틀린 직후의 내면 판정: 속삭임을 따를지 밀어낼지 d6으로 결정한다. */
 function resolveDistortChoice(input){
   S.distortPending = false;
   log({t:"me", text:input});
