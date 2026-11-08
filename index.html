@@ -7305,9 +7305,9 @@ const ARMOR_VISUALS = {
  suit:{otype:"suit",color:"#26282f",pants:"#22242a",inner:"#efede6"},fcoat:{outer:"jacket",outerColor:"#4a2925",pants:"#373238"},
  hcoat:{outer:"trench",outerColor:"#b4ad9d",pants:"#44434a"},hoodie:{otype:"hoodie",pants:"#3a3d48"},
  leather:{outer:"leather",outerColor:"#35251f",pants:"#29272a"},padded:{outer:"vest",outerColor:"#655740",pants:"#45413c"},
- raincoat:{outer:"trench",outerColor:"#ad8e2d",pants:"#34343a"},zweiarmor:{outer:"coat",outerColor:"#1e3157",pants:"#252a34"},
- shiarmor:{outer:"leather",outerColor:"#121318",pants:"#191a20"},liucoat:{outer:"coat",outerColor:"#813020",pants:"#392c2b"},
- cinqsuit:{otype:"suit",color:"#e8e2d0",pants:"#34343b",inner:"#f1ede3"},
+ raincoat:{outer:"trench",outerColor:"#ad8e2d",pants:"#34343a"},zweiarmor:{otype:"suit",outer:"trench",color:"#2f4a7a",outerColor:"#20335c",inner:"#efede6",pants:"#252a34"},
+ shiarmor:{outer:"leather",outerColor:"#101116",color:"#17181e",pants:"#191a20"},liucoat:{otype:"suit",outer:"coat",color:"#b8452f",outerColor:"#7f2b21",inner:"#efede6",pants:"#22242a"},
+ cinqsuit:{otype:"suit",outer:"cape",color:"#243a63",outerColor:"#e6e0d2",pants:"#252a36",inner:"#efede6"},
  oldboys:{otype:"overall",btype:"overall",color:"#5b5348",pants:"#454036"},
  crystalcoat:{outer:"cape",outerColor:"#7896b3",pants:"#3a4859"},plate:{outer:"jacket",outerColor:"#515761",pants:"#3d424b"},
  colorcoat:{outer:"coat",outerColor:"#30213e",pants:"#302a38"}
@@ -7711,6 +7711,32 @@ function drawSprite(cv, opt){
   const hcx = Math.round(ox + (B.headL + B.headR) / 2), headW = B.headR - B.headL, chin = oy + B.neck;
   const box = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
   const frame = (x, y, w, h, c) => { box(x, y, w, 1, c); box(x, y + h - 1, w, 1, c); box(x, y, 1, h, c); box(x + w - 1, y, 1, h, c); };
+  /* 협회 장비는 위키의 실루엣·색 배치를 참고하되, 작은 화면에서도 읽히도록 픽셀 몇 개만 사용 */
+  if(armor && RB[3]){
+    const [tl,tt,tr, tb]=RB[3], xL=ox+tl, xR=ox+tr, yT=oy+tt, yB=oy+tb;
+    const mid=Math.round((xL+xR)/2);
+    if(armor.id==="zweiarmor"){
+      box(xL,yT+1,Math.max(1,mid-xL-1),1,"#d2a943");box(mid+1,yT+1,Math.max(1,xR-mid),1,"#d2a943");
+      box(xL,yB-1,2,1,"#d2a943");box(xR-1,yB-1,2,1,"#d2a943");
+      box(mid,yT+2,1,2,"#1b2a48");
+    }
+    if(armor.id==="shiarmor"){
+      box(mid-1,yT+2,1,Math.max(1,Math.round((yB-yT)*0.32)),"#8d3038");
+      box(xL,yB-1,1,1,"#8d3038");box(xR,yB-1,1,1,"#8d3038");
+    }
+    if(armor.id==="liucoat"){
+      box(mid,yT+2,1,Math.max(1,Math.round((yB-yT)*0.22)),"#a8302c");
+      box(xL,yT+1,1,1,"#d2a943");box(xR,yT+1,1,1,"#d2a943");
+    }
+    if(armor.id==="cinqsuit"){
+      box(xL,yT+1,1,1,"#d2a943");box(xR,yT+1,1,1,"#d2a943");
+      box(mid,yT+2,1,2,"#d2a943");
+    }
+    if(armor.id==="plate"){
+      box(xL,yT+1,2,2,"#9ba3ad");box(xR-1,yT+1,2,2,"#9ba3ad");
+      box(mid-1,yT+2,3,2,"#424852");box(mid,yT+2,1,1,"#c3c8d0");
+    }
+  }
   if(tr.glasses){
     const gc = tr.glassColor, lw = emx - ex0, rw = ex1 - emx, gh = ey1 - ey0 + 2;
     const round = (x, y, w, h) => { box(x + 1, y, w - 2, 1, gc); box(x + 1, y + h - 1, w - 2, 1, gc); box(x, y + 1, 1, h - 2, gc); box(x + w - 1, y + 1, 1, h - 2, gc); };
