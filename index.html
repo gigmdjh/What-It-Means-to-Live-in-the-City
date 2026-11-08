@@ -409,6 +409,20 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .polli-cta .note{flex:1 1 200px;min-width:0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);max-width:min(92vw,420px);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:.85rem;z-index:50;transition:opacity .5s}
 .toast.out{opacity:0}
+#adminDlg{width:min(720px,94vw);max-width:94vw;box-sizing:border-box}
+#adminDlg .dlg.admin{width:auto;max-width:100%;box-sizing:border-box;max-height:86vh;overflow:auto;display:grid;gap:10px;padding:16px}
+#adminDlg .dlg.admin>*{min-width:0}
+.ad-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#adminDlg details{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+#adminDlg summary{cursor:pointer;font-weight:600}
+#adminDlg .row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+#adminDlg select{max-width:100%}
+.ad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:8px}
+.ad-grid label{display:grid;gap:2px;font-size:12px;color:var(--muted)}
+.ad-grid input{width:100%}
+.ad-pre{white-space:pre-wrap;word-break:break-all;font-size:11px;max-height:320px;overflow:auto;background:var(--panel-2);padding:8px;border-radius:6px}
+.admin-claim{display:flex}
+.ad-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:1000;background:var(--panel-2);color:var(--fg,inherit);border:1px solid var(--line);padding:8px 14px;border-radius:8px;font-size:13px;max-width:90vw}
 .login-btns{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .ugauge{display:inline-block;vertical-align:middle;width:46px;height:6px;margin-left:8px;border-radius:3px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
 .ugauge i{display:block;height:100%;background:var(--accent)}
@@ -631,6 +645,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   <div class="brand"><h1>도시에서 살아간다는 것</h1><small>The City · 안(眼)</small></div>
   <span class="chip" id="engineChip">AI <b>확인 중</b></span>
   <button class="btn" id="btnMenu" type="button" hidden>첫 화면</button>
+  <button class="btn" id="btnAdmin" type="button" hidden>🛠</button>
   <button class="btn" id="btnSettings" type="button">설정</button>
 </header>
 
@@ -676,6 +691,9 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
       <span class="note">무료 계정의 사용량으로 AI를 씁니다. 폰에서 모델을 내려받지 않아 가볍고 빠릅니다.</span>
     </div>
   </form>
+  <section class="admin-claim" id="adminClaim">
+    <button class="btn" type="button" id="btnAdminClaim">🛠 관리자 등록 (이 기기)</button>
+  </section>
   <section class="achs">
     <button class="btn" type="button" id="btnAch" aria-expanded="false" aria-controls="achList">🏆 업적 보기 <span class="note" id="achCount"></span></button>
     <div class="ach-grid" id="achList" hidden></div>
@@ -845,6 +863,44 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <div id="fx" aria-hidden="true"></div>
 <div id="smoke" aria-hidden="true" hidden></div>
 <div id="whispers" aria-hidden="true"></div>
+<dialog id="adminDlg" aria-labelledby="adTitle">
+  <div class="dlg admin">
+    <div class="ad-head"><h2 id="adTitle">🛠 관리자</h2><button class="btn" type="button" id="adClose">닫기</button></div>
+    <p class="note" id="adNote"></p>
+    <details open><summary>상태</summary>
+      <div class="ad-grid" id="adStats"></div>
+      <div class="row"><button class="btn primary" type="button" id="adApply">적용</button><button class="btn" type="button" id="adFull">체력·정신력·기력 가득</button></div>
+    </details>
+    <details><summary>시간</summary>
+      <div class="row"><button class="btn" type="button" data-adt="60">+1시간</button><button class="btn" type="button" data-adt="1440">+1일</button><button class="btn" type="button" data-add="30">+1달</button><button class="btn" type="button" data-add="365">+1년</button><button class="btn" type="button" id="adNight">뒷골목의 밤(03:20)</button><button class="btn" type="button" id="adNoon">낮 12시</button></div>
+    </details>
+    <details><summary>다음 행동에 사건 일으키기</summary>
+      <div class="row"><select id="adEv"></select><button class="btn" type="button" id="adEvGo">예약</button></div>
+      <p class="note">예약하면 다음에 행동을 입력할 때 그 사건이 일어나요.</p>
+    </details>
+    <details><summary>특수 상태</summary>
+      <div class="row"><button class="btn" type="button" id="adKin">혈귀로 깨어나기</button><button class="btn" type="button" id="adDist">뒤틀리기</button><button class="btn" type="button" id="adShin">心 얻기</button><button class="btn" type="button" id="adLic">해결사 면허</button><select id="adGrade"></select><button class="btn" type="button" id="adGradeGo">급수 설정</button></div>
+    </details>
+    <details><summary>아이템</summary>
+      <div class="row"><select id="adItem"></select><button class="btn" type="button" id="adItemGo">가방에 넣기</button></div>
+    </details>
+    <details><summary>미션·사람</summary>
+      <div id="adQuests"></div>
+      <div class="row"><select id="adPerson"></select><input id="adAff" type="number" min="-100" max="100" value="50" style="width:80px"><button class="btn" type="button" id="adAffGo">호감도 설정</button></div>
+    </details>
+    <details><summary>업적</summary>
+      <div class="row"><button class="btn" type="button" id="adAchAll">모두 달성</button><button class="btn" type="button" id="adAchReset">모두 초기화</button></div>
+    </details>
+    <details><summary>AI 디버그 (마지막 요청과 응답)</summary>
+      <div class="row"><button class="btn" type="button" id="adAIShow">불러오기</button></div>
+      <pre class="ad-pre" id="adAI"></pre>
+    </details>
+    <details><summary>이 기기의 관리자 해제</summary>
+      <div class="row"><button class="btn" type="button" id="adRevoke">관리자 해제</button></div>
+    </details>
+  </div>
+</dialog>
+
 <dialog id="loginDlg">
   <div class="dlg">
     <h2>AI로 플레이하기</h2>
@@ -1023,10 +1079,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1210"></script>
+<script src="parts.js?v=20261108-1220"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1210";
+const BUILD = "20261108-1220";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1576,6 +1632,7 @@ function kidnapChance(input){
 }
 const isKidnap = ev => /^납치:/.test(String(ev || ""));
 function rollEvent(daysAhead){
+  if(!daysAhead && S.adminEv){ const e = S.adminEv; S.adminEv = null; return e; }
   if(!daysAhead && S.distorted && !S.dead && rand01() < 0.28){ S.distortHunts = (S.distortHunts || 0) + 1; const pool = DISTORT_HUNTS.filter(e => backNight() || !/청소부/.test(e)); return pool[rnd(pool.length)]; }
   if(!daysAhead && backNight() && !/(집|방 안|실내|건물 안|가게 안|사무소)/.test(S.location || "") && rand01() < 0.35) return SWEEPER_EVENTS[rnd(SWEEPER_EVENTS.length)];
   if(!daysAhead && warpEligible() && rand01() < 0.03) return WARP_OFFER;
@@ -2575,7 +2632,8 @@ async function runAI(build, maxTok, schema, quiet, onText){
      기기 AI·크롬 내장 AI는 느리니 이 과정을 건너뛴다(고쳐 읽기만 한다) */
   const api = p === "anthropic" || p === "openai" || p === "gemini" || p === "pollinations" || p === "groq";
   const tok = api ? Math.round(maxTok * 1.8) : maxTok;
-  const call = async u => {
+  const call = async u => { const r = await call0(u); try{ window.__lastAI = {prov:p, sys, user:u, raw:typeof r === "string" ? r : JSON.stringify(r), at:new Date().toLocaleTimeString()}; }catch(e){} return r; };
+  const call0 = async u => {
     if(p === "anthropic") return callAnthropic(sys, u, tok);
     if(p === "openai") return callOpenAI(sys, u, tok);
     if(p === "gemini") return callGemini(sys, u, tok);
@@ -8795,6 +8853,92 @@ document.addEventListener("visibilitychange", () => { if(document.visibilityStat
 window.addEventListener("pageshow", e => { if(e.persisted) checkUpdate(); });   /* 뒤로가기 캐시에서 되살아난 페이지도 확인 */
 setInterval(checkUpdate, 90 * 1000);                                              /* 켜 둔 채로 있어도 1분 반마다 확인 */
 loadParts();
+/* ───────── 관리자 창 (이 기기에만) ─────────
+   메인 메뉴의 '관리자 등록'을 누른 기기만 관리자가 된다. 등록 버튼은 잠깐만 두고 나중에 없앤다. */
+const ADMIN_KEY = "dosi_admin";
+function adToast(msg){ const t = el("div", "ad-toast", msg); document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+function adRender(){ for(const f of [renderLog, renderLite, renderStatus]) try{ f(); }catch(e){} }
+const isAdmin = () => { try{ return localStorage.getItem(ADMIN_KEY) === "1"; }catch(e){ return false; } };
+const ADMIN_CLAIM_OPEN = true;   /* 관리자 등록 버튼을 메인 메뉴에 보일지. 등록이 끝나면 false로 바꾼다 */
+function adminSync(){
+  $("#btnAdmin").hidden = !isAdmin();
+  const c = $("#adminClaim"); if(c) c.hidden = !ADMIN_CLAIM_OPEN || isAdmin();
+}
+function adminOpen(){
+  if(!isAdmin()) return;
+  const ok = S && S.name && !S.dead;
+  $("#adNote").textContent = ok ? `${S.name} · ${ageY()}세 · ${timeText()}` : "게임을 시작해야 대부분의 기능을 쓸 수 있어요.";
+  const g = $("#adStats"); g.replaceChildren();
+  if(ok){
+    const fields = [["hp", "체력"], ["sp", "정신력"], ["en", "기력"], ["rep", "평판"], ["ahn", "돈(안)"], ["str", "힘"], ["def", "방어력"], ["spd", "속도"], ["int", "지력"], ["age", "나이(세)"]];
+    for(const [k, ko] of fields){
+      const lb = el("label", null, ko), inp = el("input"); inp.type = "number"; inp.dataset.k = k;
+      inp.value = k === "age" ? ageY() : Math.round(S[k] || 0); lb.appendChild(inp); g.appendChild(lb);
+    }
+  }
+  const evs = [["", "고르기"], [WARP_OFFER, "워프열차 W사 의뢰"], [LM_INVITE, "라만차랜드 초대장"], ["__scout", "스카우트"], [SHOP_EVENTS[1], "공방 앞"], [SWEEPER_EVENTS[1], "청소부 (뒷골목의 밤)"], ["__abno", "환상체"], ["납치:관리자", "납치 시도"], [SHIN_TEACH, "心 가르침"], [STAR_FIND, "별벼림 칼 발견"], ["__comm", "해결사 의뢰"], ["__famous", "원작 인물"]];
+  const es = $("#adEv"); es.replaceChildren(); evs.forEach(([v, t], i) => { const o = el("option", null, t); o.value = String(i); es.appendChild(o); }); es._evs = evs;
+  const gs = $("#adGrade"); gs.replaceChildren(); for(let i = 9; i >= 1; i--){ const o = el("option", null, i + "급"); o.value = i; gs.appendChild(o); }
+  const is = $("#adItem"); is.replaceChildren(); for(const it of ITEMS){ const o = el("option", null, `${it.name} (${({weapon:"무기", armor:"방어구"})[it.slot] || "의체"})`); o.value = it.id; is.appendChild(o); }
+  const ps = $("#adPerson"); ps.replaceChildren(); for(const n of Object.keys(S && S.npcs || {})){ const o = el("option", null, n); o.value = n; ps.appendChild(o); }
+  const qb = $("#adQuests"); qb.replaceChildren();
+  for(const q of (S && S.quests || []).filter(q => q.state === "active" || q.state === "done")){
+    const r = el("div", "row"); const b = el("button", "btn", q.state === "active" ? "완료로" : "보상 받기");
+    b.type = "button"; b.onclick = () => { const n = blankNarr("(관리자)"); if(q.state === "active") n.quest_clear = q.task; else n.quest_reward = q.giver; const d = []; questApply(n, d).forEach(t => log({t:"sys", text:t})); adRender(); save(); adminOpen(); };
+    r.append(el("span", null, `${q.task} · ${q.giver}`), b); qb.appendChild(r);
+  }
+  if(!qb.children.length) qb.appendChild(el("p", "note", "진행 중인 미션 없음"));
+  try{ if(!$("#adminDlg").open) $("#adminDlg").showModal(); }catch(e){}
+}
+function adminDone(msg){ log({t:"sys", text:"🛠 " + msg}); adRender(); save(); adminOpen(); }
+const adNeed = () => S && S.name && !S.dead;
+$("#btnAdminClaim").addEventListener("click", () => {
+  try{ localStorage.setItem(ADMIN_KEY, "1"); }catch(e){}
+  adminSync(); adToast("이 기기가 관리자로 등록되었어요. 게임 화면 위쪽 🛠 버튼으로 열 수 있어요.");
+  adminOpen();
+});
+$("#btnAdmin").addEventListener("click", adminOpen);
+$("#adClose").addEventListener("click", () => $("#adminDlg").close());
+$("#adApply").addEventListener("click", () => {
+  if(!adNeed()) return;
+  for(const inp of document.querySelectorAll("#adStats input")){
+    const k = inp.dataset.k, v = +inp.value; if(!isFinite(v)) continue;
+    if(k === "age"){ const d = Math.round(v * 365) + (S.days % 365); if(Math.floor(d / 365) !== ageY()) S.days = d; }
+    else if(k === "ahn") S.ahn = Math.max(0, Math.round(v));
+    else if(STAT_KEYS.includes(k)) S[k] = clamp(Math.round(v), 0, 200);
+    else S[k] = gclamp(k, v);
+  }
+  adminDone("상태를 바꿨다.");
+});
+$("#adFull").addEventListener("click", () => { if(!adNeed()) return; S.hp = 100; S.en = 100; S.sp = Math.max(S.sp, 0); adminDone("체력·정신력·기력을 채웠다."); });
+for(const b of document.querySelectorAll("#adminDlg [data-adt]")) b.addEventListener("click", () => { if(!adNeed()) return; advanceMins(+b.dataset.adt); adminDone(`시간을 ${b.textContent} 넘겼다.`); });
+for(const b of document.querySelectorAll("#adminDlg [data-add]")) b.addEventListener("click", () => { if(!adNeed()) return; const n = +b.dataset.add; for(let i = 0; i < n && !S.dead; i++) oneDay(); adminDone(`${b.textContent} 흘려보냈다.`); });
+$("#adNight").addEventListener("click", () => { if(!adNeed()) return; S.mins = 200; adminDone("새벽 3:20으로 맞췄다."); });
+$("#adNoon").addEventListener("click", () => { if(!adNeed()) return; S.mins = 720; adminDone("낮 12시로 맞췄다."); });
+$("#adEvGo").addEventListener("click", () => {
+  if(!adNeed()) return;
+  const es = $("#adEv"), pick = es._evs[+es.value]; if(!pick || !pick[0]) return;
+  let ev = pick[0];
+  if(ev === "__scout") ev = scoutEvent();
+  else if(ev === "__abno") ev = pickAbno(ageY());
+  else if(ev === "__comm") ev = COMMISSIONS[rnd(COMMISSIONS.length)];
+  else if(ev === "__famous"){ try{ ev = pickFamous(); }catch(e){ ev = null; } }
+  if(!ev){ adToast("이 사건은 지금 만들 수 없어요."); return; }
+  if(ev === LM_INVITE){ S.lmInvited = true; }
+  S.adminEv = ev; adminDone(`다음 행동에 '${pick[1]}' 사건을 예약했다.`);
+});
+$("#adKin").addEventListener("click", () => { if(!adNeed() || isKindred()) return; try{ S.kindred = S.kindred || {born:true}; awakenKindred(); }catch(e){ console.warn(e); } adminDone("혈귀로 깨어났다."); });
+$("#adDist").addEventListener("click", () => { if(!adNeed() || S.distorted) return; try{ becomeDistorted(); }catch(e){ console.warn(e); } adminDone("뒤틀렸다."); });
+$("#adShin").addEventListener("click", () => { if(!adNeed() || S.shin) return; try{ shinUnlock("관리자"); }catch(e){ console.warn(e); } adminDone("心을 얻었다."); });
+$("#adLic").addEventListener("click", () => { if(!adNeed()) return; if(!S.license){ S.license = 9; setLicenseTag(); } adminDone("해결사 면허를 받았다."); });
+$("#adGradeGo").addEventListener("click", () => { if(!adNeed()) return; S.license = +$("#adGrade").value; setLicenseTag(); adminDone(`해결사 ${S.license}급이 되었다.`); });
+$("#adItemGo").addEventListener("click", () => { if(!adNeed()) return; const id = $("#adItem").value, it = itemById(id); if(!it) return; S.inv = S.inv || []; S.inv.push(id); adminDone(`${it.name}을(를) 가방에 넣었다.`); });
+$("#adAffGo").addEventListener("click", () => { if(!adNeed()) return; const n = $("#adPerson").value, r = personOf(n); if(!r) return; r.aff = clamp(Math.round(+$("#adAff").value || 0), -100, 100); adminDone(`${n}의 호감도를 ${r.aff}로 바꿨다.`); });
+$("#adAchAll").addEventListener("click", () => { const g = loadAch(); for(const a of ACHS) if(!g[a[0]]) g[a[0]] = {at:Date.now(), who:(S && S.name) || "관리자"}; store.set(ACH_KEY, g); try{ renderAch(); }catch(e){} adToast("모든 업적을 달성 처리했어요."); });
+$("#adAchReset").addEventListener("click", () => { store.set(ACH_KEY, {}); try{ renderAch(); }catch(e){} adToast("업적을 초기화했어요."); });
+$("#adAIShow").addEventListener("click", () => { const a = window.__lastAI; $("#adAI").textContent = a ? `[${a.prov} · ${a.at}]\n\n=== SYSTEM ===\n${a.sys}\n\n=== USER ===\n${a.user}\n\n=== 응답 ===\n${a.raw}` : "아직 AI 요청이 없어요(이번 접속 이후)."; });
+$("#adRevoke").addEventListener("click", () => { try{ localStorage.removeItem(ADMIN_KEY); }catch(e){} $("#adminDlg").close(); adminSync(); adToast("이 기기의 관리자를 해제했어요."); });
+adminSync();
 if(!window.DOSI_EDITOR) checkUpdate();
 loadSharedLooks();
 setTimeout(() => i18nApply(), 0);
