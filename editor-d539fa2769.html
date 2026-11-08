@@ -448,6 +448,7 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
 .talk-body{min-width:0;flex:1}
 .talk-who{font:600 .8rem var(--f-mono);color:var(--accent)}
 .talk-act{font-size:.82rem;color:var(--muted);font-style:italic;margin-top:2px}
+.talk-act.only{font-size:.92rem;color:var(--fg);font-style:normal}
 .talk-say{margin-top:3px;line-height:1.6}
 .yearbar{padding:0 0 8px;margin-bottom:6px;border-bottom:1px solid var(--line)}
 .yearbar.in-card{padding:4px 0 0;margin:0;border:0}
@@ -1118,11 +1119,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1410"></script>
+<script src="parts.js?v=20261108-1420"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1410";
+const BUILD = "20261108-1420";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1219,6 +1220,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Extracted E.G.O weapons are no longer made since L Corp fell. Only when inherited, traded or taken from someone who has one (e.g. Gebura) write tag_add "에고 무기:weapon name". Never grant one any other way.
 
 [6. Other characters and dialogue]
+- talk is also used when another character does something notable toward the protagonist or in the scene without speaking (a nod, handing something over, glaring, walking off): give that entry "say":"" and describe it in "act". Speaking or acting, every other character who matters in the scene gets an entry.
 - talk: when another character (family, neighbor, client...) speaks, put 1-3 entries: [{"who":"the character's real name (e.g. 한서진, 마르코 벨리니). Never use labels like '새 친구', '이웃 주민', '낯선 사내'; give them a name even if the protagonist doesn't know it yet","say":"the line (no quotes)","act":"a short action while speaking","look":"only for a first appearance: short looks (hair color, hairstyle, eye color, build, clothes); otherwise \"\"","gender":"남성/여성"}]. If nobody speaks, [].
 - Never put the protagonist in talk. Do not repeat the lines inside narration.
 - talk "aff": how this character's feelings toward the protagonist changed in this scene ("크게 오름", "오름", "약간 오름", "없음", "약간 내림", "내림", "크게 내림"). Helping, gifts, sincerity raise it; lying, harm, rudeness lower it. For a first appearance also give "age" (number) and "job" (e.g. "시장 생선 장수", "7급 해결사"). Rewrite job only when a known character's job changes (promotion, new job, retirement).
@@ -1302,7 +1304,7 @@ You are the narrator of a text RPG.
 [Dialogue] Short spoken lines, 1-2 sentences. Speech level fits age and relationship (in Korean: parents use 반말 to kids, strangers use 존댓말).
 [Looks] Read the [외모] text and let that impression affect people's reactions and events.
 [Romance] Up to 15 innocent liking only; 16-17 innocent dating between 16-17 peers only (nothing sexual); adults never with minors; 18+ may date.
-[Talk] When another character speaks, 1-3 entries in talk: {"who":"the character's real name (e.g. 한서진, 마르코 벨리니). Never labels like '새 친구', '이웃 주민', '낯선 사내'; give a name even if unknown to the protagonist","say":"short spoken line, no quotes","act":"short action while speaking","look":"looks, first appearance only","gender":"남성/여성","age":"age number, first appearance only","job":"job, first appearance only","aff":"change in liking toward the protagonist (없음/오름/내림/크게 오름/크게 내림)"}. Never put the protagonist in talk, and do not repeat the lines in narration. If the player speaks to someone, they must answer via talk. Keep gender, age, job and #personality from [아는 사람]; never repeat earlier lines. Nobody speaks = [].
+[Talk] When another character speaks or does something notable without speaking (then "say":"" and the action in "act"), 1-3 entries in talk: {"who":"the character's real name (e.g. 한서진, 마르코 벨리니). Never labels like '새 친구', '이웃 주민', '낯선 사내'; give a name even if unknown to the protagonist","say":"short spoken line, no quotes","act":"short action while speaking","look":"looks, first appearance only","gender":"남성/여성","age":"age number, first appearance only","job":"job, first appearance only","aff":"change in liking toward the protagonist (없음/오름/내림/크게 오름/크게 내림)"}. Never put the protagonist in talk, and do not repeat the lines in narration. If the player speaks to someone, they must answer via talk. Keep gender, age, job and #personality from [아는 사람]; never repeat earlier lines. Nobody speaks = [].
 [Missions] If the player accepts someone's favor or order in this scene, quest_add "giver/task/reward" (e.g. "한서진/잃어버린 고양이 찾기/5만안"). When a task in [미션] is finished, quest_clear with the task text. When the protagonist reports a 완료 task to its giver, the giver pays: quest_reward with the giver's name (do not put that money in ahn). Otherwise "".
 [Special status] If fields like [혈귀], [뒤틀림], [心], [발톱], [엄지], [검지], [중지], [약지], [소지], [별의 이름], [라만차랜드], [워프열차] exist, reflect them. Grades, ranks, Colors and Star names are decided by the game; never change them.
 [Fields] Changes as Korean words: hp/sp/en/rep "없음/약간 감소/감소/크게 감소/약간 회복/회복/크게 회복"; ahn "없음/조금 씀/씀/많이 씀/조금 벎/벎/많이 벎"; str/def/spd/int "없음/오름/내림"; days "없음/하루/며칠/일주일/한 달/몇 달"; time (within the day) "잠깐/한 시간/몇 시간/반나절/밤새". If the player wrote a duration or time passed in the scene, reflect it in days/time. options: always "". tag_add/tag_remove: "Korean category:content" or "". shop: true only if the player chose to go into a workshop in this scene (an event bringing one near is false).
@@ -2836,7 +2838,7 @@ function stateSummary(local){
   const recent = S.log.filter(e => e.t === "narr" || e.t === "me").slice(local ? [-3, -2, -2, -1][T] : -10);
   const cut = local ? [400, 260, 160, 120][T] : 900;
   /* 서술마다 그때 누가 무슨 말을 했는지도 같이(맥락: '그거', '그 사람'이 무엇인지) */
-  const talkTxt = e => (e.talk || []).length ? " / 대사: " + e.talk.map(t => `${t.who}: "${t.say}"`).join(" ") : "";
+  const talkTxt = e => (e.talk || []).length ? " / 대사: " + e.talk.map(t => t.say ? `${t.who}: "${t.say}"` : `${t.who}(${t.act})`).join(" ") : "";
   if(recent.length) lines.push("[최근 상황] (위가 오래된 것, 맨 아래가 바로 직전)\n" + recent.map(e => { const ago = e.day != null ? S.days - e.day : 0; return (ago >= 2 ? `(${agoText(ago)}) ` : "") + (e.t === "me" ? "플레이어: " : "서술: ") + (e.text.length > cut ? "…" + e.text.slice(-cut) : e.text) + (e.t === "narr" && !local ? talkTxt(e) : ""); }).join("\n"));
   return lines.join("\n");
 }
@@ -2989,8 +2991,8 @@ function normalizeNarr(j, statCap){
   n.options = parseOptions(j.options);
   n.shop = j.shop === true || j.shop === "true";
   n.merit = j.merit == null ? 0 : num(wordAmount(j.merit, "gauge"), -30, 30);
-  n.talk = (Array.isArray(j.talk) ? j.talk : []).filter(t => t && t.who && t.say).slice(0, 4).map(t => ({
-    who:String(t.who).slice(0, 20).trim(), say:String(t.say).replace(/^["“”']+|["“”']+$/g, "").slice(0, 200).trim(),
+  n.talk = (Array.isArray(j.talk) ? j.talk : []).filter(t => t && t.who && (t.say || t.act)).slice(0, 4).map(t => ({
+    who:String(t.who).slice(0, 20).trim(), say:String(t.say || "").replace(/^["“”']+|["“”']+$/g, "").slice(0, 200).trim(),
     act:String(t.act || "").slice(0, 80).trim(), look:String(t.look || "").slice(0, 80).trim(), gender:/여/.test(t.gender || "") ? "여성" : /남/.test(t.gender || "") ? "남성" : "", outfit:/^(없음|)$/.test(String(t.outfit || "").trim()) ? "" : String(t.outfit).slice(0, 80).trim(),
     aff:t.aff == null ? null : wordLevel(t.aff), age:/^\d{1,3}$/.test(String(t.age || "").trim()) ? +String(t.age).trim() : null,
     job:/^(없음|모름|)$/.test(String(t.job || "").trim()) ? "" : String(t.job).slice(0, 30).trim()}));
@@ -3203,8 +3205,8 @@ function talkNode(t){
   const body = el("div", "talk-body");
   const head = el("div", "talk-who", t.who + (t.rel ? ` · ${t.rel}` : ""));
   body.appendChild(head);
-  if(t.act) body.appendChild(el("div", "talk-act", t.act));
-  body.appendChild(el("div", "talk-say", `“${t.say}”`));
+  if(t.act) body.appendChild(el("div", "talk-act" + (t.say ? "" : " only"), t.act));
+  if(t.say) body.appendChild(el("div", "talk-say", `“${t.say}”`));
   if(t.look) body.title = t.look;
   row.append(pic, body);
   return row;
@@ -3396,7 +3398,7 @@ function registerSpeaker(t){
   const r = personOf(t.who, {gender, look, age:t.age, job:t.job});
   if(t.job && t.job !== r.job) r.job = t.job;          /* 일이 바뀌었으면(승진·이직) 새로 */
   r.gender = r.gender || gender; r.look = r.look || look;
-  r.n = (r.n || 0) + 1; r.last = S.days; r.say = String(t.say || "").slice(0, 50);
+  r.n = (r.n || 0) + 1; r.last = S.days; if(t.say) r.say = String(t.say).slice(0, 50);
   if(t.aff) bumpAff(t.who, t.aff);
   else if(r.n > 1 && rnd(3) === 0) r.aff = clamp(r.aff + 1, -100, AFF_MAX);   /* 자주 보면 조금씩 익숙해진다 */
   trimPeople();
@@ -3619,7 +3621,7 @@ function applyNarr(n, forcedDays, shownDays){
   if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; bump("outfit"); log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
   for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
   for(const pr of String(n.npcOutfit || "").split(/\s*;\s*/)){ const [w, o] = pr.split("/"); if(w && o) setOutfit(w.trim(), o.trim()); }
-  const talk = (n.talk || []).filter(t => t && t.who && t.say && !isPlayerTalk(t)).map(t => registerSpeaker(t));
+  const talk = (n.talk || []).filter(t => t && t.who && (t.say || t.act) && !isPlayerTalk(t)).map(t => registerSpeaker(t));
   if(talk.length) n.narration = dedupeTalk(n.narration, talk);
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
   for(const q of qNotes) log({t:"sys", text:q});
@@ -3922,7 +3924,7 @@ function notePeople(talk){
   for(const t of talk || []){
     if(!t || !t.who || isPlayerTalk(t)) continue;
     const p = S.people[t.who] || (S.people[t.who] = {n:0, first:S.days});
-    p.n++; p.last = S.days; p.say = String(t.say || "").slice(0, 50); if(t.gender) p.g = t.gender;
+    p.n++; p.last = S.days; if(t.say) p.say = String(t.say).slice(0, 50); if(t.gender) p.g = t.gender;
   }
   /* 너무 많으면 오래 안 본 사람부터 */
   const ks = Object.keys(S.people); if(ks.length > 60){ ks.sort((a, b) => (S.people[a].last || 0) - (S.people[b].last || 0)); for(const k of ks.slice(0, ks.length - 60)) delete S.people[k]; }
