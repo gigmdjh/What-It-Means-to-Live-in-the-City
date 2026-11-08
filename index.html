@@ -8005,13 +8005,14 @@ function drawSprite(cv, opt){
       /* PNG는 변환 도구가 생성한 정적 RGBA 픽셀 데이터로만 표시한다. */
       const sprite = WEAPON_PIXEL_DATA && WEAPON_PIXEL_DATA.tiantui;
       if(sprite && sprite.width === 32 && sprite.height === 32){
-        const imageData = ctx.createImageData(sprite.width, sprite.height);
-        imageData.data.set(sprite.rgba);
-        const pixelCanvas = document.createElement("canvas");
-        pixelCanvas.width = sprite.width; pixelCanvas.height = sprite.height;
-        pixelCanvas.getContext("2d").putImageData(imageData, 0, 0);
+        if(!sprite.canvas){
+          const imageData = new ImageData(sprite.rgba, sprite.width, sprite.height);
+          sprite.canvas = document.createElement("canvas");
+          sprite.canvas.width = sprite.width; sprite.canvas.height = sprite.height;
+          sprite.canvas.getContext("2d").putImageData(imageData, 0, 0);
+        }
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(pixelCanvas, hx-16, hy-26);
+        ctx.drawImage(sprite.canvas, hx-16, hy-26);
       }else{
         sword(23,3,"#454a54",5,{curve:true,guardCol:"#b58b43",gripCol:"#292b31",fuller:true});
         box(hx+2,hy-21,4,5,"#292c33");box(hx+3,hy-20,3,3,"#737984");box(hx+3,hy-19,2,1,"#d2a34c");
