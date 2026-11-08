@@ -3216,7 +3216,11 @@ function applyTags(add, remove){
     /* 추출 E.G.O 무기는 지닌 인물을 만났을 때만 얻을 수 있다 */
     if(a.startsWith("에고 무기:")){ const w = egoOf(a.slice(6).trim()); if(!w || !(S.met || []).some(m => m.name === w[3])) continue; }
     S.tags.push(a); S.tagAt[a] = S.days; changed.push("+" + a);
-    if(a.startsWith("에고 무기:")) grantItem("ego:" + a.slice(6).trim(), true);
+    if(a.startsWith("에고 무기:")) {
+      const egoName = a.slice(6).trim();
+      grantItem("ego:" + egoName, true);
+      if(egoName === "사랑과 증오의 이름으로") grantItem("queen-ego-suit", false);
+    }
     if(/^(인연|사망|소속|자격|조직|견습|공무원|협회|소속 사무소|사무소|고용|혈귀|토벌|에고 무기|환상체 제압|빚|부상)/.test(a)) chron(a);
   }
   /* 오래된 태그부터 지우되 추출 E.G.O 무기는 남긴다 */
