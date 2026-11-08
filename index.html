@@ -1124,10 +1124,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.4.3"></script>
+<script src="parts.js?v=20261108-1.4.4"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.4.3";
+const BUILD = "20261108-1.4.4";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1625,7 +1625,8 @@ const FAMOUS_RAW = `앤젤라|라오루|도서관|도서관 관장. 예전 L사�
 에이해브|림버스|피쿼드호|작살잡이 무리를 이끄는 선장|4|street
 넬리|림버스|-|림버스 이야기에 나오는 인물|3|street
 동백|림버스|-|L사의 추출 E.G.O 무기를 지닌 인물|3|street
-마릴|림버스|-|L사의 추출 E.G.O 무기를 지닌 인물|3|street`;
+마릴|림버스|-|L사의 추출 E.G.O 무기를 지닌 인물|3|street
+저주의 여왕|로보토미|환상체|사랑과 정의를 외치는 마법소녀의 모습을 한 WAW급 환상체. 악당이 사라지면 자신이 존재할 이유도 잃는다고 믿는다|4|street`;
 const FAMOUS = FAMOUS_RAW.split("\n").map(l => { const [name, game, org, desc, pow, where] = l.split("|"); return {name, game, org, desc, pow:+pow || 2, where}; });
 /* 받침에 맞는 조사: jo('게부라','이','가') → 게부라가 */
 const jo = (w, a, b) => { const c = String(w).charCodeAt(String(w).length - 1) - 0xAC00; return w + (c >= 0 && c <= 11171 && c % 28 ? a : b); };
@@ -1641,7 +1642,8 @@ const EGO_WEAPONS = [
   ["등불", "WAW", "큰 새", "호엔하임"],
   ["회절", "WAW", "차원굴절 변이체", "호엔하임"],
   ["여우비", "TETH", "", "동백"],
-  ["붉은 시트", "TETH", "", "마릴"]
+  ["붉은 시트", "TETH", "", "마릴"],
+  ["사랑과 증오의 이름으로", "WAW", "저주의 여왕", "저주의 여왕"]
 ];
 const EGO_BONUS = {ZAYIN:1, TETH:2, HE:3, WAW:4, ALEPH:5};
 const egoOf = n => EGO_WEAPONS.find(w => w[0] === n);
@@ -6547,6 +6549,7 @@ const ITEMS = [
   {id:"crystalcoat", slot:"armor", name:"수정 섬유 망토", shop:"크리스탈 아틀리에", fx:{def:6, int:2}, price:40000000, age:20, look:"#a9c8e0"},
   {id:"plate", slot:"armor", name:"중장갑 흉갑", shop:"휠스 인더스트리", fx:{def:9, spd:-2}, price:55000000, age:22, look:"#6d727b"},
   {id:"colorcoat", slot:"armor", name:"특색의 코트를 본뜬 맞춤 코트", shop:"이름난 공방", fx:{def:8, spd:1}, price:120000000, age:25, look:"#3b2a4a"},
+  {id:"queen-ego-suit", slot:"armor", name:"사랑과 증오의 이름으로 (의상)", shop:"추출 E.G.O · 저주의 여왕", fx:{def:4, spd:2, int:2}, price:0, age:0, look:"#f4b6d2", ego:"WAW", hidden:true},
   {id:"uarm", slot:"arm", name:"보급형 의수", shop:"유니온 공방", fx:{str:2}, price:2500000, age:16, union:true},
   {id:"karm", slot:"arm", name:"냉각 의수", shop:"코오리 공방", fx:{str:3, def:1}, price:14000000, age:18},
   {id:"sarm", slot:"arm", name:"N7 전투 의수", shop:"슈바르츠 인더스트리", fx:{str:5}, price:30000000, age:18},
@@ -6575,8 +6578,8 @@ const ITEMS = [
   {id:"ubody", slot:"body", name:"피하 장갑판", shop:"유니온 공방", fx:{def:3}, price:6000000, age:16, union:true}
 ];
 /* 추출 E.G.O 무기: 상점에 없고, 지닌 인물에게서 얻으면 인벤토리에 들어온다 */
-const EGO_FX = {"미미크리(시제품)":{str:8, def:1}, "다 카포":{str:7, int:2}, "스마일":{str:9, spd:-1}, "저스티티아":{str:7, spd:2}, "등불":{str:5, def:1}, "회절":{str:5, spd:1}, "여우비":{str:3, def:1}, "붉은 시트":{str:3, int:1}};
-const EGO_LOOK = {"미미크리(시제품)":"greatsword", "다 카포":"blade", "스마일":"hammer", "저스티티아":"sword", "등불":"mace", "회절":"blade", "여우비":"blade", "붉은 시트":"knife"};
+const EGO_FX = {"미미크리(시제품)":{str:8, def:1}, "다 카포":{str:7, int:2}, "스마일":{str:9, spd:-1}, "저스티티아":{str:7, spd:2}, "등불":{str:5, def:1}, "회절":{str:5, spd:1}, "여우비":{str:3, def:1}, "붉은 시트":{str:3, int:1}, "사랑과 증오의 이름으로":{str:7, spd:3, int:2}};
+const EGO_LOOK = {"미미크리(시제품)":"greatsword", "다 카포":"dacapo", "스마일":"smile", "저스티티아":"justitia", "등불":"lamp", "회절":"diffraction", "여우비":"foxrain", "붉은 시트":"redsheet", "사랑과 증오의 이름으로":"queenswand"};
 for(const w of EGO_WEAPONS) ITEMS.push({id:"ego:" + w[0], slot:"weapon", name:w[0], shop:"추출 E.G.O · " + w[3] + "에게서", fx:EGO_FX[w[0]] || {str:4}, price:0, age:0, look:EGO_LOOK[w[0]] || "sword", ego:w[1], hidden:true});
 /* 웹·위키 참고 무기: 천퇴성도. 기본 상점에는 노출하지 않고 관리자 지급·주문 제작에서 활용한다. */
 ITEMS.push({id:"tiantui", slot:"weapon", name:"천퇴성도", shop:"유물 · 천퇴성", fx:{str:12, spd:3}, price:0, age:0, look:"tiantui", hidden:true});
@@ -7317,7 +7320,8 @@ const ARMOR_VISUALS = {
  cinqsuit:{otype:"suit",outer:"cape",color:"#243a63",outerColor:"#e6e0d2",pants:"#252a36",inner:"#efede6"},
  oldboys:{otype:"overall",btype:"overall",color:"#5b5348",pants:"#454036"},
  crystalcoat:{outer:"cape",outerColor:"#7896b3",pants:"#3a4859"},plate:{outer:"jacket",outerColor:"#515761",pants:"#3d424b"},
- colorcoat:{outer:"coat",outerColor:"#30213e",pants:"#302a38"}
+ colorcoat:{outer:"coat",outerColor:"#30213e",pants:"#302a38"},
+ "queen-ego-suit":{otype:"dress",btype:"skirt",color:"#f7c4dc",outer:"cape",outerColor:"#ed8db7",pants:"#f5dbe7",inner:"#fff5fa"}
 };
 const AUGMENT_VISUALS = {
  uarm:{base:"#a9b3c1",seam:"#687482"},karm:{base:"#899eae",seam:"#42d4d0"},sarm:{base:"#626b78",seam:"#d14b3d"},
@@ -7351,7 +7355,7 @@ function drawSprite(cv, opt){
   const BT = armor ? (armorVisual.btype || "pants") : baby ? "pants" : (tr.btype || "pants");
   const pants = baby ? "#e8dcc0" : armor ? (armorVisual.pants || (OT === "suit" ? "#26282f" : shade(outfit, 0.72))) : tr.pants || (OT === "overall" || OT === "track" ? outfit : OT === "suit" || OT === "uniform" ? shade(outfit, 0.85) : OT === "school" ? "#2c3346" : "#4a4a55");
   const OUTER = armor ? (armorVisual.outer || null) : baby ? null : tr.outer;
-  const dress = !armor && !baby && (OT === "dress" || OT === "nurse"), coat = !armor && !baby && (["coat", "trench", "labcoat"].includes(OUTER) || OT === "priest");
+  const dress = !baby && (armor ? OT === "dress" : (OT === "dress" || OT === "nurse")), coat = !armor && !baby && (["coat", "trench", "labcoat"].includes(OUTER) || OT === "priest");
   const skinDefault = tr.skin === "#e9c6a8";
   const skinT = hexRGB(tr.skin), skinB = B.skin;
   const OUT = hexRGB(outfit), PANT = hexRGB(pants), SHOE = [43, 39, 48], METAL = [169, 179, 193], SOCK = [236, 232, 224];
@@ -7748,6 +7752,20 @@ function drawSprite(cv, opt){
       box(xL,yT+1,2,2,"#9ba3ad");box(xR-1,yT+1,2,2,"#9ba3ad");
       box(mid-1,yT+2,3,2,"#424852");box(mid,yT+2,1,1,"#c3c8d0");
     }
+    if(armor.id==="queen-ego-suit"){
+      /* 저주의 여왕: 분홍 마법소녀 원피스, 흰 프릴과 금색 장식 */
+      box(xL,yT+1,2,2,"#fff4fa");box(xR-1,yT+1,2,2,"#fff4fa");
+      box(mid-2,yT+1,5,Math.max(2,Math.round((yB-yT)*0.42)),"#f7c4dc");
+      box(mid-1,yT+2,3,Math.max(1,Math.round((yB-yT)*0.28)),"#fff5fa");
+      box(mid,yT+3,1,1,"#e6bd4c");box(mid-1,yT+5,3,1,"#e6bd4c");
+      box(xL,yB-1,2,1,"#fff5fa");box(xR-1,yB-1,2,1,"#fff5fa");
+      box(mid-1,yB-2,3,1,"#f5e4f0");
+    }
+  }
+  if(armor && armor.id === "queen-ego-suit"){
+    /* 작은 왕관과 하트 장식 */
+    box(hcx-3,hairTop-2,7,1,"#e6bd4c");box(hcx-2,hairTop-4,1,2,"#f8d96b");box(hcx,hairTop-5,1,3,"#fff1a8");box(hcx+2,hairTop-4,1,2,"#f8d96b");
+    box(hcx+4,hairTop+2,2,2,"#ed78ad");box(hcx+5,hairTop+1,1,1,"#fff1a8");
   }
   if(tr.glasses){
     const gc = tr.glassColor, lw = emx - ex0, rw = ex1 - emx, gh = ey1 - ey0 + 2;
@@ -7864,7 +7882,65 @@ function drawSprite(cv, opt){
       grip(3, opt.gripCol);
       box(hx, hy + 4, Math.min(2, wid), 1, opt.guardCol || "#c09a3a");                        /* 칼자루 끝 */
     };
-    if(L === "arayashiki" || w.name === "천살성도 - 아라야시키"){
+    if(w.name === "사랑과 증오의 이름으로" || L === "queenswand"){
+      /* 저주의 여왕: 분홍 지팡이, 금색 별, 흰 날개와 하트 보석 */
+      box(hx+1,hy-18,2,22,"#ed78ad");box(hx+2,hy-18,1,21,"#fff0f7");
+      box(hx-2,hy-22,8,2,"#e6bd4c");box(hx,hy-24,4,2,"#f8d96b");box(hx+1,hy-26,2,2,"#fff1a8");
+      box(hx-1,hy-21,2,2,"#fff5fa");box(hx+4,hy-21,2,2,"#fff5fa");
+      box(hx+1,hy-20,3,3,"#d94d91");box(hx+2,hy-19,1,1,"#fff5fa");
+      box(hx-2,hy-17,2,2,"#f4a6ca");box(hx+4,hy-17,2,2,"#f4a6ca");
+    }
+    else if(w.name === "다 카포" || L === "dacapo"){
+      /* 다 카포: 지휘자의 검은 지팡이와 은백색 낫날 */
+      box(hx+1,hy-21,2,27,"#252733");box(hx+2,hy-21,1,25,"#8792a5");
+      box(hx-3,hy-24,7,2,"#d9e0ea");box(hx-4,hy-23,2,3,"#d9e0ea");box(hx+3,hy-25,3,2,"#f5f7fb");
+      box(hx+4,hy-23,3,2,"#aab4c5");box(hx+6,hy-22,2,2,"#252733");
+      box(hx-2,hy-18,2,2,"#7c8da8");box(hx+5,hy-14,1,1,"#d9e0ea");box(hx-3,hy-9,1,1,"#d9e0ea");
+    }
+    else if(w.name === "스마일" || L === "smile"){
+      /* 스마일: 시체의 얼굴들이 박힌 살점 망치와 크게 벌어진 입 */
+      box(hx-4,hy-20,10,9,"#6e333b");box(hx-3,hy-19,8,7,"#a84953");box(hx-2,hy-18,6,5,"#d06a70");
+      box(hx-1,hy-16,5,2,"#21191f");box(hx,hy-15,3,1,"#f1d8c8");box(hx,hy-14,3,1,"#f1d8c8");
+      box(hx-2,hy-18,2,2,"#f0d8c5");box(hx-2,hy-18,1,1,"#27252b");box(hx+3,hy-18,2,2,"#f0d8c5");box(hx+4,hy-18,1,1,"#27252b");
+      box(hx+1,hy-11,2,17,"#493036");box(hx,hy+4,4,2,"#6e333b");
+    }
+    else if(w.name === "저스티티아" || L === "justitia"){
+      /* 저스티티아: 검은 검신에 감긴 흰 붕대와 금빛 저울형 가드 */
+      sword(22,3,"#17191f",5,{fuller:true,guardCol:"#d7b34d",gripCol:"#27262c"});
+      for(const [yy,xx] of [[hy-20,0],[hy-16,1],[hy-12,0],[hy-8,1],[hy-4,0]]){
+        box(hx+xx,yy,4,1,"#e8e8e2");box(hx+xx+1,yy+1,2,1,"#9ea4ad");
+      }
+      box(hx-4,hy-1,3,1,"#e6c55a");box(hx+3,hy-1,3,1,"#e6c55a");
+      box(hx-3,hy-3,2,2,"#d7b34d");box(hx+3,hy-3,2,2,"#d7b34d");
+    }
+    else if(w.name === "등불" || L === "lamp"){
+      /* 등불: 검은 철제 등롱과 여러 개의 노란 눈 */
+      box(hx-3,hy-20,7,1,"#c49b37");box(hx-2,hy-19,5,8,"#25262d");box(hx-1,hy-18,3,6,"#e4ad35");
+      box(hx-2,hy-17,1,1,"#fff0a0");box(hx+1,hy-16,1,1,"#fff0a0");box(hx,hy-14,1,1,"#fff0a0");box(hx+2,hy-13,1,1,"#fff0a0");
+      box(hx-3,hy-11,7,1,"#c49b37");box(hx,hy-10,1,16,"#25262d");box(hx-2,hy+4,5,2,"#c49b37");
+    }
+    else if(w.name === "회절" || L === "diffraction"){
+      /* 회절: 눈에 보이지 않는 무기를 프리즘 같은 굴절 파편으로 표현 */
+      box(hx,hy-20,1,25,"#b9efff");box(hx-2,hy-18,2,4,"#6ce5f1");box(hx+2,hy-15,2,4,"#b58cff");
+      box(hx-3,hy-11,2,3,"#e9f9ff");box(hx+3,hy-8,2,3,"#5b9eff");box(hx-1,hy-5,3,2,"#d8c7ff");
+      box(hx+1,hy-23,2,2,"#e9f9ff");box(hx-2,hy-2,2,2,"#7be9ee");
+    }
+    else if(w.name === "여우비" || L === "foxrain"){
+      /* 여우비: 여우비의 우산살과 빗방울이 달린 짙은 남색 우산 */
+      box(hx-4,hy-20,9,1,"#28334d");box(hx-3,hy-21,7,1,"#465779");box(hx-2,hy-22,5,1,"#687da0");
+      box(hx-4,hy-19,2,2,"#28334d");box(hx+3,hy-19,2,2,"#28334d");box(hx-1,hy-19,3,2,"#28334d");
+      box(hx,hy-18,1,23,"#5b6476");box(hx,hy+4,3,2,"#343b4c");
+      box(hx-4,hy-15,1,2,"#9db7d9");box(hx+4,hy-13,1,2,"#9db7d9");box(hx+2,hy-8,1,2,"#9db7d9");
+    }
+    else if(w.name === "붉은 시트" || L === "redsheet"){
+      /* 붉은 시트: 검은 칼날과 붉은 부적 종이, 휘감긴 천 */
+      sword(20,2,"#333039",4,{fuller:true,guardCol:"#8f343b",gripCol:"#33272c"});
+      for(const [yy,xx] of [[hy-20,-2],[hy-15,3],[hy-10,-1],[hy-6,3]]){
+        box(hx+xx,yy,3,4,"#bd4748");box(hx+xx,yy,1,3,"#f0d6a4");box(hx+xx+1,yy+1,1,1,"#7c2830");
+      }
+      box(hx-2,hy-2,6,2,"#6f333b");box(hx-1,hy-1,4,1,"#d4b58a");
+    }
+    else if(L === "arayashiki" || w.name === "천살성도 - 아라야시키"){
       /* 천살성도 - 아라야시키: 희고 투명한 대태도, 봉인된 칼집과 불멸의 붉은 검흔 */
       sword(29,4,"#dce8e8",7,{fuller:true,guardCol:"#bfc8cc",gripCol:"#34353b"});
       box(hx+1,hy-27,1,22,"#f8ffff");box(hx+2,hy-23,1,17,"#b9dce2");
@@ -8276,7 +8352,7 @@ const CUSTOM_TIERS = [
   {ko:"이름난 공방", pts:12, price:15000000, age:18, days:7},
   {ko:"명장의 공방", pts:20, price:50000000, age:20, days:14},
   {ko:"전설의 장인", pts:30, price:150000000, age:22, days:30}];
-const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷", tiantui:"천퇴성도", arayashiki:"천살성도 - 아라야시키", tianjiu:"천구성도", dihui:"지혜성도"};
+const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷", tiantui:"천퇴성도", arayashiki:"천살성도 - 아라야시키", tianjiu:"천구성도", dihui:"지혜성도", queenswand:"사랑과 증오의 이름으로"};
 const CUSTOM_SLOTS = {weapon:"무기", armor:"방어구", arm:"의수", leg:"의족", eye:"의안", body:"신체 장갑"};
 let customDraft = {slot:"weapon", tier:0, name:"", look:"sword", color:"#4a4f5e", fx:{str:6, def:0, spd:0, int:0}};
 /* 저장본에 있는 주문 장비를 장비 목록에 등록한다 */
