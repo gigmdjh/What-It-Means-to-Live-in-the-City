@@ -1096,11 +1096,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1250"></script>
+<script src="parts.js?v=20261108-1300"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1250";
+const BUILD = "20261108-1300";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1162,6 +1162,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 [0. Context first]
 - Before writing, read the bottom of [최근 상황] (the scene and dialogue just before) and work out who or what the player input refers to. Short inputs like "that", "that person", "yes", "I'll take it" continue from what the previous scene pointed at.
 - Carry over the place, people, objects and time from the previous scene. Do not move elsewhere on your own or insert new people.
+- When the protagonist is alone with one person in a private setting (a room, a home, a car, a closed office, a rooftop), nobody else shows up unless the player calls someone, leaves, or opens the door to them. No sudden visitors, knocks, phone calls or noises from outside to bring someone in. Keep the scene between the two of them.
 - Never restart a danger or event listed in [이미 끝난 일] (already finished) in the same form. Past events in memory are past.
 - Always read [현재 장소] (current place) and [때] (time). The scene starts in that place at that time (dark at night, inside if at home). If the player did not move, do not start somewhere else. If they moved, put the new place in location; otherwise repeat the current place.
 
@@ -1273,6 +1274,7 @@ You are the narrator of a text RPG.
 [Abilities] Never write stats as numbers, ratios or grades ("평균의 1.5배", "힘 45"). Show them as impressions or reactions ("당신의 그 모습은 꽤나 강해 보이는군요.").
 [Protagonist] Never invent actions, speech, thoughts or feelings the player did not input (never write the player's lines). Text in quotes is what the protagonist actually said; use it as is. Never rename the protagonist ("a strange child") and make them speak. Never decide for the player.
 [Ending] Usually end on a situation to react to, with the last sentence naturally showing what the protagonist faces (no labels like "지금 무엇이 문제인지"). If told the player let it pass, end settled and quiet.
+[Private scenes] Alone with one person in a private place: no one else appears unless the player calls someone, leaves, or lets them in (no sudden visitors, knocks or calls).
 [Time] After days or months, small things like food and wrappers are gone and light wounds have healed. Do not continue an old scene as if it were now.
 [Dialogue] Short spoken lines, 1-2 sentences. Speech level fits age and relationship (in Korean: parents use 반말 to kids, strangers use 존댓말).
 [Looks] Read the [외모] text and let that impression affect people's reactions and events.
@@ -2576,6 +2578,7 @@ function plainContext(){
   lines.push(`주인공: ${S.name}, ${S.gender}, ${y}세(${stage(y)}). 외모: ${curLook() || "평범함"}.`);
   lines.push(`곳: ${corpOf(S.district)} 구역 ${S.location || originKo(S.origin)}. 때: ${timeText()}. 집안 형편: ${wealthText()}.`);
   lines.push(backNight() ? "지금은 뒷골목의 밤이다. 거리는 칠흑같이 어둡고 청소부가 거리를 쓴다." : "청소부는 지금 나오지 않는다. 등장시키지 마라.");
+  { const pv = privateWith(); if(pv) lines.push(`지금 주인공은 ${pv}와(과) 단둘이 있다. 다른 사람을 갑자기 등장시키지 마라.`); }
   if(S.family.length) lines.push(`가족: ${familyText()}.`);
   const eqT = equipText(); if(eqT && eqT !== "없음") lines.push(`지닌 것: ${eqT}.`);
   if((S.inv || []).length) lines.push(`가방: ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")}.`);
@@ -2779,6 +2782,7 @@ function stateSummary(local){
   lines.push(`[장비] ${equipText()}`);
   if((S.inv || []).length) lines.push(`[가방] ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")} (갈아 낄 수 있는 무기·방어구)`);
   { const qs = questState(); if(qs) lines.push(qs); }
+  { const pv = privateWith(); if(pv) lines.push(`[둘만의 자리] 지금 주인공은 ${pv}와(과) 단둘이 있다. 플레이어가 누군가를 부르거나, 밖으로 나가거나, 문을 열어 주지 않는 한 다른 인물을 등장시키지 마라(갑자기 들어오는 사람, 노크, 전화, 문밖의 소리, 지나가던 사람 모두 금지). 장면은 두 사람 사이의 일로만 이어 가라.`); }
   lines.push(`[가족] ${familyText()}`);
   { const fp = S.family.filter(f => f.alive).map(f => { if(!f.persona) f.persona = rollPersona(); return `${f.name}: #${f.persona.join(" #")}`; }); if(fp.length) lines.push(`[가족 성격] ${fp.join(" / ")}`); }
   const bonds = S.tags.filter(t => /^인연:/.test(t)).map(t => t.slice(3));
@@ -4196,6 +4200,19 @@ function appendEntry(e, live){
   }
 }
 
+/* 둘만의 자리: 최근 장면에서 말한 사람이 한 명뿐이고, 닫힌 곳이거나 '단둘이' 같은 말이 있으면 */
+const PRIVATE_RE = /(단둘|둘만|둘이서|둘이 남|방 안|방에서|방으로|안방|침실|자취방|원룸|차 안|차에 타|객실|호텔 방|병실|사무실 안|옥상|문을 잠그|문을 닫|조용한 방|집 안|집에서|집으로)/;
+const PUBLIC_RE = /(시장|거리|광장|공원|지하철역|기차역|역 앞|역 안|정류장|식당|국밥집|카페|술집|가게 안|학교|교실|체육관|공방|병원 로비|사무소 로비|파티|퍼레이드|열차)/;
+function privateWith(){
+  const narrs = []; for(let i = S.log.length - 1; i >= 0 && narrs.length < 2; i--) if(S.log[i].t === "narr") narrs.push(S.log[i]);
+  if(!narrs.length) return null;
+  const who = new Set(); for(const n of narrs) for(const t of (n.talk || [])) if(t && t.who) who.add(t.who);
+  if(who.size !== 1) return null;
+  const name = [...who][0];
+  const here = String(S.location || "") + " " + narrs.map(n => String(n.text || "").slice(-300)).join(" ") + " " + (S._lastInput || "");
+  if(PUBLIC_RE.test(String(S.location || "")) && !/(단둘|둘만|둘이서)/.test(here)) return null;
+  return PRIVATE_RE.test(here) ? name : null;
+}
 function lastNarr(){ for(let i = S.log.length - 1; i >= 0; i--) if(S.log[i].t === "narr") return S.log[i]; return null; }
 /* 그 장면 뒤에 행동·시간 흐름이 있었으면 지나간 장면 */
 function sceneOpen(e){ const i = S.log.indexOf(e); return i >= 0 && !S.log.slice(i + 1).some(x => x.t === "me" || x.t === "small"); }
@@ -4972,6 +4989,11 @@ function romanceApply(R){
   }else { r.aff = clamp(r.aff - 6, -100, 100); S.sp = gclamp("sp", S.sp - 5); bump("confessNo"); log({t:"sys", text:`💔 ${R.who}에게 거절당했다.`}); }
 }
 /* 상대가 먼저: 호감 40이면 고백, 연인이고 호감 70이면 청혼 */
+/* 둘만 있을 땐 바깥 사건이 끼어들지 않는다. 관리자 예약이나 그 사람과의 고백·청혼만 */
+function privateEvent(who){
+  if(S.adminEv){ const e = S.adminEv; S.adminEv = null; return e; }
+  const re = romanceEvent(); return re && re.endsWith(":" + who) ? re : null;
+}
 function romanceEvent(){
   if(S.distorted || S.warp || S.dead) return null;
   const pa = ageY(); if(pa < 16) return null;
@@ -5910,7 +5932,8 @@ async function doAction(input, opt = {}){
   if(aiOK){
     done = thinking("결과를 서술하는 중…");
     try{
-      ev = passive || wo ? null : (rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0));
+      S._lastInput = input; const pv = privateWith();
+      ev = passive || wo ? null : pv ? privateEvent(pv) : (rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0));
       const rl = passive && opt.danger ? `- 플레이어는 위급한 상황에 아무 대응도 하지 않았다. 그대로 두었을 때의 결과를 주사위 결과대로 그려라: ${results.map(r => `${r.text}(${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join(", ")}. 대성공이면 위협이 스스로 물러가거나 누군가 도와준다. 성공이면 큰 탈 없이 지나간다. 아슬아슬한 실패·실패면 다치거나 무언가를 잃는다. 대실패면 크게 다치거나 큰 것을 잃는다. 일이 흐지부지되지 않게 분명한 결과로 끝내고, 결과에 맞게 hp 등 수치 칸을 채워라. 새 위협은 만들지 말고 urgent는 false.` : passive ? "- 플레이어는 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 상황이 어떻게 흘러가는지(좋든 나쁘든 그럴 법한 결과) 서술하고, 그 일이 일단락된 상태로 끝내라. 이번 장면만은 '장면 끝에 반응해야 할 상황을 남기라'는 규칙을 따르지 마라: 위협은 지나가거나(포기하고 떠난다, 다른 곳으로 간다, 누군가 막아 준다) 결과가 확정되어(다치거나 빼앗기는 등) 조용히 끝난 상태로 마무리하고, 새 위협이나 새 사건을 만들지 마라. 마지막 문장은 상황이 정리된 지금의 모습이다. urgent는 false." : results.map(r => r.auto ? `- ${r.text} → 자동 성공` : `- ${r.text} (${STAT_KO[r.stat]}) → ${r.tier} (d20 ${r.d} + 보정 ${r.total - r.d} = ${r.total} / 난이도 ${r.dc})`).join("\n");
       n = normalizeNarr(await runAI((local, plain) => plain ? {sys:LORE_SHORT + "\n" + NARR_PLAIN,
         user: plainContext() + (passive && opt.danger ? `\n\n주인공은 위급한 상황에 아무 대응도 하지 않았다. 결과(이대로 그려라): ${results.map(r => r.tier).join(", ")}. 대성공은 위협이 물러감, 성공은 큰 탈 없음, 실패는 다치거나 잃음, 대실패는 크게 다침. 분명한 결과로 끝내고 새 위협은 만들지 마라.` : passive ? "\n\n주인공은 직전의 상황에 아무 반응도 하지 않고 그냥 두었다. 그대로 두었을 때 어떻게 흘러가는지 쓰고, 일이 일단락된 상태로 끝내라. 새 위협을 만들지 말고, 상황이 정리된 조용한 모습으로 끝내라." : "\n\n주인공이 하려는 것: " + (actInput || "(말만 한다)") + (sp.says.length ? "\n주인공이 한 말(그대로 말한 것, 바꾸지 말 것): " + sp.says.map(x => `"${x}"`).join(" ") : "") + "\n결과(이대로 그려라): " + results.map(r => `${r.text} → ${r.auto ? "쉽게 해냄" : r.tier}`).join(", ") + (wo ? warpPlain(wo) : plainEvent(ev)) + romanceLine(rom))}
@@ -5920,7 +5943,7 @@ async function doAction(input, opt = {}){
     }catch(e){ log({t:"sys", text:"AI 서술 실패: " + e.message}); }
     done();
   }
-  if(!aiOK && !passive && !wo) ev = rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0);
+  if(!aiOK && !passive && !wo){ S._lastInput = input; const pv = privateWith(); ev = pv ? privateEvent(pv) : rand01() < kidnapChance(input) ? "납치:시도" : rollEvent(0); }
   const fin = guardNarr(n || (passive ? (opt.danger ? dangerPassiveNarr(results) : passiveNarr()) : ruleEvent(ruleNarrate(input, results), ev)), results);
   fin.event = !!ev;
   S.awaitEvent = !!ev;
