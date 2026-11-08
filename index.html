@@ -105,10 +105,12 @@ body.in-game .game{flex:1;min-height:0;height:auto}
 .tag{font-size:.78rem;padding:2px 8px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);color:var(--fg)}
 .tag.add{color:var(--accent);border-color:var(--line);border-color:color-mix(in srgb, var(--accent) 50%, var(--line))}
 .tag.del{color:var(--muted);text-decoration:line-through}
-.e-child{border:1px solid var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:10px;max-width:560px}
+.e-child{border:1px solid var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:10px;max-width:min(560px,100%);min-width:0;box-sizing:border-box;overflow:hidden}
 .e-child .c-head{font:700 1.02rem var(--f-display)}
-.c-form{display:flex;gap:8px;flex-wrap:wrap}
-.c-form input{flex:1 1 180px;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.c-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch;min-width:0}
+.c-form input{width:100%;min-width:0;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.c-form .btn{white-space:nowrap;box-sizing:border-box}
+@media (max-width:340px){ .c-form{grid-template-columns:1fr} .c-form .btn{width:100%} }
 .hud,.status-head{display:none}
 .update-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px max(16px, env(safe-area-inset-left, 0px));margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:.88rem}
 .update-bar .btn{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink);padding:4px 12px}
@@ -764,6 +766,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
       <div class="family" id="sBonds"></div>
     </div>
     <div class="card full">
+      <div class="label">집</div>
+      <div class="note" id="sHouse"></div>
+    </div>
+    <div class="card full">
       <div class="label">미션 <span class="note" id="sQuestsN"></span></div>
       <div class="quests" id="sQuests"></div>
     </div>
@@ -844,6 +850,20 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </div>
 
 <!-- 공방 -->
+<dialog id="realty" aria-labelledby="rtTitle">
+  <form method="dialog" class="dlg">
+    <h2 id="rtTitle">부동산 중개소</h2>
+    <p class="note" id="rtMoney"></p>
+    <section><h3>지금 사는 집</h3><div id="rtNow"></div></section>
+    <div class="speed tabs" role="group" aria-label="지역">
+      <button type="button" data-rt="back" aria-pressed="true">뒷골목</button><button type="button" data-rt="nest" aria-pressed="false">둥지</button>
+    </div>
+    <div class="items" id="rtList"></div>
+    <p class="note">매매는 값을 한 번에 치르고, 월세는 보증금(월세 10달 치)을 맡기고 매달 월세를 낸다. 팔면 산 값의 90%, 월세를 빼면 보증금을 돌려받는다. 둥지 집은 둥지에서 일하거나 이름난 해결사여야 계약할 수 있다.</p>
+    <div class="row"><button class="btn" value="close">닫기</button></div>
+  </form>
+</dialog>
+
 <dialog id="shop">
   <form method="dialog" class="dlg">
     <h2>공방</h2>
@@ -886,7 +906,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
     </details>
     <details><summary>미션·사람</summary>
       <div id="adQuests"></div>
-      <div class="row"><select id="adPerson"></select><input id="adAff" type="number" min="-100" max="100" value="50" style="width:80px"><button class="btn" type="button" id="adAffGo">호감도 설정</button></div>
+      <div class="row"><select id="adPerson"></select><input id="adAff" type="number" min="-100" max="200" value="50" style="width:80px"><button class="btn" type="button" id="adAffGo">호감도 설정</button></div>
     </details>
     <details><summary>업적</summary>
       <div class="row"><button class="btn" type="button" id="adAchAll">모두 달성</button><button class="btn" type="button" id="adAchReset">모두 초기화</button></div>
@@ -1097,10 +1117,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1330"></script>
+<script src="parts.js?v=20261108-1400"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1330";
+const BUILD = "20261108-1400";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -2783,6 +2803,8 @@ function stateSummary(local){
   lines.push(`[장비] ${equipText()}`);
   if((S.inv || []).length) lines.push(`[가방] ${(S.inv || []).map(id => (itemById(id) || {}).name).filter(Boolean).join(", ")} (갈아 낄 수 있는 무기·방어구)`);
   { const qs = questState(); if(qs) lines.push(qs); }
+  lines.push(`[집] ${houseText()}${S.house ? `. 집이라고 하면 이곳이다(${homeLoc()})` : ""}${S.house && houseOf(S.house.id).safe ? ". 단단한 은신처라 뒷골목의 밤에도 안전하다" : ""}`);
+  lines.push("[부동산] 집을 사거나 월세를 구하는 계약은 게임의 부동산 창에서 한다. 서술에서 집을 사거나 이사한 것으로 처리하지 마라(돈도 빼지 마라).");
   { const pv = privateWith(); if(pv) lines.push(`[둘만의 자리] 지금 주인공은 ${pv}와(과) 단둘이 있다. 플레이어가 누군가를 부르거나, 밖으로 나가거나, 문을 열어 주지 않는 한 다른 인물을 등장시키지 마라(갑자기 들어오는 사람, 노크, 전화, 문밖의 소리, 지나가던 사람 모두 금지). 장면은 두 사람 사이의 일로만 이어 가라.`); }
   lines.push(`[가족] ${familyText()}`);
   { const fp = S.family.filter(f => f.alive).map(f => { if(!f.persona) f.persona = rollPersona(); return `${f.name}: #${f.persona.join(" #")}`; }); if(fp.length) lines.push(`[가족 성격] ${fp.join(" / ")}`); }
@@ -3224,7 +3246,8 @@ function isPlayerTalk(t){
 }
 /* ───────── 만난 사람 기억: 이름·성별·나이(시간에 따라 늘어남)·호감도·외모·능력치 ───────── */
 const AFF_STEP = [0, 4, 9, 16, 24];
-function affWord(a){ return a >= 70 ? "깊이 신뢰함" : a >= 40 ? "아주 호의적" : a >= 15 ? "호의적" : a > -15 ? "보통" : a > -40 ? "꺼림" : a > -70 ? "적대적" : "원수처럼 미워함"; }
+const AFF_MAX = 200;
+function affWord(a){ return a >= 150 ? "목숨처럼 아낌" : a >= 100 ? "서로 없으면 안 됨" : a >= 70 ? "깊이 신뢰함" : a >= 40 ? "아주 호의적" : a >= 15 ? "호의적" : a > -15 ? "보통" : a > -40 ? "꺼림" : a > -70 ? "적대적" : "원수처럼 미워함"; }
 /* 나이·하는 일에 맞춘 능력치(성인 평균 30) */
 function rollPersonStats(age, who, look){
   const t = String(who || "") + " " + String(look || "");
@@ -3292,7 +3315,7 @@ function personOf(name, hint){
 function bumpAff(name, lv){
   const r = personOf(name); if(!r) return;
   const d = Math.sign(lv) * AFF_STEP[Math.min(4, Math.abs(lv))];
-  r.aff = clamp(Math.round(r.aff + d), -100, 100);
+  r.aff = clamp(Math.round(r.aff + d), -100, AFF_MAX);
   return d;
 }
 /* 너무 많아지면 오래 안 본 사람부터 잊는다(인연·가족은 남긴다) */
@@ -3357,7 +3380,7 @@ function registerSpeaker(t){
   const OF = S.outfits || {};
   if(fam){
     if(fam.aff == null) fam.aff = 30;
-    if(t.aff) fam.aff = clamp(fam.aff + Math.sign(t.aff) * AFF_STEP[Math.min(4, Math.abs(t.aff))], -100, 100);
+    if(t.aff) fam.aff = clamp(fam.aff + Math.sign(t.aff) * AFF_STEP[Math.min(4, Math.abs(t.aff))], -100, AFF_MAX);
     if(!fam.stats) fam.stats = rollPersonStats(famAge(fam), fam.rel, fam.look);
     return {who:fam.name, rel:fam.rel, say:t.say, act:t.act || "", look:lookWithOutfit(fam.look || "", OF[fam.name] || OF[t.who]), gender:fam.gender, age:famAge(fam)};
   }
@@ -3373,7 +3396,7 @@ function registerSpeaker(t){
   r.gender = r.gender || gender; r.look = r.look || look;
   r.n = (r.n || 0) + 1; r.last = S.days; r.say = String(t.say || "").slice(0, 50);
   if(t.aff) bumpAff(t.who, t.aff);
-  else if(r.n > 1 && rnd(3) === 0) r.aff = clamp(r.aff + 1, -100, 100);   /* 자주 보면 조금씩 익숙해진다 */
+  else if(r.n > 1 && rnd(3) === 0) r.aff = clamp(r.aff + 1, -100, AFF_MAX);   /* 자주 보면 조금씩 익숙해진다 */
   trimPeople();
   return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(r.look, OF[t.who]), gender:r.gender, age:npcAge(r)};
 }
@@ -3605,6 +3628,97 @@ function applyNarr(n, forcedDays, shownDays){
   checkDeath();
 }
 
+/* ───────── 집 ─────────
+   부동산 중개소에 찾아가면 창이 열린다. 매매(한 번에 값을 치름) 또는 월세(보증금 + 매달 월세).
+   18세부터 계약할 수 있다. 둥지 집은 둥지에서 일하거나(날개 직원·협회 직원) 3급 이상 해결사·특색이어야 한다. */
+const HOUSES = [
+  {id:"bsemi", area:"back", name:"반지하 원룸", price:28000000, rent:220000, upkeep:60000, desc:"창문 반이 길바닥에 걸린 방 한 칸. 비 오는 날엔 물이 샌다."},
+  {id:"bgoshi", area:"back", name:"고시원 방", price:0, rent:280000, upkeep:0, desc:"침대와 책상이 겨우 들어가는 방. 공용 부엌과 화장실.", rentOnly:true},
+  {id:"broom", area:"back", name:"골목 원룸", price:65000000, rent:400000, upkeep:90000, desc:"골목 안쪽 낡은 건물 3층. 볕이 조금 든다."},
+  {id:"btwo", area:"back", name:"연립 투룸", price:120000000, rent:650000, upkeep:150000, desc:"방 두 칸과 작은 부엌. 가족이 살 만하다."},
+  {id:"bhouse", area:"back", name:"골목 단독주택", price:240000000, rent:1000000, upkeep:250000, desc:"작은 마당이 딸린 2층 집. 뒷골목에선 꽤 번듯하다."},
+  {id:"bshop", area:"back", name:"상가 딸린 건물", price:520000000, rent:0, upkeep:400000, desc:"1층 가게를 세 주고 위층에 산다. 매달 세가 들어온다.", income:900000},
+  {id:"bsafe", area:"back", name:"요새 같은 은신처", price:850000000, rent:0, upkeep:700000, desc:"철문과 방탄 유리, 비상 통로. 뒷골목의 밤에도 마음 놓고 잔다.", safe:true},
+  {id:"noffi", area:"nest", name:"둥지 오피스텔", price:450000000, rent:1500000, upkeep:300000, desc:"깨끗한 복도와 경비원. 창밖으로 날개의 탑이 보인다."},
+  {id:"napt", area:"nest", name:"둥지 아파트", price:1300000000, rent:2800000, upkeep:600000, desc:"방 세 칸에 넓은 거실. 둥지 사람들의 평범한 집."},
+  {id:"nvilla", area:"nest", name:"둥지 고급 빌라", price:3200000000, rent:5500000, upkeep:1200000, desc:"정원과 전용 경비. 이웃은 날개의 간부들이다."},
+  {id:"npent", area:"nest", name:"둥지 펜트하우스", price:9000000000, rent:0, upkeep:3000000, desc:"꼭대기 층 전체. 구역이 한눈에 내려다보인다."}];
+const houseOf = id => HOUSES.find(h => h.id === id) || HOUSES[0];
+function nestAccess(){
+  return S.origin === "nest" || (S.license && S.license <= 3) || !!S.color || S.tags.some(t => /^(날개 직원|협회 직원):/.test(t));
+}
+function houseText(){
+  if(!S.house) return ageY() < 20 && parentsAlive() ? "부모님 집에서 산다" : `${originKo(S.origin)}에서 셋방살이(따로 계약한 집 없음)`;
+  const h = houseOf(S.house.id), yrs = Math.floor((S.days - S.house.since) / 365);
+  return `${originKo(h.area)} ${h.name} · ${S.house.own ? "자가" : `월세 ${fmt(h.rent)}안`} · ${yrs ? yrs + "년째" : "올해 들어옴"}`;
+}
+/* 매달 집값: 자가는 관리비(가게 딸린 건물은 세가 들어옴), 월세는 월세+관리비, 계약 없으면 예전처럼 대충 셋방 값 */
+function houseMonthly(){
+  if(!S.house) return null;
+  const h = houseOf(S.house.id);
+  return (S.house.own ? h.upkeep - (h.income || 0) : h.rent + Math.round(h.upkeep / 2));
+}
+let rtTab = "back";
+function openRealty(){
+  if(flow.on) stopFlow(null);
+  bump("realty"); rtTab = S.house ? houseOf(S.house.id).area : S.origin === "nest" ? "nest" : "back";
+  renderRealty(); try{ $("#realty").showModal(); }catch(e){}
+}
+function renderRealty(){
+  $("#rtMoney").textContent = `소지금 ${fmt(S.ahn)}안 · ${ageY()}세`;
+  document.querySelectorAll("[data-rt]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.rt === rtTab)));
+  const now = $("#rtNow"); now.replaceChildren();
+  now.appendChild(el("div", "item-meta", houseText()));
+  if(S.house){
+    const h = houseOf(S.house.id);
+    const back = S.house.own ? Math.round(S.house.paid * 0.9) : S.house.deposit || 0;
+    const b = el("button", "btn", S.house.own ? `팔기 (+${fmt(back)}안)` : `월세 빼기 (보증금 +${fmt(back)}안)`); b.type = "button";
+    b.onclick = () => leaveHouse(); now.appendChild(b);
+  }
+  const box = $("#rtList"); box.replaceChildren();
+  const adult = ageY() >= 18, nestOk = nestAccess();
+  for(const h of HOUSES.filter(x => x.area === rtTab)){
+    const c = el("div", "item"), top = el("div", "item-top");
+    top.append(el("b", null, h.name), el("span", "item-price", h.price ? fmt(h.price) + "안" : "매매 없음"));
+    c.append(top, el("div", "item-meta", h.desc));
+    c.appendChild(el("div", "item-meta", [h.rent ? `월세 ${fmt(h.rent)}안 (보증금 ${fmt(h.rent * 10)}안)` : "월세 없음", `관리비 ${fmt(h.upkeep)}안`, h.income ? `세 수입 +${fmt(h.income)}안/월` : "", h.safe ? "뒷골목의 밤에도 안전" : ""].filter(Boolean).join(" · ")));
+    const row = el("div", "row");
+    const here = S.house && S.house.id === h.id;
+    const why = here ? "지금 사는 집" : !adult ? "18세부터 계약할 수 있다" : h.area === "nest" && !nestOk ? "둥지에서 일하거나 이름난 해결사여야 한다" : "";
+    if(why){ row.appendChild(el("span", "note", why)); }
+    else {
+      if(h.price){ const b = el("button", "btn", "사기"); b.type = "button"; b.disabled = S.ahn < h.price; b.onclick = () => takeHouse(h, true); row.appendChild(b); }
+      if(h.rent){ const b = el("button", "btn", "월세 계약"); b.type = "button"; b.disabled = S.ahn < h.rent * 10; b.onclick = () => takeHouse(h, false); row.appendChild(b); }
+    }
+    c.appendChild(row); box.appendChild(c);
+  }
+}
+function leaveHouse(silent){
+  if(!S.house) return;
+  const h = houseOf(S.house.id), back = S.house.own ? Math.round(S.house.paid * 0.9) : S.house.deposit || 0;
+  S.ahn += back;
+  if(!silent){ log({t:"sys", text:`🏠 ${h.name}을(를) ${S.house.own ? "팔았다" : "뺐다"}: +${fmt(back)}안`}); sfx("coin"); }
+  S.house = null;
+}
+function takeHouse(h, own){
+  const cost = own ? h.price : h.rent * 10;
+  /* 지금 집을 정리한 돈까지 합쳐서 계산 */
+  const back = S.house ? (S.house.own ? Math.round(S.house.paid * 0.9) : S.house.deposit || 0) : 0;
+  if(S.ahn + back < cost){ log({t:"sys", text:"돈이 모자라다."}); return; }
+  if(S.house) leaveHouse();
+  S.ahn -= cost;
+  S.house = {id:h.id, area:h.area, own, since:S.days, d:S.district, paid:own ? h.price : 0, deposit:own ? 0 : cost};
+  S.location = homeLoc();
+  bump(own ? "houseBuy" : "houseRent");
+  if(h.area === "nest" && S.origin !== "nest") bump("nestMove");
+  chron(`${originKo(h.area)} ${h.name}${own ? "을(를) 샀다" : "에 월세로 들어갔다"}`);
+  log({t:"sys", text:`🏠 ${originKo(h.area)} ${h.name}${own ? `을(를) 샀다: −${fmt(cost)}안` : `에 월세로 들어갔다: 보증금 −${fmt(cost)}안, 매달 ${fmt(h.rent)}안`}`});
+  sfx("fanfare"); save(); try{ renderLite(); renderStatus(); }catch(e){}
+  renderRealty();
+}
+document.querySelectorAll("[data-rt]").forEach(b => b.addEventListener("click", () => { rtTab = b.dataset.rt; renderRealty(); }));
+const REALTY_RE = /(부동산|중개소|복덕방|집을 (보러|알아보|구하|사|산다|살|팔|내놓|계약)|집 (보러|구하러|사러)|이사(를|하|갈)|월세 ?(방|집)을? (구|알아|찾)|셋방을 (구|알아|찾))/;
+
 /* ───────── 미션 ─────────
    누군가의 부탁·명령을 받아들이면 미션이 생긴다. 해낸 뒤 그 사람을 다시 찾아가 알리면 보상을 받는다.
    상태: active(진행 중) → done(완료, 보고 전) → paid(보상 받음) / failed */
@@ -3711,7 +3825,7 @@ function enCalcNote(){
   log({t:"sys", text:`기력 계산 (${dayLabel(c.days)}): 지낸 동안 ${c.used} 소모, ${c.got} 회복 → ${c.start} → ${c.end}`});
 }
 /* 기절: 깨어나는 곳과 상황은 그때의 장소·위험·형편에 따라 갈린다 */
-const homeLoc = () => `${corpOf(S.district)} 구역 ${originKo(S.origin)} 집`;
+const homeLoc = () => S.house ? `${corpOf(S.house.d || S.district)} 구역 ${originKo(S.house.area)} 우리 집(${houseOf(S.house.id).name})` : `${corpOf(S.district)} 구역 ${originKo(S.origin)} 집`;
 function faintPlan(){
   const loc = String(S.location || ""), y = ageY();
   const atHome = /집/.test(loc), outside = !atHome && !/(병원|진료소|사무소|라만차)/.test(loc);
@@ -4399,7 +4513,7 @@ function renderStatus(){
     const np = S.npcs && S.npcs[b.nm]; if(np && np.look) row.title = np.look;
     bd.appendChild(row);
   }
-  renderPeople(); renderQuests();
+  renderPeople(); renderQuests(); try{ $("#sHouse").textContent = houseText(); }catch(e){}
   $("#sTagsN").textContent = (S.tags || []).length ? `${S.tags.length}개` : "";
   const tg = $("#sTags"); tg.replaceChildren();
   if(!S.tags.length) tg.appendChild(el("div", "note", "아직 없음"));
@@ -4979,6 +5093,21 @@ function romanceLevel(who){
   if(Math.abs(pa - ta) <= 2) return "like";
   return "none";
 }
+/* 호감도 100 이상인 연인·배우자에게 하는 행동은 판정 없이 성공한다(싸움은 제외) */
+function loverAuto(input){
+  const t = String(input || ""); if(!t.trim()) return null;
+  const sp = S.family.find(f => f.rel === "배우자" && f.alive);
+  const cands = [];
+  if(sp && (sp.aff || 0) >= 100) cands.push(sp.name);
+  if(S.lover && S.npcs[S.lover.name] && (S.npcs[S.lover.name].aff || 0) >= 100) cands.push(S.lover.name);
+  for(const n of cands){
+    const parts = n.split(/\s+/), given = parts.length > 1 ? parts[0] : n.slice(-2);
+    if(t.includes(n) || (given.length >= 2 && t.includes(given))) return n;
+    /* 이름을 안 불러도 지금 단둘이 그 사람과 있으면 */
+    if(privateWith() === n) return n;
+  }
+  return null;
+}
 function romanceTarget(t){
   t = String(t || "");
   const names = Object.keys(S.npcs || {}).filter(n => !S.family.some(f => f.name === n));
@@ -5018,18 +5147,18 @@ function romanceApply(R){
   bump(R.kind === "propose" ? "propose" : "confess");
   if(R.why === "age" || R.why === "notlover") return;
   if(R.kind === "propose"){
-    if(R.ok){ bump("proposeOk"); S.tags = S.tags.filter(t => !/^(연인|풋사랑|좋아함):/.test(t)); S.lover = null; r.aff = clamp(r.aff + 10, -100, 100); try{ sfx("fanfare"); }catch(e){} }
-    else { r.aff = clamp(r.aff - 4, -100, 100); S.sp = gclamp("sp", S.sp - 4); }
+    if(R.ok){ bump("proposeOk"); S.tags = S.tags.filter(t => !/^(연인|풋사랑|좋아함):/.test(t)); S.lover = null; r.aff = clamp(r.aff + 10, -100, AFF_MAX); try{ sfx("fanfare"); }catch(e){} }
+    else { r.aff = clamp(r.aff - 4, -100, AFF_MAX); S.sp = gclamp("sp", S.sp - 4); }
     return;
   }
   if(R.ok){
     const tag = R.lv === "like" ? "좋아함" : "연인";
     S.tags = S.tags.filter(t => !/^(연인|풋사랑|좋아함):/.test(t)); S.tags.push(`${tag}:${R.who}`);
     if(R.lv !== "like") S.lover = {name:R.who, at:S.days, young:R.lv === "young"};
-    r.aff = clamp(r.aff + 8, -100, 100); bump("confessOk");
+    r.aff = clamp(r.aff + 8, -100, AFF_MAX); bump("confessOk");
     log({t:"sys", text:`♥ ${R.who}와(과) ${tag === "연인" ? "연인이 되었다" : "서로 좋아하는 마음을 확인했다"}.`});
     try{ sfx("good"); }catch(e){}
-  }else { r.aff = clamp(r.aff - 6, -100, 100); S.sp = gclamp("sp", S.sp - 5); bump("confessNo"); log({t:"sys", text:`💔 ${R.who}에게 거절당했다.`}); }
+  }else { r.aff = clamp(r.aff - 6, -100, AFF_MAX); S.sp = gclamp("sp", S.sp - 5); bump("confessNo"); log({t:"sys", text:`💔 ${R.who}에게 거절당했다.`}); }
 }
 /* 상대가 먼저: 호감 40이면 고백, 연인이고 호감 70이면 청혼 */
 /* 둘만 있을 땐 바깥 사건이 끼어들지 않는다. 관리자 예약이나 그 사람과의 고백·청혼만 */
@@ -5732,6 +5861,10 @@ const ACHS = [
   ["bigHurt", "깊은 상처", "한 번에 크게 다쳤다", () => cnt("bigHurt") >= 1, "c", "몸과 마음"],
   ["bigHurt10", "흉터투성이", "크게 다친 게 열 번", () => cnt("bigHurt") >= 10, "r", "몸과 마음"],
   ["exhausted", "기진맥진", "기력이 바닥났다", () => S.en <= 0 || cnt("faint") >= 1, "c", "몸과 마음"],
+  ["house1", "내 방 한 칸", "월세든 매매든 처음으로 내 집을 구했다", () => cnt("houseBuy") + cnt("houseRent") >= 1, "c", "돈과 평판"],
+  ["houseOwn", "내 집 마련", "집을 샀다", () => cnt("houseBuy") >= 1, "u", "돈과 평판"],
+  ["nestMove", "둥지 입성", "뒷골목 출신이 둥지에 집을 구했다", () => cnt("nestMove") >= 1, "r", "돈과 평판"],
+  ["penthouse", "구역을 내려다보다", "둥지 펜트하우스를 샀다", () => S.house && S.house.id === "npent" && S.house.own, "l", "돈과 평판"],
   ["quest1", "첫 부탁", "누군가의 부탁을 받아들였다", () => cnt("questTake") >= 1, "c", "몸과 마음"],
   ["questDone1", "약속은 지킨다", "미션을 마치고 보상을 받았다", () => cnt("questDone") >= 1, "u", "몸과 마음"],
   ["questDone10", "믿을 만한 사람", "미션 열 개를 마치고 보상을 받았다", () => cnt("questDone") >= 10, "r", "몸과 마음"],
@@ -5970,7 +6103,8 @@ async function doActionCore(input, opt = {}){
     S._mangNote = mangN;
   }
   if(passive && !opt.danger) for(const r of results){ r.auto = true; r.tier = "무대응"; r.cls = "auto"; }
-  else for(const r of results){
+  else if(loverAuto(input)) for(const r of results){ if(!inCombat(r, input)){ r.auto = true; r.tier = "자동 성공"; r.cls = "auto"; } }
+  if(!(passive && !opt.danger)) for(const r of results){
     /* 굴릴 필요 없는 행동은 주사위를 보여 주지 않는다 */
     if(r.auto) continue;
     log({t:"roll", data:r}); sfx("dice");
@@ -6044,8 +6178,8 @@ async function doActionCore(input, opt = {}){
         const crit = results.some(r => r.cls === "crit");
         const g = Math.min(40, Math.round(6 * Math.log2(1 + want / 3) * (crit ? 1.3 : 1)));
         const fam = S.family.find(f => f.name === who);
-        if(fam){ if(fam.aff == null) fam.aff = 30; fam.aff = clamp(fam.aff + g, -100, 100); }
-        else { const r = personOf(who); if(r){ r.aff = clamp((r.aff || 0) + g, -100, 100); r.last = S.days + want; r.n = (r.n || 0) + 1; } }
+        if(fam){ if(fam.aff == null) fam.aff = 30; fam.aff = clamp(fam.aff + g, -100, AFF_MAX); }
+        else { const r = personOf(who); if(r){ r.aff = clamp((r.aff || 0) + g, -100, AFF_MAX); r.last = S.days + want; r.n = (r.n || 0) + 1; } }
         const aff = fam ? fam.aff : (S.npcs[who] || {}).aff || 0;
         log({t:"sys", text:`♥ ${who}와(과) ${dayLabel(want)} 동안 가까이 지냈다. 호감 +${g} (지금 ${aff}, ${affWord(aff)})`});
         if(!fam && aff >= 40 && !S.tags.some(t => t.startsWith("인연:" + who))){ S.tags.push(`인연:${who}/친구`); log({t:"sys", text:`${who}와(과) 인연을 맺었다.`}); }
@@ -6083,6 +6217,8 @@ async function doActionCore(input, opt = {}){
   const atShop = enters && (!n || n.shop || shopNearNow());
   if(SHOP_EVENTS.includes(ev)) S.shopNear = {d:S.days, m:minsNow()};
   if(atShop){ S.shopNear = null; openShop(); }
+  /* 중개소에 가는 건 판정과 상관없이 된다(대실패만 아니면) */
+  else if(!wo && !S.dead && !passive && !results.some(r => r.cls === "fumble") && REALTY_RE.test(input || "")) openRealty();
 }
 /* 공방은 사건으로 '가까이 오기'만 하고, 플레이어가 들어가겠다고 해야 창이 열린다 */
 const SHOP_ENTER_RE = /(들어가|들어간|들어선|들른|들르|구경|둘러|진열대|물건을 본|새 물건|따라 들어|안으로|살펴본|고른다|골라|주문)/;
@@ -7462,7 +7598,9 @@ function oneDay(){
     if(!base && S.tags.some(t => /^(직업|일):/.test(t))) base = 1800000;
     const income = base * (0.9 + rand01() * 0.2);
     const withParents = ageY() < 20 && parentsAlive();
-    const cost = withParents ? 0 : (S.origin === "nest" ? 1700000 : 900000) * (0.9 + rand01() * 0.2);
+    const hm = houseMonthly();
+    const cost = hm != null ? (houseOf(S.house.id).area === "nest" ? 1100000 : 600000) * (0.9 + rand01() * 0.2) + hm
+      : withParents ? 0 : (S.origin === "nest" ? 1700000 : 900000) * (0.9 + rand01() * 0.2);
     const staffCost = (S.staff || []).length * 1200000;
     const officeIncome = S.office ? (1500000 + (S.staff || []).length * 1000000) * (0.6 + S.rep / 100 * 0.8) : 0;
     const net = Math.round((income + officeIncome - cost - staffCost) / 1000) * 1000;
@@ -9042,7 +9180,7 @@ $("#adShin").addEventListener("click", () => { if(!adNeed() || S.shin) return; t
 $("#adLic").addEventListener("click", () => { if(!adNeed()) return; if(!S.license){ S.license = 9; setLicenseTag(); } adminDone("해결사 면허를 받았다."); });
 $("#adGradeGo").addEventListener("click", () => { if(!adNeed()) return; S.license = +$("#adGrade").value; setLicenseTag(); adminDone(`해결사 ${S.license}급이 되었다.`); });
 $("#adItemGo").addEventListener("click", () => { if(!adNeed()) return; const id = $("#adItem").value, it = itemById(id); if(!it) return; S.inv = S.inv || []; S.inv.push(id); adminDone(`${it.name}을(를) 가방에 넣었다.`); });
-$("#adAffGo").addEventListener("click", () => { if(!adNeed()) return; const n = $("#adPerson").value, r = personOf(n); if(!r) return; r.aff = clamp(Math.round(+$("#adAff").value || 0), -100, 100); adminDone(`${n}의 호감도를 ${r.aff}로 바꿨다.`); });
+$("#adAffGo").addEventListener("click", () => { if(!adNeed()) return; const n = $("#adPerson").value, r = personOf(n); if(!r) return; r.aff = clamp(Math.round(+$("#adAff").value || 0), -100, AFF_MAX); adminDone(`${n}의 호감도를 ${r.aff}로 바꿨다.`); });
 $("#adAchAll").addEventListener("click", () => { const g = loadAch(); for(const a of ACHS) if(!g[a[0]]) g[a[0]] = {at:Date.now(), who:(S && S.name) || "관리자"}; store.set(ACH_KEY, g); try{ renderAch(); }catch(e){} adToast("모든 업적을 달성 처리했어요."); });
 $("#adAchReset").addEventListener("click", () => { store.set(ACH_KEY, {}); try{ renderAch(); }catch(e){} adToast("업적을 초기화했어요."); });
 $("#adAIShow").addEventListener("click", () => { const a = window.__lastAI; $("#adAI").textContent = a ? `[${a.prov} · ${a.at}]\n\n=== SYSTEM ===\n${a.sys}\n\n=== USER ===\n${a.user}\n\n=== 응답 ===\n${a.raw}` : "아직 AI 요청이 없어요(이번 접속 이후)."; });
