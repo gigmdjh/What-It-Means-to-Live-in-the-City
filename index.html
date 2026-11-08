@@ -1127,7 +1127,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="parts.js?v=20261108-1.4.5"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.4.7";
+const BUILD = "20261109-1.4.8";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -7343,7 +7343,7 @@ const AUGMENT_VISUALS = {
 function drawSprite(cv, opt){
   const W = SPRITE_W, H = SPRITE_H;
   if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
-  const ctx = cv.getContext("2d"); ctx.clearRect(0, 0, W, H);
+  let ctx = cv.getContext("2d"); const mainCtx = ctx; ctx.clearRect(0, 0, W, H);
   if(!PART.ready) return;
   const o = opt || {};
   const tr = o.traits || lookTraits(), y0 = o.age != null ? o.age : ageY();
@@ -7875,14 +7875,15 @@ function drawSprite(cv, opt){
   const w = eq.weapon && itemById(eq.weapon);
   if(w && !baby){
     const hx = ox + B.w - 3, hy = oy + B.handTop + 3, L = w.look;
-    /* 무기는 손을 기준으로 좌우 반전하고 살짝 기울인다. 건틀릿은 양손 장비라 변형하지 않는다. */
+    /* 무기를 별도 원본 픽셀 캔버스에 먼저 그린 뒤, 최근접 보간으로 한 번만 회전/반전한다. */
     const transformWeapon = !["gauntlet","gauntlet2"].includes(L);
+    let weaponCanvas = null;
     if(transformWeapon){
-      ctx.save();
-      ctx.translate(hx, hy);
-      ctx.scale(-1, 1);
-      ctx.rotate(-0.18);
-      ctx.translate(-hx, -hy);
+      weaponCanvas = document.createElement("canvas");
+      weaponCanvas.width = W; weaponCanvas.height = H;
+      ctx = weaponCanvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, W, H);
     }
     const grip = (len, col) => { box(hx, hy + 1, 2, len, col || "#5a3f2a"); box(hx, hy + 1, 1, len, "#7a5a3a"); };
     /* 곧은 칼: 길이, 폭, 색, 날 가운데 홈, 코등이 폭 */
@@ -8062,7 +8063,17 @@ function drawSprite(cv, opt){
 
     else if(L === "musket"){ box(hx, hy - 22, 2, 27, "#6a4a30"); box(hx + 1, hy - 24, 1, 20, "#3b3d44"); box(hx, hy - 22, 1, 27, "#8a6644"); box(hx + 1, hy - 30, 1, 6, "#dfe3ea"); box(hx + 1, hy - 31, 1, 1, "#f4f6fa"); box(hx - 1, hy + 2, 4, 3, "#5a3f2a"); box(hx + 2, hy - 2, 1, 2, "#c09a3a"); }
     else sword(18, 2, "#dfe3ea", 5, {});
-    if(transformWeapon) ctx.restore();
+    if(transformWeapon){
+      ctx = mainCtx;
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.scale(-1, 1);
+      ctx.rotate(-0.18);
+      ctx.translate(-hx, -hy);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(weaponCanvas, 0, 0);
+      ctx.restore();
+    }
   }
   /* 발톱: 왼팔 건틀릿과 칼날 손가락 넷 */
   if(!o.traits && S && S.claw && !baby){
