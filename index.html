@@ -7981,7 +7981,7 @@ function drawSprite(cv, opt){
     else if(L === "dihui" || w.name === "지혜성도"){
       /* 지혜성도: assets/weapons/Arayashiki.png에서 사전 변환한 정적 픽셀 데이터 */
       const sprite = WEAPON_PIXEL_DATA && WEAPON_PIXEL_DATA.dihui;
-      if(sprite && sprite.width === 32 && sprite.height === 32){
+      if(sprite && sprite.width === 32 && sprite.height === 32 && sprite.rgba && sprite.rgba.length === 32 * 32 * 4){
         if(!sprite.canvas){
           const imageData = new ImageData(sprite.rgba, sprite.width, sprite.height);
           sprite.canvas = document.createElement("canvas");
@@ -8016,7 +8016,7 @@ function drawSprite(cv, opt){
     else if(w.name === "천퇴성도" || L === "tiantui"){
       /* PNG는 변환 도구가 생성한 정적 RGBA 픽셀 데이터로만 표시한다. */
       const sprite = WEAPON_PIXEL_DATA && WEAPON_PIXEL_DATA.tiantui;
-      if(sprite && sprite.width === 32 && sprite.height === 32){
+      if(sprite && sprite.width === 32 && sprite.height === 32 && sprite.rgba && sprite.rgba.length === 32 * 32 * 4){
         if(!sprite.canvas){
           const imageData = new ImageData(sprite.rgba, sprite.width, sprite.height);
           sprite.canvas = document.createElement("canvas");
