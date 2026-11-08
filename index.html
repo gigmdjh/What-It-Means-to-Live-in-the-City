@@ -905,7 +905,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
       <p class="note">예약하면 다음에 행동을 입력할 때 그 사건이 일어나요.</p>
     </details>
     <details><summary>특수 상태</summary>
-      <div class="row"><button class="btn" type="button" id="adKin">혈귀로 깨어나기</button><button class="btn" type="button" id="adDist">뒤틀리기</button><button class="btn" type="button" id="adShin">心 얻기</button><button class="btn" type="button" id="adLic">해결사 면허</button><select id="adGrade"></select><button class="btn" type="button" id="adGradeGo">급수 설정</button></div>
+      <div class="row"><button class="btn" type="button" id="adKin">혈귀로 깨어나기</button><button class="btn" type="button" id="adDist">뒤틀리기</button><button class="btn" type="button" id="adShin">心 얻기</button><button class="btn" type="button" id="adEgo">E.G.O 개화</button><button class="btn" type="button" id="adLic">해결사 면허</button><select id="adGrade"></select><button class="btn" type="button" id="adGradeGo">급수 설정</button></div>
     </details>
     <details><summary>아이템</summary>
       <div class="row"><select id="adItem"></select><button class="btn" type="button" id="adItemGo">가방에 넣기</button></div>
@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.7"></script>
+<script src="parts.js?v=20261108-1.0.8"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.7";
+const BUILD = "20261108-1.0.8";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -4107,6 +4107,7 @@ function giveName(kind, name){
   const k = NAME_KIND[kind]; if(!k) return;
   const nm = (name || "").trim().slice(0, k.max) || k.ph[rndVis(k.ph.length)];
   S[kind] = nm;
+  if(kind === "ego") S.egoMastery = Math.max(1, Math.round(S.egoMastery || 0));
   S.pendingNames = (S.pendingNames || []).filter(x => x !== kind);
   const tagName = {ego:"에고", color:"특색", office:"사무소"}[kind];
   S.tags = S.tags.filter(t => !t.startsWith(tagName + ":"));
@@ -4514,7 +4515,13 @@ function migrateSave(){
   if(!S.v || S.v < 3){ if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45); S.v = 3; }
   if(typeof S.mins !== "number") S.mins = 9 * 60;
   for(const k of STAT_KEYS) if(typeof S[k] !== "number" || !Number.isFinite(S[k])) S[k] = (k === "res" || k === "dex") ? Math.max(1, Math.round(Math.min(ageY(), 20) * 1.4 + 2)) : 1;
+  if(typeof S.shinMastery !== "number" || !Number.isFinite(S.shinMastery)) S.shinMastery = S.shin ? 1 : 0;
+  if(typeof S.egoMastery !== "number" || !Number.isFinite(S.egoMastery)) S.egoMastery = S.ego ? 1 : 0;
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
+}
+function masterStatCard(label, value){
+  const n = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+  const c = el("div", "stat"); c.append(el("div", "n", label), el("div", "v", String(n)), el("div", "b", "숙련 " + n + "%")); return c;
 }
 function renderStatus(){
   renderYearBar(); renderWarpBar(); renderDistort(); renderSerumBar(); renderPresBar();
@@ -4577,6 +4584,8 @@ function renderStatus(){
     c.append(el("div", "n", STAT_KO[k]), v, el("div", "b", `판정 +${bonus(eff(k))}`));
     st.appendChild(c);
   }
+  if(S.shin) st.appendChild(masterStatCard("신 숙련도", S.shinMastery));
+  if(S.ego) st.appendChild(masterStatCard("에고 숙련도", S.egoMastery));
   const fam = $("#sFamily"); fam.replaceChildren();
   if(!S.family.length) fam.appendChild(el("div", "note", "없음"));
   for(const f of S.family){
@@ -5481,6 +5490,7 @@ function shinState(){
 }
 function shinUnlock(how){
   S.shin = {rings:1, uses:0, at:S.days, how};
+  S.shinMastery = Math.max(1, Math.round(S.shinMastery || 0));
   if(!S.tags.some(t => /^心:/.test(t))) S.tags.push("心:신(心)을 깨침");
   sfx("good");
   log({t:"narr", text:"마음을 텅 비운다. 그 빈자리에 가장 강렬했던 기억 하나를 떠올리자, 감정이 밀물처럼 차오른다. 가슴 한가운데에서 금빛 불꽃이 피어올라 팔과 다리로 번진다. 몸이 가볍고, 단단하다.\n\n이것이 마음의 힘, 신(心)이다. 손끝에 따뜻한 빛의 고리 하나가 맺혔다가 흩어진다. 망(望)이다.", deltas:[], options:ruleOptions()});
@@ -5492,6 +5502,7 @@ function shinTrain(input, results){
   if(S.shin || S.distorted || ageY() < 10) return;
   if(!SHIN_TRAIN_RE.test(String(input || ""))) return;
   for(const r of results){ if(r.cls === "crit") S.shinProg = (S.shinProg || 0) + 2; else if(r.cls === "ok" || r.auto) S.shinProg = (S.shinProg || 0) + 1; }
+  if(S.shin) S.shinMastery = Math.min(100, (S.shinMastery || 1) + results.filter(r => r.cls === "crit" || r.cls === "ok" || r.auto).length);
   if((S.shinProg || 0) >= SHIN_NEED) shinUnlock(S.shinTaught ? "배움" : "스스로");
   else if((S.shinProg || 0) > 0 && (S.shinProg % 4 === 0)) log({t:"sys", text:`가슴 속에서 무언가 따뜻하게 일렁인다. (心 수련 ${S.shinProg}/${SHIN_NEED})`});
 }
@@ -6212,7 +6223,7 @@ async function doActionCore(input, opt = {}){
   const mangN = S._mang || 0; S._mang = 0;
   if(mangN){
     const cost = mangCost(mangN); S.sp = gclamp("sp", S.sp - cost);
-    S.shin.uses++; bump("mang"); bump("mangRings", mangN); if(mangN > (S.cnt.mangMax || 0)) S.cnt.mangMax = mangN;
+    S.shin.uses++; S.shinMastery = Math.min(100, (S.shinMastery || 1) + 1); bump("mang"); bump("mangRings", mangN); if(mangN > (S.cnt.mangMax || 0)) S.cnt.mangMax = mangN;
     /* 쓸수록 고리를 하나씩 더 다룰 수 있게 된다(최대 5) */
     if(S.shin.rings < 5 && S.shin.uses >= S.shin.rings * 12){ S.shin.rings++; log({t:"sys", text:`망(望)을 ${S.shin.rings}개까지 일으킬 수 있게 되었다.`}); }
     log({t:"sys", text:`☀ 망(望) ${mangN}개 · 정신력 −${cost}`});
@@ -9234,10 +9245,10 @@ function adminOpen(){
   $("#adNote").textContent = ok ? `${S.name} · ${ageY()}세 · ${timeText()}` : "게임을 시작해야 대부분의 기능을 쓸 수 있어요.";
   const g = $("#adStats"); g.replaceChildren();
   if(ok){
-    const fields = [["hp", "체력"], ["sp", "정신력"], ["en", "기력"], ["rep", "평판"], ["ahn", "돈(안)"], ["str", "힘"], ["def", "방어력"], ["spd", "속도"], ["int", "지력"], ["age", "나이(세)"]];
+    const fields = [["hp", "체력"], ["sp", "정신력"], ["en", "기력"], ["rep", "평판"], ["ahn", "돈(안)"], ["str", "힘"], ["def", "방어력"], ["spd", "속도"], ["int", "지력"], ["res", "정신저항"], ["dex", "공방"], ...(S.shin ? [["shinMastery", "신 숙련도"]] : []), ...(S.ego ? [["egoMastery", "에고 숙련도"]] : []), ["age", "나이(세)"]];
     for(const [k, ko] of fields){
       const lb = el("label", null, ko), inp = el("input"); inp.type = "number"; inp.dataset.k = k;
-      inp.value = k === "age" ? ageY() : Math.round(S[k] || 0); lb.appendChild(inp); g.appendChild(lb);
+      inp.value = k === "age" ? ageY() : Math.round(S[k] || 0); if(k === "shinMastery" || k === "egoMastery"){ inp.min = "0"; inp.max = "100"; } lb.appendChild(inp); g.appendChild(lb);
     }
   }
   const evs = [["", "고르기"], [WARP_OFFER, "워프열차 W사 의뢰"], [LM_INVITE, "라만차랜드 초대장"], ["__scout", "스카우트"], [SHOP_EVENTS[1], "공방 앞"], [SWEEPER_EVENTS[1], "청소부 (뒷골목의 밤)"], ["__abno", "환상체"], ["납치:관리자", "납치 시도"], [SHIN_TEACH, "心 가르침"], [STAR_FIND, "별벼림 칼 발견"], ["__comm", "해결사 의뢰"], ["__famous", "원작 인물"]];
@@ -9270,6 +9281,8 @@ $("#adApply").addEventListener("click", () => {
     if(k === "age"){ const d = Math.round(v * 365) + (S.days % 365); if(Math.floor(d / 365) !== ageY()) S.days = d; }
     else if(k === "ahn") S.ahn = Math.max(0, Math.round(v));
     else if(STAT_KEYS.includes(k)) S[k] = clamp(Math.round(v), 0, 200);
+    else if(k === "shinMastery" && S.shin) S.shinMastery = clamp(Math.round(v), 0, 100);
+    else if(k === "egoMastery" && S.ego) S.egoMastery = clamp(Math.round(v), 0, 100);
     else S[k] = gclamp(k, v);
   }
   adminDone("상태를 바꿨다.");
@@ -9293,7 +9306,8 @@ $("#adEvGo").addEventListener("click", () => {
 });
 $("#adKin").addEventListener("click", () => { if(!adNeed() || isKindred()) return; try{ S.kindred = S.kindred || {born:true}; awakenKindred(); }catch(e){ console.warn(e); } adminDone("혈귀로 깨어났다."); });
 $("#adDist").addEventListener("click", () => { if(!adNeed() || S.distorted) return; try{ becomeDistorted(); }catch(e){ console.warn(e); } adminDone("뒤틀렸다."); });
-$("#adShin").addEventListener("click", () => { if(!adNeed() || S.shin) return; try{ shinUnlock("관리자"); }catch(e){ console.warn(e); } adminDone("心을 얻었다."); });
+$("#adShin").addEventListener("click", () => { if(!adNeed() || S.shin) return; try{ shinUnlock("관리자"); S.shinMastery = Math.max(1, S.shinMastery || 0); }catch(e){ console.warn(e); } adminDone("心을 얻었다."); });
+$("#adEgo").addEventListener("click", () => { if(!adNeed() || S.ego) return; S.egoMastery = Math.max(1, S.egoMastery || 0); requestName("ego"); adminDone("E.G.O 개화를 시작했다. 이름을 정하면 능력치에 숙련도가 표시된다."); });
 $("#adLic").addEventListener("click", () => { if(!adNeed()) return; if(!S.license){ S.license = 9; setLicenseTag(); } adminDone("해결사 면허를 받았다."); });
 $("#adGradeGo").addEventListener("click", () => { if(!adNeed()) return; S.license = +$("#adGrade").value; setLicenseTag(); adminDone(`해결사 ${S.license}급이 되었다.`); });
 $("#adItemGo").addEventListener("click", () => { if(!adNeed()) return; const id = $("#adItem").value, it = itemById(id); if(!it) return; S.inv = S.inv || []; S.inv.push(id); adminDone(`${it.name}을(를) 가방에 넣었다.`); });
