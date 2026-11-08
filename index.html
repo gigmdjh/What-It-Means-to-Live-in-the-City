@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.2"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.3"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.2";
+const BUILD = "20261109-1.5.3";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -3470,7 +3470,7 @@ function registerSpeaker(t){
   if(t.aff) bumpAff(t.who, t.aff);
   else if(r.n > 1 && rnd(3) === 0) r.aff = clamp(r.aff + 1, -100, AFF_MAX);   /* 자주 보면 조금씩 익숙해진다 */
   trimPeople();
-  return {who:t.who, say:t.say, act:t.act || "", look:lookWithOutfit(r.look, OF[t.who]), gender:r.gender, age:npcAge(r)};
+  return {who:t.who, rel:t.rel || "", job:r.job || t.job || "", say:t.say, act:t.act || "", look:lookWithOutfit(r.look, OF[t.who]), gender:r.gender, age:npcAge(r)};
 }
 /* 다른 사람 옷차림 기억: 가족은 가족 이름으로 */
 function setOutfit(who, outfit){
