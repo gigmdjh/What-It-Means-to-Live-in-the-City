@@ -7462,7 +7462,11 @@ function drawSprite(cv, opt){
     if(region === 12){
       const ax12 = Math.abs(x - cxB);
       if(coat && OUTER && ax12 > GAP + 1) return ax12 <= GAP + 2 ? shade3(OUTR, 0.72) : (OUTER === "trench" && y === (RB[12] || [0, 0])[1] ? shade3(OUTR, 0.6) : OUTR);
-      if((OUTER === "jacket" || OUTER === "leather") && ax12 > GAP && y <= (RB[12] || [0, 0])[1] + 1) return OUTR;
+      if(OUTER === "jacket" || OUTER === "leather"){
+        /* 겉옷 자락은 허리 부위까지 이어져야 하며, 바지 색으로 덮이지 않게 한다 */
+        if(ax12 > GAP + 1) return OUTR;
+        if(ax12 > GAP) return shade3(OUTR, 0.72);
+      }
       if(tr.belt || OT === "uniform"){ const top = (RB[12] || [0, 0])[1]; if(y === top + 1) return [44, 38, 34]; }
       if(OT === "robe") return ACC;
       if(dress || OT === "priest" || OT === "overall") return OUT;
