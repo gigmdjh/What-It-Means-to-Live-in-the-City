@@ -1119,11 +1119,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1420"></script>
+<script src="parts.js?v=20261108-1430"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1420";
+const BUILD = "20261108-1430";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -4222,7 +4222,7 @@ function log(entry){
   if(S.log.length > 250) S.log.splice(0, S.log.length - 250);
   /* 장면이 지나가면(행동·시간 흐름·작은 일) 앞 장면의 선택지는 지운다 */
   if(entry.t === "me" || entry.t === "small") document.querySelectorAll("#log .opts").forEach(o => o.remove());
-  if(entry.t === "small" || entry.t === "me"){ document.querySelectorAll("#log .redo-btn").forEach(b => b.remove()); if(entry.t === "small" && typeof REDO !== "undefined") REDO = null; }
+  if(entry.t === "small" || entry.t === "me"){ document.querySelectorAll("#log .redo-btn").forEach(b => b.remove()); if(entry.t === "small" && typeof REDO !== "undefined" && REDO){ REDO = null; saveRedo(); } }
   appendEntry(entry, true);
 }
 
@@ -6002,27 +6002,40 @@ function renderAch(){
 }
 
 /* 관리자: 방금 응답을 다시 받기. 행동 직전 상태를 기억해 두었다가 되돌린 뒤 같은 입력으로 다시 부른다(주사위는 같고 서술만 새로) */
-var REDO = null;
+/* 새로고침해도 남도록 이 기기에 저장해 둔다(관리자만) */
+const REDO_KEY = "dosi_redo";
+const redoOwner = () => S ? `${S.name}|${S.seed}|${S.born || ""}` : "";
+function saveRedo(){
+  try{ if(REDO && REDO.turn != null) localStorage.setItem(REDO_KEY, JSON.stringify(Object.assign({}, REDO, {owner:redoOwner()}))); else localStorage.removeItem(REDO_KEY); }
+  catch(e){ try{ localStorage.removeItem(REDO_KEY); }catch(_){} }
+}
+function loadRedo(){ try{ const r = JSON.parse(localStorage.getItem(REDO_KEY) || "null"); return r && r.snap && r.turn != null ? r : null; }catch(e){ return null; } }
+var REDO = loadRedo();
 async function doAction(input, opt = {}){
   const can = !busy && S && !S.dead && isAdmin();
   if(can && !opt.redo) REDO = {snap:JSON.stringify(S), input, opt:Object.assign({}, opt)};
   if(!can) REDO = opt.redo ? REDO : null;
   await doActionCore(input, opt);
   if(REDO && S && !S.dead) REDO.turn = S.turn;
+  if(isAdmin()) saveRedo();
   redoMark();
 }
 function redoMark(){
   document.querySelectorAll("#log .redo-btn").forEach(b => b.remove());
   if(!REDO || REDO.turn == null || !isAdmin() || !S || S.dead || busy) return;
-  const nodes = document.querySelectorAll("#log .e-narr"); const last = nodes[nodes.length - 1]; if(!last) return;
+  /* 다른 캐릭터이거나 그 뒤로 진행했으면 버린다 */
+  if(REDO.owner && REDO.owner !== redoOwner() || REDO.turn !== S.turn){ REDO = null; saveRedo(); return; }
+  const nodes = [...document.querySelectorAll("#log .e-narr")].filter(n => !/^⏸/.test(n.textContent.trim())); const last = nodes[nodes.length - 1]; if(!last) return;
   const b = el("button", "btn redo-btn", "↻ 다시 응답"); b.type = "button"; b.title = "관리자: 이 응답을 다시 받기";
   b.onclick = redoLast; last.appendChild(b);
 }
 async function redoLast(){
   if(busy || !REDO) return;
-  S = JSON.parse(REDO.snap);
+  const r = REDO; REDO = null;
+  S = JSON.parse(r.snap);
   try{ renderLog(); renderLite(); renderStatus(); }catch(e){}
-  await doAction(REDO.input, Object.assign({}, REDO.opt, {redo:true}));
+  REDO = r;
+  await doAction(r.input, Object.assign({}, r.opt, {redo:true}));
 }
 async function doActionCore(input, opt = {}){
   if(flow.on){ flow.on = false; clearTimeout(flow.timer); updateFlowUI(); }
