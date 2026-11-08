@@ -1127,7 +1127,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="parts.js?v=20261108-1.4.5"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.4.5";
+const BUILD = "20261109-1.4.6";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -6588,6 +6588,9 @@ for(const w of EGO_WEAPONS) ITEMS.push({id:"ego:" + w[0], slot:"weapon", name:w[
 /* 소지: 별마다 별벼림 칼 한 자루.
    세계관상 별의 이름을 가진 칼은 별도 아이템으로 중복 추가하지 않고,
    해당 별벼림 칼의 외형에 별 고유의 무기 디자인을 연결한다. */
+/* 사용자가 제작한 32×32 천퇴성 별벼림 칼 픽셀 아트(투명 PNG) */
+const TIANTUI_PIXEL_ART = new Image();
+TIANTUI_PIXEL_ART.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACNUlEQVR4AbyXP0hcQRDGJ6aMkECCkNgEUwUkGAjpQyws1EZFEGvFRmxFrRRtLMRGsLFRQU5F1M47RBAEERQ50EpsTkEQVLTz3/we7BWKeDMr7/G+N7v77u337c7M7l6ZvMH1p7rsIcDaXbQAiAe7vwuwkvP7KAGQZ8Z+yfbupax3HMlp/p4+TYgSANOnyga5mTiXXEUFVTPcAhj9WqYvIezK1sjQULl0dH0W2pPGEh9uAaH/kZ+DMlG7J/391zKpM7GTv38X3pViXQIYZUZ9DzkkTP//szOKZrgEwHJ4dIVx+z75WB9mAYw+pNy/ySrJbnTK/Ow3oZxqDOBzUg83NLedJGmYWgzozAk+x/eUwYw+CiKmABS9zC7Qb4p3EIEtNhoLbgH4HMT4H61uAcQAiFkDogQ0Nt0V4yBVF7DSDYwfy9/fH5PUYwn+oEuwJwWjZoCPSUPcsLzw3rUM04c7BviYNGT6AXUPogSE6ccFre3l5p0QwVECcAHTz3lgbvpaiA86tcAsoFLkIZx8GDnZcKujh5R3WAvMAuh8cXRUhvUIVvejV7J6BvhyXCNVvHDAJSC3tCTnShbsxeZmUtcm8+0SACFMwVL2wiSAswBE7Hz1WlhVBHupZc9tEgBB/mAAI4iY0ljY0logL0gK2/FFYUW+Vj/X7SEXvZ73pI0v3eR5S89+8V9QToPxpd+W2m4SQKeIYDOiDMgGrBdmARAhApt6FkD61nDNQBBBJoQMCG1P7Wv1RwAAAP//xZASWAAAAAZJREFUAwB05NaphLxdDAAAAABJRU5ErkJggg==";
 const STAR_BLADE_LOOKS = {
   "천퇴성":"tiantui",       // 약실·총구·방아쇠가 결합된 피스톨 소드
   "천살성":"arayashiki",    // 반투명한 흰 대태도와 봉인된 칼집
@@ -7990,15 +7993,17 @@ function drawSprite(cv, opt){
       box(hx-4,hy-1,8,2,"#672c35");box(hx-3,hy,6,1,"#b64b52");
     }
     else if(w.name === "천퇴성도" || L === "tiantui"){
-      /* 천퇴성도: 총열과 약실이 결합된 검, 장전 가능한 중절식 실린더 */
-      sword(23,3,"#454a54",5,{curve:true,guardCol:"#b58b43",gripCol:"#292b31",fuller:true});
-      box(hx+2,hy-21,4,5,"#292c33");box(hx+3,hy-20,3,3,"#737984");box(hx+3,hy-19,2,1,"#d2a34c");
-      box(hx+4,hy-23,2,4,"#1c1e24");box(hx+4,hy-24,2,1,"#aeb4bf");
-      /* 칼등 총구 */
-      box(hx+1,hy-17,2,5,"#22252c");box(hx+1,hy-18,2,1,"#9ba2ad");box(hx+1,hy-14,2,1,"#17191f");
-      /* 중절식 이음새와 권총 손잡이 */
-      box(hx-1,hy-4,5,2,"#5e626b");box(hx,hy-3,3,1,"#d0a14c");
-      box(hx+1,hy+1,3,5,"#282a30");box(hx+2,hy+2,1,3,"#737984");box(hx+1,hy+5,4,1,"#b58b43");
+      /* 사용자 제작 원본 32×32 픽셀 아트: 손잡이·약실·칼날/칼등/총구·가드 */
+      if(TIANTUI_PIXEL_ART.complete && TIANTUI_PIXEL_ART.naturalWidth){
+        ctx.drawImage(TIANTUI_PIXEL_ART, hx-16, hy-26, 32, 32);
+      }else{
+        sword(23,3,"#454a54",5,{curve:true,guardCol:"#b58b43",gripCol:"#292b31",fuller:true});
+        box(hx+2,hy-21,4,5,"#292c33");box(hx+3,hy-20,3,3,"#737984");box(hx+3,hy-19,2,1,"#d2a34c");
+        box(hx+4,hy-23,2,4,"#1c1e24");box(hx+4,hy-24,2,1,"#aeb4bf");
+        box(hx+1,hy-17,2,5,"#22252c");box(hx+1,hy-18,2,1,"#9ba2ad");box(hx+1,hy-14,2,1,"#17191f");
+        box(hx-1,hy-4,5,2,"#5e626b");box(hx,hy-3,3,1,"#d0a14c");
+        box(hx+1,hy+1,3,5,"#282a30");box(hx+2,hy+2,1,3,"#737984");box(hx+1,hy+5,4,1,"#b58b43");
+      }
     }
     else if(L === "knife"){ box(hx, hy - 6, 1, 6, "#dfe3ea"); box(hx + 1, hy - 4, 1, 4, "#b8bec8"); box(hx, hy - 7, 1, 1, "#f4f6fa"); box(hx, hy, 2, 4, "#3b3d44"); box(hx, hy + 1, 1, 1, "#8a8f99"); }
     else if(L === "pipe"){ box(hx, hy - 16, 2, 21, "#7d7f86"); box(hx, hy - 16, 1, 21, "#a3a6ad"); box(hx - 1, hy - 17, 4, 2, "#5f6168"); box(hx - 1, hy - 7, 4, 1, "#5f6168"); box(hx, hy - 12, 1, 2, "#8a5a3a"); }
