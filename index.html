@@ -1124,10 +1124,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.4.1"></script>
+<script src="parts.js?v=20261108-1.4.2"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.4.1";
+const BUILD = "20261108-1.4.2";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -6578,6 +6578,8 @@ const ITEMS = [
 const EGO_FX = {"미미크리(시제품)":{str:8, def:1}, "다 카포":{str:7, int:2}, "스마일":{str:9, spd:-1}, "저스티티아":{str:7, spd:2}, "등불":{str:5, def:1}, "회절":{str:5, spd:1}, "여우비":{str:3, def:1}, "붉은 시트":{str:3, int:1}};
 const EGO_LOOK = {"미미크리(시제품)":"greatsword", "다 카포":"blade", "스마일":"hammer", "저스티티아":"sword", "등불":"mace", "회절":"blade", "여우비":"blade", "붉은 시트":"knife"};
 for(const w of EGO_WEAPONS) ITEMS.push({id:"ego:" + w[0], slot:"weapon", name:w[0], shop:"추출 E.G.O · " + w[3] + "에게서", fx:EGO_FX[w[0]] || {str:4}, price:0, age:0, look:EGO_LOOK[w[0]] || "sword", ego:w[1], hidden:true});
+/* 웹·위키 참고 무기: 천퇴성도. 기본 상점에는 노출하지 않고 관리자 지급·주문 제작에서 활용한다. */
+ITEMS.push({id:"tiantui", slot:"weapon", name:"천퇴성도", shop:"유물 · 천퇴성", fx:{str:12, spd:3}, price:0, age:0, look:"tiantui", hidden:true});
 /* 소지: 별마다 별벼림 칼 한 자루 */
 for(const st of STARS){
   const h = hashStr(st);
@@ -6591,6 +6593,7 @@ const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
    textureKey는 추후 픽셀아트 파일과 연결할 안정적인 키다. */
 const ITEM_KIND_KO = {blade:"날붙이", blunt:"둔기", polearm:"장병기", firearm:"화기", gauntlet:"건틀릿", clothing:"의류", lightArmor:"경량 방호구", heavyArmor:"중장갑", arm:"의수", leg:"의족", eye:"의안", body:"신체 개조"};
 const ITEM_VISUAL_NOTES = {
+  tiantui:"약실·총구·방아쇠가 결합된 피스톨 소드",mimicry:"살점과 눈알, 가시가 얽힌 추출 E.G.O 대검",
   stigma:"고열로 달아오른 날과 어두운 칼날 테두리",hwando:"한쪽 날이 휜 환도형 도검",
   brick:"모서리가 깨진 벽돌",chain:"마디가 반복되는 녹슨 쇠사슬",crowbar:"끝이 꺾인 지렛대형 쇠막대",
   cleaver:"넓고 무거운 정육용 칼날",tonfa:"직각 손잡이가 달린 방범 곤봉",dagger:"양손에 나눠 쥐는 쌍단검",
@@ -7857,7 +7860,32 @@ function drawSprite(cv, opt){
       grip(3, opt.gripCol);
       box(hx, hy + 4, Math.min(2, wid), 1, opt.guardCol || "#c09a3a");                        /* 칼자루 끝 */
     };
-    if(L === "knife"){ box(hx, hy - 6, 1, 6, "#dfe3ea"); box(hx + 1, hy - 4, 1, 4, "#b8bec8"); box(hx, hy - 7, 1, 1, "#f4f6fa"); box(hx, hy, 2, 4, "#3b3d44"); box(hx, hy + 1, 1, 1, "#8a8f99"); }
+    if(w.name === "미미크리(시제품)"){
+      /* 미미크리: 넓은 은회색 대검에 아무것도 없는의 살점·가시·눈을 픽셀로 얹는다 */
+      sword(27,5,"#b8c0c8",9,{fuller:true,guardCol:"#672c35",gripCol:"#402a2d"});
+      for(const [yy,xx] of [[hy-22,0],[hy-18,1],[hy-14,-1],[hy-10,1],[hy-6,0]]){
+        box(hx+xx,yy,3,2,"#682d38");box(hx+xx+1,yy-1,2,2,"#8f3d48");
+        box(hx+xx+1,yy,1,1,"#d75a62");
+      }
+      /* 눈알과 검신에 얽힌 살점 */
+      box(hx-1,hy-21,2,2,"#e7d8b5");box(hx,hy-21,1,1,"#79b95b");box(hx,hy-21,1,1,"#253a27");
+      box(hx+3,hy-15,2,2,"#e7d8b5");box(hx+4,hy-15,1,1,"#79b95b");box(hx+4,hy-15,1,1,"#253a27");
+      box(hx-2,hy-9,2,2,"#e7d8b5");box(hx-1,hy-9,1,1,"#79b95b");box(hx-1,hy-9,1,1,"#253a27");
+      for(const [xx,yy] of [[-2,hy-25],[4,hy-20],[-2,hy-12],[5,hy-7],[1,hy-4]]){box(hx+xx,yy,2,3,"#71323a");box(hx+xx,yy-1,1,2,"#c8cdd5");}
+      box(hx-4,hy-1,8,2,"#672c35");box(hx-3,hy,6,1,"#b64b52");
+    }
+    else if(w.name === "천퇴성도" || L === "tiantui"){
+      /* 천퇴성도: 총열과 약실이 결합된 검, 장전 가능한 중절식 실린더 */
+      sword(23,3,"#454a54",5,{curve:true,guardCol:"#b58b43",gripCol:"#292b31",fuller:true});
+      box(hx+2,hy-21,4,5,"#292c33");box(hx+3,hy-20,3,3,"#737984");box(hx+3,hy-19,2,1,"#d2a34c");
+      box(hx+4,hy-23,2,4,"#1c1e24");box(hx+4,hy-24,2,1,"#aeb4bf");
+      /* 칼등 총구 */
+      box(hx+1,hy-17,2,5,"#22252c");box(hx+1,hy-18,2,1,"#9ba2ad");box(hx+1,hy-14,2,1,"#17191f");
+      /* 중절식 이음새와 권총 손잡이 */
+      box(hx-1,hy-4,5,2,"#5e626b");box(hx,hy-3,3,1,"#d0a14c");
+      box(hx+1,hy+1,3,5,"#282a30");box(hx+2,hy+2,1,3,"#737984");box(hx+1,hy+5,4,1,"#b58b43");
+    }
+    else if(L === "knife"){ box(hx, hy - 6, 1, 6, "#dfe3ea"); box(hx + 1, hy - 4, 1, 4, "#b8bec8"); box(hx, hy - 7, 1, 1, "#f4f6fa"); box(hx, hy, 2, 4, "#3b3d44"); box(hx, hy + 1, 1, 1, "#8a8f99"); }
     else if(L === "pipe"){ box(hx, hy - 16, 2, 21, "#7d7f86"); box(hx, hy - 16, 1, 21, "#a3a6ad"); box(hx - 1, hy - 17, 4, 2, "#5f6168"); box(hx - 1, hy - 7, 4, 1, "#5f6168"); box(hx, hy - 12, 1, 2, "#8a5a3a"); }
     else if(L === "bat"){ box(hx + 1, hy - 15, 2, 3, "#b08350"); box(hx, hy - 12, 3, 8, "#b08350"); box(hx, hy - 12, 1, 8, "#cfa06a"); box(hx, hy - 4, 2, 9, "#9a7044"); box(hx, hy + 2, 2, 1, "#2b2b31"); box(hx - 1, hy + 5, 4, 1, "#7a5a3a"); }
     else if(L === "sword") sword(20, 2, "#dfe3ea", 6, {});
@@ -8215,7 +8243,7 @@ const CUSTOM_TIERS = [
   {ko:"이름난 공방", pts:12, price:15000000, age:18, days:7},
   {ko:"명장의 공방", pts:20, price:50000000, age:20, days:14},
   {ko:"전설의 장인", pts:30, price:150000000, age:22, days:30}];
-const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷"};
+const CUSTOM_LOOKS = {knife:"단검", sword:"장검", blade:"휜 칼", hotsword:"가열 도검", greatsword:"대검", rapier:"세검", spear:"창", axe:"도끼", scythe:"낫", mace:"메이스", hammer:"망치", bat:"몽둥이", pipe:"쇠파이프", gauntlet:"건틀릿", gun:"권총", musket:"머스킷", tiantui:"천퇴성도"};
 const CUSTOM_SLOTS = {weapon:"무기", armor:"방어구", arm:"의수", leg:"의족", eye:"의안", body:"신체 장갑"};
 let customDraft = {slot:"weapon", tier:0, name:"", look:"sword", color:"#4a4f5e", fx:{str:6, def:0, spd:0, int:0}};
 /* 저장본에 있는 주문 장비를 장비 목록에 등록한다 */
