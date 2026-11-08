@@ -4076,6 +4076,7 @@ function distortionCheck(){
   S.distorting = false;
   if(win){
     S.sp = 0;
+    if(S.ego) S.egoMastery = Math.min(100, (S.egoMastery || 1) + 1);
     if(!S.ego){
       for(const k of ["str", "def"]) S[k] += 4;
       log({t:"narr", text:"당신은 그 목소리를 밀어내지 않고, 끝까지 들은 뒤 대답한다. 무너지던 감정이 한 점으로 모여 형태를 갖춘다. 당신의 에고(E.G.O)가 발현했다.", deltas:[{k:"힘", v:4}, {k:"방어력", v:4}], options:[]});
@@ -5502,7 +5503,6 @@ function shinTrain(input, results){
   if(S.shin || S.distorted || ageY() < 10) return;
   if(!SHIN_TRAIN_RE.test(String(input || ""))) return;
   for(const r of results){ if(r.cls === "crit") S.shinProg = (S.shinProg || 0) + 2; else if(r.cls === "ok" || r.auto) S.shinProg = (S.shinProg || 0) + 1; }
-  if(S.shin) S.shinMastery = Math.min(100, (S.shinMastery || 1) + results.filter(r => r.cls === "crit" || r.cls === "ok" || r.auto).length);
   if((S.shinProg || 0) >= SHIN_NEED) shinUnlock(S.shinTaught ? "배움" : "스스로");
   else if((S.shinProg || 0) > 0 && (S.shinProg % 4 === 0)) log({t:"sys", text:`가슴 속에서 무언가 따뜻하게 일렁인다. (心 수련 ${S.shinProg}/${SHIN_NEED})`});
 }
