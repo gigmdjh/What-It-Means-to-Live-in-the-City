@@ -2927,6 +2927,8 @@ function ruleJudge(input){
     if(/때리|치|밀|들어|부수|던지|싸우|주먹|힘껏|당기/.test(p)) stat = "str";
     else if(/막|버티|견디|참|방어|맞서/.test(p)) stat = "def";
     else if(/달리|뛰|도망|피하|숨|훔치|잡|기어|재빠|오르/.test(p)) stat = "spd";
+    else if(/공포|겁먹|두려|정신 간섭|정신 공격|세뇌|환청|유혹을 뿌리|의지를 굳|정신을 붙잡|뒤틀림에 맞서/.test(p)) stat = "res";
+    else if(/만들|제작|수리|고치|조립|손질|정밀|공예|공방|자물쇠|자물쇠를 따|도구를 다루|기계를 조작/.test(p)) stat = "dex";
     const trivial = /둘러보|쉬|쉰|잠|자고|잔다|먹|마신|기다|운다|울|웃|앉|눕|인사|바라본|지켜본/.test(p);
     return {text: p.slice(0, 80), stat, dc: 12 + ageAdd, why: aiOn() ? "간이 판정" : "규칙 기반 판정 (AI 없음)", trivial};
   });
@@ -4511,7 +4513,7 @@ function migrateSave(){
   if(!S) return;
   if(!S.v || S.v < 3){ if(typeof S.sp === "number") S.sp = clamp(Math.round(S.sp * 0.9 - 45), -45, 45); S.v = 3; }
   if(typeof S.mins !== "number") S.mins = 9 * 60;
-  for(const k of STAT_KEYS) if(typeof S[k] !== "number" || !Number.isFinite(S[k])) S[k] = k === "res" || k === "dex" ? 1 + rnd(2) : 1;
+  for(const k of STAT_KEYS) if(typeof S[k] !== "number" || !Number.isFinite(S[k])) S[k] = (k === "res" || k === "dex") ? Math.max(1, Math.round(Math.min(ageY(), 20) * 1.4 + 2)) : 1;
   if(S.v < 4){ for(const f of S.family || []) if(!f.look) f.look = f.rel === "자녀" ? randLook(f.gender) : randLook(f.gender); S.v = 4; }
 }
 function renderStatus(){
@@ -6574,9 +6576,9 @@ const itemById = id => ITEMS.find(i => i.id === id);
 const isAug = it => ["arm","leg","eye","body"].includes(it.slot);
 function fxText(fx){ return Object.entries(fx).map(([k, v]) => `${STAT_KO[k]}${v > 0 ? "+" : ""}${v}`).join(" "); }
 function equipBonus(k){ let b = 0; for(const id of Object.values(S.equip || {})){ const it = id && itemById(id); if(it && it.fx[k]) b += it.fx[k]; } return b; }
-/* 혈귀는 사람보다 몇 배 강하다(지력 제외). 피가 모자라면 그만큼 약해진다 */
+/* 혈귀는 신체 능력이 강해진다. 지력·정신저항·공방은 혈액량으로 배율이 바뀌지 않는다. */
 function kinMul(k){
-  if(k === "int" || !isKindred()) return 1;
+  if(k === "int" || k === "res" || k === "dex" || !isKindred()) return 1;
   if(S.bornKindred && !S.kindredAwake) return 1.5;
   const b = S.blood == null ? 60 : S.blood;
   return b <= 0 ? 1.3 : b < 30 ? 2 : 3;
