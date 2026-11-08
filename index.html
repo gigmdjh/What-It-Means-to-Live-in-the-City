@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.12"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.12";
+const BUILD = "20261109-1.5.13";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1174,7 +1174,8 @@ You are the referee of a text RPG set in this world. Do not narrate. Only set th
 [What to do]
 - First read the very last scene in [최근 상황] (recent events) and work out who or what in that scene the input refers to.
 - Split only the actions actually written in the player input (max 3). Words inside quotes are speech and are not rolled. Never add or invent actions the player did not write (looking around, checking for danger, searching for watchers or traces, staying alert, etc.).
-- Ordinary actions with no risk and no way to fail (receiving, handing over, answering, greeting, thanking, agreeing, refusing, laughing) stay as one action with trivial: true.
+- Ordinary everyday actions with no meaningful risk or consequence for failure are automatic: receiving, handing over, answering, greeting, thanking, agreeing, refusing, laughing, looking around, walking around a familiar safe place, playing normally, eating, resting, dressing, washing, and age-appropriate conversation. Mark these trivial: true; do not invent obstacles or roll just to make life harder.
+- Childhood is not a blanket penalty. Age changes difficulty only when the action genuinely depends on physical development, coordination, independence or adult-level knowledge. Do not penalize a child for ordinary play, simple conversation, asking for help, learning, or familiar daily routines. A child may struggle with adult-sized physical tasks or dangerous situations, but should usually succeed at normal child activities.
 - For each action pick the single most relevant stat and a difficulty word. Do not write numbers. Use 정신저항 for resisting fear, coercion, mental interference or psychological pressure; use 공방 for precise handwork, repairs and crafting.
 
 [Stats] (value must be the Korean word)
@@ -1182,7 +1183,7 @@ You are the referee of a text RPG set in this world. Do not narrate. Only set th
 
 [Difficulty] (value must be one of these Korean words)
 - 사소함 (trivial), 매우 쉬움 (very easy), 쉬움 (easy), 보통 (normal), 어려움 (hard), 매우 어려움 (very hard), 극히 어려움 (extremely hard), 불가능 (impossible).
-- Rate the difficulty of the situation itself: the opponent's strength and number, the place, weather, physical limits from age, and the effect of the character's looks (read the [외모] text yourself). Example: a newborn standing up and walking is 불가능; crying is 사소함.
+- Rate the difficulty of the situation itself. Consider age-related physical limits only when they matter to this specific action, along with the opponent, location and weather. Do not treat being young as a reason that every action is hard. Example: a newborn walking is 불가능; a child greeting someone or playing with a toy is 사소함 or automatic.
 - The player's stats, gear, augment bonuses, prescript and injury penalties are added by the dice separately. Do not factor them into difficulty again. Use 정신저항 for resisting fear, coercion, mental interference or psychological pressure; use 공방 for precise handwork, repairs and crafting.
 - Against an Abnormality, use its grade: ZAYIN 쉬움, TETH 보통, HE 어려움, WAW 매우 어려움, ALEPH 극히 어려움 (suppressing it alone is nearly impossible). Fleeing or hiding is one or two steps easier.
 
@@ -2941,7 +2942,6 @@ function ruleJudge(input){
   const parts = input.split(/[,.\n]|그리고|그 다음|한 뒤|하고 나서/).map(s => s.trim()).filter(s => s.length > 1).slice(0, 3);
   if(!parts.length) parts.push(input.trim() || "가만히 있는다");
   const y = ageY();
-  const ageAdd = y < 1 ? 14 : y < 3 ? 10 : y < 7 ? 6 : y < 13 ? 3 : 0;
   return parts.map(p => {
     let stat = "int";
     if(/때리|치|밀|들어|부수|던지|싸우|주먹|힘껏|당기/.test(p)) stat = "str";
@@ -2949,7 +2949,9 @@ function ruleJudge(input){
     else if(/달리|뛰|도망|피하|숨|훔치|잡|기어|재빠|오르/.test(p)) stat = "spd";
     else if(/공포|겁먹|두려|정신 간섭|정신 공격|세뇌|환청|유혹을 뿌리|의지를 굳|정신을 붙잡|뒤틀림에 맞서/.test(p)) stat = "res";
     else if(/만들|제작|수리|고치|조립|손질|정밀|공예|공방|자물쇠|자물쇠를 따|도구를 다루|기계를 조작/.test(p)) stat = "dex";
-    const trivial = /둘러보|쉬|쉰|잠|자고|잔다|먹|마신|기다|운다|울|웃|앉|눕|인사|바라본|지켜본/.test(p);
+    const trivial = /둘러보|쉬|쉰|잠|자고|잔다|먹|마신|기다|운다|울|웃|앉|눕|인사|바라본|지켜본|대답|감사|고맙|받는다|받아|건넨|준다|동의|거절|말을 건|이야기하|대화하|놀|옷을 입|씻|걷는다|천천히 걷|도움을 청|물어본|질문/.test(p);
+    const physical = stat === "str" || stat === "def" || stat === "spd" || stat === "dex";
+    const ageAdd = physical ? (y < 1 ? 14 : y < 3 ? 10 : y < 7 ? 6 : y < 13 ? 3 : 0) : 0;
     return {text: p.slice(0, 80), stat, dc: 12 + ageAdd, why: aiOn() ? "간이 판정" : "규칙 기반 판정 (AI 없음)", trivial};
   });
 }
