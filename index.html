@@ -372,11 +372,11 @@ dialog::backdrop{background:rgb(0 0 0 / .6)}
   .game{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding-block:8px}
   .hud{display:grid;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .hud-top{display:flex;align-items:center;gap:8px;min-width:0}
-  .hud-top .hname-wrap{flex:0 1 auto;max-width:48%;overflow:hidden}
+  .hud-top .hname-wrap{flex:1 1 0;min-width:0;max-width:none;overflow:hidden}
   .hud-top #hName{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .hud-top .htitle{max-width:100%;overflow-wrap:anywhere}
   .hud-top b{font:700 1rem var(--f-display);white-space:nowrap}
-  .hud-top .info{font-size:.78rem;color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hud-top .info{font-size:.78rem;color:var(--muted);flex:0 0 auto;min-width:max-content;white-space:nowrap}
   .hud-top .btn{padding:4px 10px;font-size:.8rem;flex:none}
   .hud-g{display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:8px}
   .hud-g.five{grid-template-columns:repeat(5, minmax(0,1fr))}
@@ -643,7 +643,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 .inv-it b{font-size:.86rem}.inv-it span{font-size:.72rem;color:var(--muted)}
 .inv-it .ego{font:700 .68rem var(--f-mono)}
 .inv-sec{grid-column:1/-1;font-size:.72rem;color:var(--muted);margin-top:4px}
-.hname-wrap{display:flex;flex-direction:column;min-width:0}
+.hud-top{display:flex;align-items:center;gap:8px;min-width:0}\n.hname-wrap{display:flex;flex:1 1 0;flex-direction:column;min-width:0;max-width:100%;overflow:hidden}\n.hud-top #hName{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.hud-top .htitle{max-width:100%;overflow-wrap:anywhere}\n.hud-top .info{flex:0 0 auto;min-width:max-content;white-space:nowrap;overflow:visible}
 .htitle{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:.72rem;font-weight:700;letter-spacing:.02em;margin:2px 0 0}
 .htitle span{padding:1px 6px;border-radius:4px;border:1px solid currentColor}
 .abno-g{font:700 .72rem var(--f-mono)!important;letter-spacing:.04em}
@@ -1123,10 +1123,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1.0.1"></script>
+<script src="parts.js?v=20261108-1.0.2"></script>
 <script>
 "use strict";
-const BUILD = "20261108-1.0.1";
+const BUILD = "20261108-1.0.2";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
