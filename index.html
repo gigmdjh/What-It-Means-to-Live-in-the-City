@@ -1125,10 +1125,10 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 </dialog>
 
 <script src="parts.js?v=20261108-1.4.5"></script>
-<script src="weapon-pixels.js?v=20261109-1.5.9"></script>
+<script src="weapon-pixels.js?v=20261109-1.5.10"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.9";
+const BUILD = "20261109-1.5.10";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1364,7 +1364,10 @@ You keep the memory of a text RPG. Summarize the given record into short fields 
 - people: who appeared, as "name (relation to protagonist, traits, attitude toward protagonist)", comma-separated. None = "".
 - outcome: how it ended (who won or lost, injuries, things gained or lost, promises, debts, grudges, favors). A danger that is over must say "끝남" clearly.
 - pending: what is still unfinished (promises to keep, debts to pay, someone chasing). None = "".
-- Drop mood, weather and finished trivia.
+- Drop temporary mood, weather, decorative description and finished trivia unless they caused a lasting consequence.
+- Prioritize durable facts: relationship changes and why they changed, trust or hostility, promises, debts, favors, secrets, betrayals, grudges, family ties, lasting injuries, employment, and major decisions.
+- Clearly distinguish what happened in the past from the current state. Preserve whether a promise/debt/conflict is still pending or has been completed; never revive a resolved danger.
+- Keep the names of the people involved and the concrete cause/result. Do not invent facts or treat guesses as confirmed.
 - Write the values in the same language as the record.
 Output JSON only: {"where":"","situation":"","people":"","outcome":"","pending":""}`;
 
@@ -4024,8 +4027,22 @@ function chron(text){ if(!S.chron) S.chron = []; S.chron.push({d:S.days, t:Strin
 /* 관련도: 지금 장면·입력과 글자 겹침이 많은 옛 기억을 위로 */
 function relevantMem(list, query, k){
   if(!list.length || k <= 0) return [];
-  const q = bigrams(query); if(!q.size) return list.slice(-k);
-  const sc = list.map((m, i) => { const b = bigrams(m); let h = 0; for(const x of b) if(q.has(x)) h++; return {m, i, s:h / Math.sqrt(b.size + 1)}; });
+  const qText = String(query || "");
+  const q = bigrams(qText);
+  if(!q.size) return list.slice(-k);
+  const people = Object.keys((S && S.people) || {}).filter(name => name.length >= 2 && qText.includes(name));
+  const pendingRe = /(?:아직|미해결|기다리|약속|갚아야|빚|찾으러|추적|복수|원한|계약|비밀|배신|용서|화해|결혼|가족|고용|해고|부상|사망|죽음|실종|적대|신뢰|호감)/;
+  const doneRe = /(?:아직: (?:없음|-)|끝남|완료됨|해결됨)/;
+  const sc = list.map((m, i) => {
+    const b = bigrams(m); let h = 0;
+    for(const x of b) if(q.has(x)) h++;
+    let score = h / Math.sqrt(b.size + 1);
+    /* 현재 장면에 직접 등장한 사람의 과거 기억은 글자 겹침이 적어도 우선한다. */
+    if(people.some(name => m.includes(name))) score += 0.85;
+    /* 약속·빚·원한 등 아직 영향을 주는 일은 일반적인 과거 사건보다 우선한다. */
+    if(pendingRe.test(m) && !doneRe.test(m)) score += 0.35;
+    return {m, i, s:score};
+  });
   const top = sc.filter(x => x.s > 0.6).sort((a, b) => b.s - a.s).slice(0, k).sort((a, b) => a.i - b.i);
   return top.map(x => x.m);
 }
