@@ -1096,11 +1096,11 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
   </form>
 </dialog>
 
-<script src="parts.js?v=20261108-1240"></script>
+<script src="parts.js?v=20261108-1250"></script>
 <script>window.DOSI_EDITOR = 1;</script>
 <script>
 "use strict";
-const BUILD = "20261108-1240";
+const BUILD = "20261108-1250";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1320,7 +1320,7 @@ function advanceMins(mins){
 /* 행동에 걸린 시간: AI의 time 말 → 분. 잠은 다음 날 아침 7시까지 */
 function timeWordMins(w, input){
   const t = String(w || "");
-  if(/(밤새|다음 날|아침까지|잠)/.test(t) || /(잠을 잔다|잔다|자러|잠든다|눈을 붙인다)/.test(input || "")) return ((7 * 60 - minsNow()) + 1440) % 1440 || 1440;
+  if(SLEEP_WORD_RE.test(t) || /(잠을 잔다|잔다|자러|잠든다|눈을 붙인다)/.test(input || "")) return ((7 * 60 - minsNow()) + 1440) % 1440 || 1440;
   if(/(잠깐|몇 분|금방|순식간)/.test(t)) return 10 + rnd(20);
   if(/(반나절)/.test(t)) return 300 + rnd(120);
   if(/(몇 시간|두어 시간|서너 시간)/.test(t)) return 150 + rnd(120);
@@ -3632,12 +3632,14 @@ function renderQuests(){
    깨어 있는 동안 한 시간에 3, 자는 동안 한 시간에 12, 하루를 통째로 보내면 25(나이가 들면 줄지만 절반 아래로는 안 준다) */
 const enRF = () => Math.max(0.5, regenFactor());
 const enDayRegen = () => 25 * enRF();
-function isSleepAct(w, input){ return /(밤새|다음 날|아침까지|잠)/.test(String(w || "")) || /(잠을 잔다|잔다|자러|잠든다|눈을 붙인다|낮잠|쉰다|휴식)/.test(input || ""); }
+/* '잠깐·잠시'는 잠이 아니다 */
+const SLEEP_WORD_RE = /(밤새|다음 날|아침까지|잠을|잠든|잠이 들|잠자|(^|\s)잠($|\s))/;
+function isSleepAct(w, input){ return SLEEP_WORD_RE.test(String(w || "")) || /(잠을 잔다|잔다|자러|잠든다|눈을 붙인다|낮잠|쉰다|휴식)/.test(input || ""); }
 function enInDay(fin, mins, sleeping){
   if(!(mins > 0)) return;
   const g = Math.round(mins / 60 * (sleeping ? 12 : 3) * enRF());
   if(g <= 0) return;
-  fin.en = sleeping ? Math.max(fin.en || 0, (fin.en || 0) + g) : (fin.en || 0) + g;
+  fin.en = Math.min((fin.en || 0) + g, Math.max(0, 100 - S.en));
 }
 /* 긴 시간을 건너뛸 때: 그동안 매일 쓴 기력과 매일 회복한 기력을 하루씩 셈해 결과를 낸다 */
 function enOverDays(fin, days){
