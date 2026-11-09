@@ -1128,7 +1128,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.21";
+const BUILD = "20261109-1.5.22";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -1242,7 +1242,7 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - Vary sentence length and paragraph rhythm. Use short sentences for sudden actions or tension, and longer sentences when observing a place, following a train of thought or allowing an emotional moment to unfold.
 - Maintain continuity with previous scenes. Do not repeat information the reader already knows unless the repetition has a clear dramatic purpose.
 - Never invent unexplained supernatural events. Any unusual event must follow the world's established rules or be clearly grounded in the current situation.
-- [Appearance continuity] For the protagonist and every established character, keep hairstyle, hair color, eye shape and eye color consistent with their recorded appearance even after days, months or years pass. Time and aging alone do not change these features; in particular, do not gray hair just because someone gets older. Clothing may change naturally with weather, season, work, wealth or events. Change a fixed feature only when an explicit event actually changes it (such as a haircut, dye, eye injury, prosthetic or supernatural transformation), then keep the new appearance consistent. If appearance details are unknown, do not invent changes between scenes.
+- [Appearance continuity] For the protagonist and every established character, keep hair color, eye shape and eye color consistent with their recorded appearance. Hair length grows gradually with elapsed in-world time (roughly 1 cm per month); a haircut explicitly requested or shown in the scene shortens it and the new length persists. Do not randomly change hairstyle, color or eyes; only length grows naturally, and only an actual haircut changes it abruptly. Clothing may change naturally with weather, season, work, wealth or events. Change a fixed feature only when an explicit event actually changes it (such as a haircut, dye, eye injury, prosthetic or supernatural transformation), then keep the new appearance consistent. If appearance details are unknown, do not invent changes between scenes.
 - Keep the prose specific to this character, this place and this moment. Avoid generic descriptions that could be pasted into any scene.
 - Track subtext: distinguish what a character says from what they may want, fear, conceal or misunderstand. Convey this through wording, timing, gestures and selective silence; do not state hidden motives as facts unless established.
 - Make each response a consequence of the immediately preceding exchange. Remember what each person knows, what has already been answered, and what remains unresolved. Do not reset relationships or emotional tension between turns.
@@ -1367,7 +1367,7 @@ You are the narrator of a text RPG.
 [Private scenes] Alone with one person in a private place: no one else appears unless the player calls someone, leaves, or lets them in (no sudden visitors, knocks or calls).
 [Time] After days or months, small things like food and wrappers are gone and light wounds have healed. Do not continue an old scene as if it were now. Events and threats from old memories are over unless the game state explicitly says they remain unresolved; never turn a completed event into an ongoing pursuit or confrontation just because it appears in memory.
 [Dialogue] Short spoken lines, 1-2 sentences. Speech level fits age and relationship (in Korean: parents use 반말 to kids, strangers use 존댓말).
-[Looks] Read the [외모] text and let that impression affect people's reactions and events. For the protagonist and every established character, preserve hairstyle, hair color, eye shape and eye color exactly across time skips; aging alone never grays hair or changes eyes. Clothes may change with season, work, weather and events. Change a fixed feature only after an explicit haircut, dye, injury, prosthetic or supernatural transformation, then remain consistent.
+[Looks] Read the [외모] text and let that impression affect people's reactions and events. For the protagonist and every established character, preserve hair color, eye shape and eye color across time skips. Hair length grows gradually with elapsed in-world time (roughly 1 cm per month); only an explicit haircut shortens it, and the resulting length persists. Clothes may change with season, work, weather and events. Change a fixed feature only after an explicit haircut, dye, injury, prosthetic or supernatural transformation, then remain consistent.
 [Romance] Up to 15 innocent liking only; 16-17 innocent dating between 16-17 peers only (nothing sexual); adults never with minors; 18+ may date.
 [Talk] When another character speaks or does something notable without speaking (then "say":"" and the action in "act"), 1-3 entries in talk: {"who":"the character's real name (e.g. 한서진, 마르코 벨리니). Never labels like '새 친구', '이웃 주민', '낯선 사내'; give a name even if unknown to the protagonist","say":"short spoken line, no quotes","act":"short action while speaking","look":"looks, first appearance only","gender":"남성/여성","age":"age number, first appearance only","job":"job, first appearance only","aff":"change in liking toward the protagonist (없음/오름/내림/크게 오름/크게 내림)"}. Never put the protagonist in talk, and do not repeat the lines in narration. If the player speaks to someone, they must answer via talk. Keep gender, age, job and #personality from [아는 사람]; never repeat earlier lines. Nobody speaks = [].
 [Missions] If the player accepts someone's favor or order in this scene, quest_add "giver/task/reward" (e.g. "한서진/잃어버린 고양이 찾기/5만안"). When a task in [미션] is finished, quest_clear with the task text. When the protagonist reports a 완료 task to its giver, the giver pays: quest_reward with the giver's name (do not put that money in ahn). Otherwise "".
@@ -7431,7 +7431,15 @@ function drawSprite(cv, opt){
   const stage = y0 < 7 ? 0 : y0 < 18 ? 1 : 2;
   const B = PART.bodies[g + stage]; if(!B || !B.px) return;
   const hseed = hashStr((o.seedName != null ? o.seedName : (S && S.name || "")) + (tr.gender || ""));
-  const lookTxt = o.look != null ? o.look : (S && (S.outfit ? curLook() : S.look));
+  let lookTxt = o.look != null ? o.look : (S && (S.outfit ? curLook() : S.look));
+  /* 저장된 머리 길이에 따라 픽셀 캐릭터의 길이 표현을 갱신한다. */
+  const hairLength = o.hairLength != null ? o.hairLength : (o.seedName && S && S.npcs && S.npcs[o.seedName] ? S.npcs[o.seedName].hairLength : S && S.hairLength);
+  if(Number.isFinite(Number(hairLength)) && Number(hairLength) >= 0){
+    const hl = Number(hairLength);
+    if(hl < 15) lookTxt = String(lookTxt).replace(/장발|긴 생머리|긴 머리|허리까지|어깨를 넘는/g, "단발");
+    else if(hl < 60 && /장발|긴 생머리|긴 머리|허리까지|어깨를 넘는/.test(String(lookTxt))) lookTxt = String(lookTxt).replace(/장발|긴 생머리|긴 머리|허리까지|어깨를 넘는/g, "어깨까지 오는 머리");
+    else if(hl >= 60 && /단발|숏컷|짧은 머리/.test(String(lookTxt))) lookTxt = String(lookTxt).replace(/단발|숏컷|짧은 머리/g, "어깨를 넘는 긴 머리");
+  }
   const baby = y0 < 2;
   let outfit = tr.outfit || (origin === "nest" ? "#45587a" : "#6a6152");
   if(baby) outfit = "#e8dcc0";
