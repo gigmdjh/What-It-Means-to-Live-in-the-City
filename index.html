@@ -1183,9 +1183,12 @@ You are the referee of a text RPG set in this world. Do not narrate. Only set th
 
 [Difficulty] (value must be one of these Korean words)
 - 사소함 (trivial), 매우 쉬움 (very easy), 쉬움 (easy), 보통 (normal), 어려움 (hard), 매우 어려움 (very hard), 극히 어려움 (extremely hard), 불가능 (impossible).
-- Rate the difficulty of the situation itself. Consider age-related physical limits only when they matter to this specific action, along with the opponent, location and weather. Do not treat being young as a reason that every action is hard. Example: a newborn walking is 불가능; a child greeting someone or playing with a toy is 사소함 or automatic.
-- The player's stats, gear, augment bonuses, prescript and injury penalties are added by the dice separately. Do not factor them into difficulty again. Use 정신저항 for resisting fear, coercion, mental interference or psychological pressure; use 공방 for precise handwork, repairs and crafting.
-- Against an Abnormality, use its grade: ZAYIN 쉬움, TETH 보통, HE 어려움, WAW 매우 어려움, ALEPH 극히 어려움 (suppressing it alone is nearly impossible). Fleeing or hiding is one or two steps easier.
+- Rate the difficulty of the situation itself, not the player's stats. Use this calibration consistently: 사소함 = no meaningful chance of failure (trivial true); 매우 쉬움 = routine with a small complication; 쉬움 = favorable and familiar; 보통 = uncertain for a capable person; 어려움 = clearly unfavorable or requires training; 매우 어려움 = requires strong skill or a major advantage; 극히 어려움 = exceptional feat with very low odds; 불가능 = physically/logically impossible in the current circumstances. Do not call an action impossible merely because it is dangerous or unlikely.
+- Consider age-related physical limits only when they matter to this specific action, along with the opponent, location, preparation and weather. Do not treat being young as a reason every action is hard. Stats, gear, augment bonuses, prescript and injury penalties are added by the dice separately; never count them twice.
+- Do not raise difficulty just because the setting is dangerous. A safe familiar action stays easy; danger only affects an action when it creates a concrete obstacle or consequence. Prefer one relevant obstacle over stacking vague penalties.
+- For social actions, judge the actual goal and target's motives: greeting is automatic; asking a favor may be easy or hard depending on cost, relationship and stakes; persuading, deceiving and threatening are not interchangeable.
+- For a failed risky action, choose a believable consequence proportional to the stakes. Failure can mean no progress, lost time, a cost, suspicion, or a worse position; do not invent injury or catastrophe for a minor mistake. Near failure may make limited progress but must not count as full success. A critical success earns a meaningful advantage; a critical failure creates a clear but context-appropriate cost.
+- Against an Abnormality, use its grade as a starting point, not a universal fixed difficulty: ZAYIN 쉬움, TETH 보통, HE 어려움, WAW 매우 어려움, ALEPH 극히 어려움 for direct suppression by an unprepared person. Consider preparation, allies and the exact action; fleeing or hiding is usually easier than suppressing it.
 
 [Other fields]
 - trivial: true if the action cannot fail (looking around, resting, eating, receiving an item, answering). There is no reason to roll for something where failure changes nothing.
@@ -1214,8 +1217,9 @@ You are the narrator of a text RPG set in this world. Write the scene according 
 - When time passes, update the situation rather than replaying the same beat. If no meaningful change occurred, it is fine for the scene to remain ordinary.
 
 [1. Rolls]
-- Never change the given roll results. Success is success, failure is failure. 대성공 (critical success) goes beyond expectations; 대실패 (critical failure) carries a clear cost.
-- Never reward a failed action.
+- Never change the given roll results. Success is success, failure is failure. 대성공 (critical success) gives a concrete advantage beyond the expected result; 대실패 (critical failure) causes a clear cost appropriate to the stakes. An action marked 불가능 cannot succeed through narration.
+- A near failure may allow limited progress only if it remains meaningfully short of the player's stated goal; never describe it as full success. Ordinary failure should usually cause no progress, lost time, a modest cost, suspicion, or a worse position depending on the situation. Do not add injury, death, or a major relationship change unless the established stakes justify it.
+- Do not invent extra obstacles or punishments after a roll. Apply the result and its consequence, then continue the scene naturally.
 
 [2. Style and prose]
 - Make the scene easy to follow on the first read. Clearly identify who acts, what they react to, and what changes as a result.
@@ -2913,8 +2917,8 @@ function stateSummary(local){
 
 /* ───────── 판정 ───────── */
 /* 판정 AI가 플레이어가 적지 않은 행동을 덧붙이면 버리고, 평범한 행동은 굴리지 않는다 */
-const EASY_RE = /(받는다|받겠|받아|받을게|고마|감사|인사|대답|답한다|끄덕|웃는다|웃으며|좋아|그래|응|알겠|동의|건넨다|건네|준다|줄게|안아|손을 잡|따라간다|앉는다|듣는다|기다린다|쉰다|먹는다|마신다|잔다)/;
-const RISK_RE = /(싸우|때리|공격|훔치|도망|숨|달아나|뛰어|오르|뛰어내|부수|속이|거짓말|설득|협박|위협|막는|피한|해킹|따돌|몰래|찾는다|조사|살핀다|추적)/;
+const EASY_RE = /(받는다|받겠|받아|받을게|고마|감사|인사|대답|답한다|끄덕|웃는다|웃으며|좋아|그래|응|알겠|동의|건넨다|건네|준다|줄게|안아|손을 잡|따라간다|앉는다|듣는다|기다린다|쉰다|먹는다|마신다|잔다|옷을 입|씻는다|평범하게 걷|평범하게 놀|도움을 청|질문한다)/;
+const RISK_RE = /(싸우|때리|공격|훔치|도망|숨|달아나|뛰어|오르|뛰어내|부수|속이|거짓말|설득|협박|위협|막는|피한|해킹|따돌|몰래|찾는다|조사|살핀다|추적|위험|급히|무리하게|강제로|침입|탈출|추격|위협받|설득해|거절당)/;
 function sanitizeActions(actions, input){
   if(!actions || !actions.length) return actions;
   const inB = bigrams(input);
@@ -2930,10 +2934,12 @@ function normalizeActions(j){
     const stat = STAT_KEYS.includes(a.stat) ? a.stat : (KO2STAT[String(a.stat || "").trim()] || "int");
     const combat = a.combat === true || a.combat === "true";
     const dw = String(a.difficulty || "").trim();
-    const dc = a.dc != null && isFinite(Number(a.dc)) ? num(a.dc, 0, 40)
-      : DIFF_DC[dw] != null ? DIFF_DC[dw]
-      : /불가/.test(dw) ? 30 : /극히/.test(dw) ? 25 : /매우 어|아주 어/.test(dw) ? 20 : /어려/.test(dw) ? 16 : /매우 쉬|아주 쉬/.test(dw) ? 5 : /쉬/.test(dw) ? 10 : /사소/.test(dw) ? 0 : 13;
-    return {text: String(a.text || "행동").slice(0, 80), stat, dc, why: String(a.why || "").slice(0, 140), trivial: !!a.trivial || dc <= 0, combat, combatSet: a.combat != null};
+    /* Named difficulty is canonical: ignore contradictory numeric DCs from the model. */
+    const dc = DIFF_DC[dw] != null ? DIFF_DC[dw]
+      : /불가/.test(dw) ? 30 : /극히/.test(dw) ? 25 : /매우 어|아주 어/.test(dw) ? 20 : /어려/.test(dw) ? 16 : /매우 쉬|아주 쉬/.test(dw) ? 5 : /쉬/.test(dw) ? 10 : /사소/.test(dw) ? 0
+      : a.dc != null && isFinite(Number(a.dc)) ? num(a.dc, 0, 40) : 13;
+    const impossible = /불가/.test(dw);
+    return {text: String(a.text || "행동").slice(0, 80), stat, dc, why: String(a.why || "").slice(0, 140), trivial: !impossible && (!!a.trivial || dc <= 0), impossible, combat, combatSet: a.combat != null};
   });
   return out.length ? out : null;
 }
@@ -2958,6 +2964,8 @@ function ruleJudge(input){
 
 function rollCheck(a){
   if(a.trivial) return {auto:true, tier:"자동 성공", cls:"ok"};
+  /* Truly impossible actions cannot succeed through a lucky die roll. */
+  if(a.impossible) return {auto:true, tier:"불가능", cls:"fail", impossible:true};
   const d = 1 + rnd(20);
   const b = bonus(eff(a.stat));
   const mods = [];
@@ -2990,6 +2998,8 @@ function rollCheck(a){
   /* 추출 E.G.O 무기는 장착하면 무기 능력치로 반영된다 */
   const total = d + b + mods.reduce((s, m) => s + m.v, 0);
   let tier, cls;
+  /* Natural 20 is a critical success; natural 1 is a critical failure.
+     Near failure is not a full success, even if the narration can show limited progress. */
   if(d === 20 || total >= a.dc + 10){ tier = "대성공"; cls = "crit"; }
   else if(d === 1){ tier = "대실패"; cls = "fumble"; }
   else if(total >= a.dc){ tier = "성공"; cls = "ok"; }
