@@ -1128,7 +1128,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.23";
+const BUILD = "20261109-1.5.24";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -6380,7 +6380,7 @@ async function doActionCore(input, opt = {}){
   /* 피를 실제로 마신 장면이 아니면 혈액은 오르지 않는다(AI가 다른 회복과 헷갈려 넣는 경우를 막는다) */
   if(fin.blood > 0 && !DRINK_BLOOD_RE.test(String(input || "") + " " + String(fin.narration || ""))) fin.blood = 0;
   if(passive && fin.blood > 0 && !DRINK_BLOOD_RE.test(String(fin.narration || ""))) fin.blood = 0;
-  /* 플레이어가 적은 기간(며칠 동안, 일주일 후, 한 달간, 3년…): 해냈으면 그만큼 시간이 흐르고, 길수록 능력치가 크게 변한다 */
+  /* 플레이어가 적은 기간(며칠 동안, 일주일 후, 한 달간, 3년…): 해냈으면 그만큼 시간이 흐른다. 능력치는 기간만으로 크게 뛰지 않고, 실제로 훈련한 경우에도 나이·현재 능력치에 따른 상한을 적용한다. */
   if(!passive && !wo){
     const want = inputDays(actInput || input);
     const ok = results.some(r => r.auto || r.cls === "ok" || r.cls === "crit");
@@ -6407,7 +6407,8 @@ async function doActionCore(input, opt = {}){
         const expected = Math.max(3, 2 + 1.4 * Math.min(y, 20));
         const current = Math.max(0, Number(S[tr]) || 0);
         const statFactor = current > expected ? Math.max(0.35, expected / current) : 1;
-        const g = Math.min(7, Math.round(1.4 * Math.log2(1 + want / 30) * ageFactor * statFactor * (crit ? 1.25 : 1)));
+        const gainCap = y < 13 ? 3 : y < 20 ? 4 : 5;
+        const g = Math.min(gainCap, Math.round(1.0 * Math.log2(1 + want / 60) * ageFactor * statFactor * (crit ? 1.2 : 1)));
         if(g > 0 && !(fin[tr] >= g)) fin[tr] = g;
         /* 보조 능력은 장기간의 훈련에서만 드물게, 주 능력보다 훨씬 적게 오른다. */
         if(want >= 90 && g >= 3 && rnd(3) === 0){
@@ -6765,9 +6766,11 @@ function equipBonus(k){ let b = 0; for(const id of Object.values(S.equip || {}))
 /* 혈귀는 신체 능력이 강해진다. 지력·정신저항·공방은 혈액량으로 배율이 바뀌지 않는다. */
 function kinMul(k){
   if(k === "int" || k === "res" || k === "dex" || !isKindred()) return 1;
+  /* 타고난 혈귀는 별도 설정을 유지한다. 물려서 된 권속은 혈액만으로 능력치가 두 배·세 배가 되지 않게 한다. */
   if(S.bornKindred && !S.kindredAwake) return 1.5;
   const b = S.blood == null ? 60 : S.blood;
-  return b <= 0 ? 1.3 : b < 30 ? 2 : 3;
+  if(S.bornKindred) return b <= 0 ? 1.3 : b < 30 ? 1.5 : b < 80 ? 2 : 2.25;
+  return b <= 0 ? 0.8 : b < 30 ? 1 : b < 80 ? 1.25 : 1.5;
 }
 const eff = k => Math.max(0, Math.round((S[k] + equipBonus(k)) * kinMul(k)));
 function equipText(){
