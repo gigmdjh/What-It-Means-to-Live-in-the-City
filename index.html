@@ -1128,7 +1128,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.19";
+const BUILD = "20261109-1.5.20";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -3729,7 +3729,19 @@ function applyNarr(n, forcedDays, shownDays){
   if(n.outfit && n.outfit !== S.outfit){ S.outfit = n.outfit; bump("outfit"); log({t:"sys", text:`옷차림이 바뀌었다: ${n.outfit}`}); }
   for(const t of n.talk || []) if(t && t.outfit && !isPlayerTalk(t)) setOutfit(t.who, t.outfit);
   for(const pr of String(n.npcOutfit || "").split(/\s*;\s*/)){ const [w, o] = pr.split("/"); if(w && o) setOutfit(w.trim(), o.trim()); }
+  /* 대화 전후의 호감도를 비교해, 실제로 바뀐 인물만 변화 알림에 추가한다. */
+  const affBefore = new Map();
+  for(const [name, r] of Object.entries(S.npcs || {})) affBefore.set("npc:" + name, {name, value:Number(r.aff) || 0});
+  for(const f of S.family || []) if(f.name) affBefore.set("family:" + f.name, {name:f.name, value:Number(f.aff == null ? ((f.rel === "어머니" || f.rel === "아버지") ? 100 : 30) : f.aff) || 0});
   const talk = (n.talk || []).filter(t => t && t.who && (t.say || t.act) && !isPlayerTalk(t)).map(t => registerSpeaker(t));
+  for(const [name, r] of Object.entries(S.npcs || {})){
+    const key = "npc:" + name, before = affBefore.get(key), after = Number(r.aff) || 0;
+    if(before && after !== before.value) deltas.push({k:name + " 호감도", v:after - before.value, aff:true, current:after, level:affWord(after)});
+  }
+  for(const f of S.family || []) if(f.name){
+    const key = "family:" + f.name, before = affBefore.get(key), after = Number(f.aff == null ? ((f.rel === "어머니" || f.rel === "아버지") ? 100 : 30) : f.aff) || 0;
+    if(before && after !== before.value) deltas.push({k:f.name + " 호감도", v:after - before.value, aff:true, current:after, level:affWord(after)});
+  }
   if(talk.length) n.narration = dedupeTalk(n.narration, talk);
   log({t:"narr", text:n.narration, deltas, tags:tagChanges, talk, options:n.options || []});
   for(const q of qNotes) log({t:"sys", text:q});
@@ -4408,7 +4420,8 @@ function appendEntry(e, live){
         if(d.days){ ds.appendChild(el("span", "d", `⏱ ${dayLabel(d.v)}`)); continue; }
         if(d.event){ ds.appendChild(el("span", "d event", "⚡ 돌발 상황")); if(live) sfx("event"); continue; }
         const v = d.k === "안" ? (d.v > 0 ? "+" : "−") + fmt(Math.abs(d.v)) : (d.v > 0 ? "+" : "−") + Math.abs(d.v);
-        ds.appendChild(el("span", "d " + (d.v > 0 ? "up" : "down"), `${d.k} ${v}`));
+        const label = d.aff ? `${d.k} ${v} (현재 ${d.current} · ${d.level})` : `${d.k} ${v}`;
+        ds.appendChild(el("span", "d " + (d.v > 0 ? "up" : "down"), label));
       }
       node.appendChild(ds);
     }
