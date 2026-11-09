@@ -1128,7 +1128,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.24";
+const BUILD = "20261109-1.5.25";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -3027,7 +3027,8 @@ function inputDays(t){
   return Math.max(0, Math.min(3650, d));
 }
 /* 기간 동안 누구와 호감을 쌓았는지: 입력에 아는 사람(가족 포함)의 이름이 있고, 가까이 지내는 행동이면 그 사람 */
-const BOND_RE = /(친해|친하게|호감|어울|같이 지내|함께 지내|함께 시간|같이 시간|시간을 보내|시간을 보낸|사이를 좁|정을 쌓|가까워|챙겨|챙긴|챙기|돌봐|돌보|돌본|간호|보살피|보살핀|도와주|데이트|연애|사귀|자주 만나|만나며|놀며|같이 놀|함께 놀|같이 일|함께 일|대화를 나누|이야기를 나누|편지를 주고)/;
+const BOND_RE = /(친해|친하게|호감|어울|같이 지내|함께 지내|함께 시간|같이 시간|시간을 보내|시간을 보낸|사이를 좁|정을 쌓|가까워|챙겨|챙긴|챙기|돌봐|돌보|돌본|간호|보살피|보살핀|도와주|데이트|연애|사귀|자주 만나|만나며|놀며|같이 놀|함께 놀|같이 일|함께 일|대화를 나누|이야기를 나누|편지를 주고|싸우|다투|괴롭히|따돌리|배신|속이|모욕|해치|미워|원망)/;
+const BOND_NEG_RE = /(싸우|다투|괴롭히|따돌리|배신|속이|모욕|해치|미워|원망)/;
 function bondTarget(t){
   t = String(t || "");
   if(!BOND_RE.test(t)) return null;
@@ -6386,17 +6387,20 @@ async function doActionCore(input, opt = {}){
     const ok = results.some(r => r.auto || r.cls === "ok" || r.cls === "crit");
     if(want > 0 && ok){
       if(!(fin.days >= want)) fin.days = want;
-      /* 그동안 누군가와 가까이 지냈으면 그 사람의 호감이 기간만큼 쌓인다 */
+      /* 장기간의 관계 변화는 기간에 비례해 무한히 커지지 않는다. 몇 년을 함께 보내도 한 번에 호감도가 폭증하지 않게 한다. */
       const who = bondTarget(actInput || input);
       if(who){
         const crit = results.some(r => r.cls === "crit");
-        const g = Math.min(40, Math.round(6 * Math.log2(1 + want / 3) * (crit ? 1.3 : 1)));
+        const negative = BOND_NEG_RE.test(String(actInput || input));
+        const amount = Math.min(15, Math.max(1, Math.round(2.5 * Math.log2(1 + want / 30) * (crit ? 1.15 : 1))));
+        const g = negative ? -amount : amount;
         const fam = S.family.find(f => f.name === who);
         if(fam){ if(fam.aff == null) fam.aff = 30; fam.aff = clamp(fam.aff + g, -100, AFF_MAX); }
         else { const r = personOf(who); if(r){ r.aff = clamp((r.aff || 0) + g, -100, AFF_MAX); r.last = S.days + want; r.n = (r.n || 0) + 1; } }
         const aff = fam ? fam.aff : (S.npcs[who] || {}).aff || 0;
-        log({t:"sys", text:`♥ ${who}와(과) ${dayLabel(want)} 동안 가까이 지냈다. 호감 +${g} (지금 ${aff}, ${affWord(aff)})`});
-        if(!fam && aff >= 40 && !S.tags.some(t => t.startsWith("인연:" + who))){ S.tags.push(`인연:${who}/친구`); log({t:"sys", text:`${who}와(과) 인연을 맺었다.`}); }
+        const actionLabel = negative ? "갈등을 겪었다" : "함께 시간을 보냈다";
+        log({t:"sys", text:`♥ ${who}와(과) ${dayLabel(want)} 동안 ${actionLabel}. 호감도 ${g > 0 ? "+" : ""}${g} (현재 ${aff}, ${affWord(aff)})`});
+        if(!negative && !fam && aff >= 40 && !S.tags.some(t => t.startsWith("인연:" + who))){ S.tags.push(`인연:${who}/친구`); log({t:"sys", text:`${who}와(과) 인연을 맺었다.`}); }
       }
       const tr = trainStat(actInput || input, results);
       if(tr){
