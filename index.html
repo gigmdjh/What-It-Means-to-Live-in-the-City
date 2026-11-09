@@ -2964,8 +2964,6 @@ function ruleJudge(input){
 
 function rollCheck(a){
   if(a.trivial) return {auto:true, tier:"자동 성공", cls:"ok"};
-  /* Truly impossible actions cannot succeed through a lucky die roll. */
-  if(a.impossible) return {auto:true, tier:"불가능", cls:"fail", impossible:true};
   const d = 1 + rnd(20);
   const b = bonus(eff(a.stat));
   const mods = [];
@@ -3000,7 +2998,8 @@ function rollCheck(a){
   let tier, cls;
   /* Natural 20 is a critical success; natural 1 is a critical failure.
      Near failure is not a full success, even if the narration can show limited progress. */
-  if(d === 20 || total >= a.dc + 10){ tier = "대성공"; cls = "crit"; }
+  if(a.impossible){ tier = d === 1 ? "대실패" : "실패"; cls = d === 1 ? "fumble" : "fail"; }
+  else if(d === 20 || total >= a.dc + 10){ tier = "대성공"; cls = "crit"; }
   else if(d === 1){ tier = "대실패"; cls = "fumble"; }
   else if(total >= a.dc){ tier = "성공"; cls = "ok"; }
   else if(total >= a.dc - 3){ tier = "아슬아슬한 실패"; cls = "close"; }
