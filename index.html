@@ -1128,7 +1128,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261109-1.5.15";
+const BUILD = "20261109-1.5.16";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -3296,7 +3296,7 @@ function talkNode(t){
   const body = el("div", "talk-body");
   const heading = el("div", "talk-head");
   heading.appendChild(el("span", "talk-who", t.who));
-  const meta = [t.rel, t.job, t.age != null ? `${t.age}세` : ""].filter(Boolean);
+  const meta = [t.gender, t.rel, t.job, t.age != null ? `${t.age}세` : ""].filter(Boolean);
   if(meta.length) heading.appendChild(el("span", "talk-meta", meta.join(" · ")));
   body.appendChild(heading);
   if(t.act) body.appendChild(el("div", "talk-act" + (t.say ? "" : " only"), t.act));
