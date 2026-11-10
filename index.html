@@ -1128,7 +1128,7 @@ body.lmland::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:
 <script src="weapon-pixels.js?v=20261109-1.5.13"></script>
 <script>
 "use strict";
-const BUILD = "20261110-1.5.27";
+const BUILD = "20261110-1.5.28";
 /* ───────── 세계관 (프로젝트 문 위키 기준 요약) ───────── */
 const LORE_FULL = `[World: "the City" (도시) of Project Moon]
 - The City is humanity's last stronghold, ruled by the Head (머리). About 7 billion people, the size of a small country, split into 26 Districts (District 26 is not on any map).
@@ -2935,7 +2935,7 @@ function updateCitySystems(input,results,n){
   if(S.distorted&&!p.distortionSeen){p.distortionSeen=true;p.strain=clamp(p.strain+20,0,100);p.effects.push({key:"뒤틀림 경험/자아와 욕망의 충돌",event:"뒤틀림 경험",effect:"자아와 욕망의 충돌이 선택에 남을 수 있음",at:S.days});p.milestones.push({at:S.days,kind:"뒤틀림",text:"뒤틀림을 겪음"});}
   if(S.ego&&!p.egoSeen){p.egoSeen=true;p.milestones.push({at:S.days,kind:"E.G.O 발현",text:"E.G.O 「"+S.ego+"」"});}
   const shock=/(학살|고문|살해|사망|죽었|시체|납치|배신|절단|뒤틀림|청소부|환상체|가족을 잃|친구를 잃|동료를 잃|강제 수술)/.exec(story),harm=Number(n.hp)<0||Number(n.sp)<0||!!n.family_dead||failed;
-  if(shock&&harm&&p.lastShock!==shock[0]){const serious=/(학살|고문|살해|사망|죽었|뒤틀림|청소부|환상체|절단)/.test(shock[0]);p.strain=clamp(p.strain+(serious?16:9),0,100);p.lastShock=shock[0];
+  if(shock&&harm&&!(p.lastShock&&p.lastShock.key===shock[0]&&S.days-p.lastShock.at<30)){const serious=/(학살|고문|살해|사망|죽었|뒤틀림|청소부|환상체|절단)/.test(shock[0]);p.strain=clamp(p.strain+(serious?16:9),0,100);p.lastShock={key:shock[0],at:S.days};
     if(!n._cityAftereffect&&!p.effects.some(x=>x.event===shock[0])){const line=(story.split(/(?<=[.!?。])\s+/).find(x=>x.includes(shock[0]))||story).slice(0,100);p.effects.push({key:line+"/반응 관찰",event:line,effect:"기억은 남아 있으며 관련 상황에서 반응이 나타날 수 있음",at:S.days});if(p.effects.length>10)p.effects.shift();}
     log({t:"sys",text:"심리 기록: 중대한 사건의 부담이 누적되었다 ("+p.strain+"/100). 정신력과 별개이며, 이 수치만으로 뒤틀림이 발생하지 않는다."});}
   if(ok&&/(상담|위로|마음을 정리|명상|치료|심리 치료|믿을 만한 사람과 이야기|신뢰하는 사람과 이야기|충분히 쉰|잠을 잔|휴식을 취)/.test(act)&&p.strain>0){const old=p.strain;p.strain=clamp(p.strain-6,0,100);if(old!==p.strain)log({t:"sys",text:"심리 기록: 휴식이나 대화로 누적 부담이 줄었다 ("+old+" → "+p.strain+"/100). 기억은 자동으로 지워지지 않는다."});}
